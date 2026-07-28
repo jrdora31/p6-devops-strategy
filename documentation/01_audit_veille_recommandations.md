@@ -80,9 +80,19 @@ L’audit a été réalisé sur la branche `dev`, au commit `526bd96cddd29036769
 
 L’audit ne couvre pas de runner GitLab distant, d’environnement AWS, de test de charge ou d’indicateur de production.
 
-Le [workflow CI actuel](diagrammes/workflow_ci_actuel.md) représente les étapes observées et distingue le flux Docker manuel déclaré par les Ops. Il est également disponible en [SVG](diagrammes/workflow_ci_actuel.svg) et en [PNG](diagrammes/workflow_ci_actuel.png).
+#### 3.2.1 État initial de référence
 
-![Workflow CI actuel de MicroCRM](diagrammes/workflow_ci_actuel.png)
+| Élément | Référence « avant » |
+|---|---|
+| Code et configurations | Branche `dev`, commit `526bd96cddd2903676988b56dfeb2778667aa435` |
+| Pipeline | `.gitlab-ci.yml` du commit audité : stages `test` et `build`, quatre jobs |
+| Exécution | `Dockerfile`, `misc/docker/Caddyfile`, `misc/docker/supervisor.ini`, configurations Angular et Spring |
+| Mesures | Indicateurs de la section 1.2 et résultats détaillés de la section 3.3 |
+| Workflow | [Source Mermaid modifiable](diagrammes/workflow_ci_actuel.md) et [export SVG](diagrammes/workflow_ci_actuel.svg) |
+
+Le workflow distingue les faits observés dans le dépôt du flux Docker manuel déclaré par les Ops.
+
+![Workflow CI actuel de MicroCRM](diagrammes/workflow_ci_actuel.svg)
 
 ### 3.3 Processus audités
 
@@ -142,15 +152,36 @@ MicroCRM possède une base exploitable : code centralisé, dépendances reproduc
 
 La chaîne reste limitée à l’intégration. Elle ne conserve aucun rapport ou artefact, ne publie aucune image et n’automatise ni les contrôles de sécurité ni la livraison.
 
-Les besoins communs aux équipes sont :
+#### 3.4.1 Retours des équipes
 
-- réduire les opérations manuelles ;
-- détecter plus tôt les problèmes ;
+| Équipe | Constats et besoins déclarés |
+|---|---|
+| Dev | L’équipe se déclare à l’aise avec Angular, npm, Karma et Docker, mais débutante avec Java, Spring Boot, Gradle et JUnit. Elle souhaite une analyse statique et une aide à la conception afin de détecter plus tôt les mauvaises pratiques. Elle signale également qu’une CVE a retardé le premier déploiement. |
+| Ops | L’équipe contrôle manuellement les images avec un outil comme Trivy, puis les déploie manuellement avec Docker. Elle souhaite un registre d’images interne, des contrôles de sécurité réalisés avant la transmission et davantage d’automatisation. |
+
+Le croisement des deux sondages fait ressortir :
+
+- une convergence explicite : la majorité des opérations est encore manuelle ;
+- un enjeu partagé : les Dev ont subi un retard lié à une CVE et les Ops demandent que le contrôle des images intervienne avant leur transmission.
+
+Docker constitue l’interface entre les équipes : les Dev produisent et transmettent des références d’images, puis les Ops les contrôlent et les déploient. L’audit montre toutefois que cette transmission n’est ni automatisée ni traçable dans la CI.
+
+Les besoins suivants restent spécifiques ou doivent être clarifiés :
+
+- l’analyse statique du code répond principalement au besoin exprimé par les Dev ;
+- le registre interne, le scan des images en amont et l’automatisation du déploiement répondent principalement aux Ops ;
+- le lien entre l’environnement de `staging` cité par les Dev et l’environnement de démonstration cité par les Ops n’est pas établi ;
+- le dépôt utilise HSQLDB alors que PostgreSQL figure dans les technologies Ops ; aucune migration de base de données n’est donc décidée à ce stade.
+
+Les sondages orientent la veille, mais n’imposent aucun outil. Trivy décrit une pratique Ops actuelle ; les solutions seront comparées pendant la veille technologique.
+
+Les besoins techniques suivants sont issus de l’audit du dépôt, et non d’un consensus déclaré dans les sondages :
+
 - livrer une image identifiable et vérifiée ;
 - rendre la configuration portable ;
 - conserver des preuves liées au commit.
 
-#### 3.4.1 Analyse SWOT
+#### 3.4.2 Analyse SWOT
 
 | Forces | Faiblesses |
 |---|---|
@@ -161,7 +192,7 @@ Les besoins communs aux équipes sont :
 
 | Opportunités | Menaces |
 |---|---|
-| Les besoins Dev/Ops convergent. | Les vulnérabilités évoluent dans le temps. |
+| Les retours justifient l’automatisation et la sécurité plus en amont. | Les vulnérabilités évoluent dans le temps. |
 | GitLab et Docker peuvent être étendus sans remplacer l’existant. | Les tags flottants peuvent modifier un build. |
 | Une CI full-stack peut relier code, contrôles et images. | Un contrôle tardif peut retarder la livraison. |
 | L’automatisation peut réduire les manipulations manuelles. | Des besoins d’environnement mal clarifiés peuvent conduire à une solution inadaptée. |

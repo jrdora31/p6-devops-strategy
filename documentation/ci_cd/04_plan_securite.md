@@ -2,9 +2,9 @@
 
 | Faiblesse observée | Preuve / emplacement | Risque | Mesure envisagée |
 |---|---|---|---|
-| Les dépendances ne sont pas analysées. | Aucun scan dans `.gitlab-ci.yml` ; alertes npm consignées dans `documentation/01_audit_veille_recommandations.pdf`. | Une dépendance vulnérable peut être livrée. | Ajouter des scans de dépendances frontend et backend. |
+| Les dépendances ne font l’objet d’aucun contrôle dédié dans la CI. | Aucun job de scan dans `.gitlab-ci.yml` ; 64 alertes npm consignées dans `documentation/01_audit_veille_recommandations.md`. | Une dépendance vulnérable peut être livrée. | Ajouter des scans de dépendances frontend et backend. |
 | Le code et les images ne sont pas analysés automatiquement. | `.gitlab-ci.yml` contient uniquement les stages `test` et `build`. | Une faille peut être découverte trop tard. | Ajouter SonarQube et un scan des images dans la CI. |
-| Aucun contrôle automatique des secrets n’est configuré. | Aucun job de détection de secrets dans `.gitlab-ci.yml`. | Un futur jeton GitLab ou AWS peut être publié par erreur. | Scanner le dépôt et stocker les secrets dans des variables protégées. |
+| Aucun contrôle automatique des secrets n’est configuré. | Aucun job de détection de secrets dans `.gitlab-ci.yml`. | Un secret peut être publié par erreur. Un jeton de registre compromis permettrait de publier une image malveillante, puis de compromettre le déploiement. | Scanner le dépôt, stocker les secrets dans des variables masquées et protégées, limiter leurs droits, puis révoquer et renouveler tout jeton compromis. |
 | Les images de construction utilisent des versions flottantes. | Tags `latest`, `node` et `gradle:jdk17` dans `.gitlab-ci.yml` et `Dockerfile`. | Un build peut changer sans modification du code. | Épingler les versions et tracer les images par SHA et digest. |
 | Les conteneurs s’exécutent avec `root`. | Aucune instruction `USER` dans `Dockerfile`. | Une compromission peut disposer de privilèges excessifs. | Utiliser un compte non privilégié. |
 | L’API autorise toutes les origines et ne possède pas de contrôle d’accès. | `allowedOrigins("*")` dans `SpringDataRestCustomization.java` ; aucune dépendance Spring Security dans `back/build.gradle`. | Des données peuvent être consultées ou modifiées sans autorisation. | Restreindre CORS et définir l’authentification avant l’exposition publique. |

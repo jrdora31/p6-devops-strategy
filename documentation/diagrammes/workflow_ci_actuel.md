@@ -2,7 +2,7 @@
 
 **État audité :** branche `dev`, commit `526bd96cddd2903676988b56dfeb2778667aa435`.
 
-**Exports :** [SVG](workflow_ci_actuel.svg) · [PNG](workflow_ci_actuel.png)
+**Export :** [SVG](workflow_ci_actuel.svg)
 
 ```mermaid
 flowchart TB
