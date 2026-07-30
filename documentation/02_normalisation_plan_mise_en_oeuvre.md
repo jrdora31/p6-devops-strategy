@@ -124,11 +124,11 @@ Le template Auto DevOps de GitLab sert de référence pour la modularité, les i
 
 | Élément | Version du repository | Décision pour la CI |
 |---|---|---|
-| Frontend | Angular `17.3.8`, TypeScript `5.4.5`, RxJS `7.8.1` | Conserver les versions du `package-lock.json`. Utiliser temporairement Node `20.19.5`, compatible avec Angular 17.3, puis planifier la mise à niveau d’Angular car cette version n’est plus supportée. |
+| Frontend | Angular `17.3.8`, TypeScript `5.4.5`, RxJS `7.8.1` | Conserver les versions du `package-lock.json`. Utiliser Node `20.19.5` pour le build et une image Cypress épinglée avec Node `20.10.0` pour les tests avec Chrome ; les deux versions appartiennent à la plage supportée par Angular 17.3. Planifier ensuite la mise à niveau d’Angular car cette version n’est plus supportée. |
 | Backend | Spring Boot `3.2.5`, Gradle Wrapper `8.7`, code Java `17` | Exécuter Gradle avec un JDK `21` et conserver la cible Java `17`. Cette combinaison est supportée par Spring Boot 3.2.5 et Gradle 8.7. |
 | Tests | Karma/Jasmine et JUnit | Produire des rapports JUnit XML pour GitLab. Conserver LCOV pour la couverture frontend destinée à SonarQube ; ajouter JaCoCo XML pour le backend. |
 | SonarQube Cloud | Scanner non encore configuré | Épingler le scanner lors de son intégration et conserver l’auto-provisioning du JRE. TypeScript 5.4 et LCOV sont supportés. |
-| Images CI | Tags flottants dans la CI actuelle | Remplacer `node`, `gradle:jdk17` et `cypress/browsers:latest` par des tags complets, puis par leurs digests après validation. |
+| Images CI | Tags flottants dans la CI auditée | La CI cible utilise des tags complets pour Node, Cypress, Java et Docker. Leurs digests seront enregistrés après validation dans GitLab. |
 | GitLab Runner | Version non observée | Vérifier l’executor, sa version et la prise en charge de Docker lors du premier pipeline cible. |
 
 La machine locale utilise Node `24.14.0`, qui n’est pas dans la plage supportée par Angular 17.3. Les commandes frontend devront donc être exécutées dans l’image CI compatible, et non dépendre de la version installée sur le poste.

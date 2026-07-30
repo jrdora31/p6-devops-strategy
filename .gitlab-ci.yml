@@ -1,33 +1,25 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - when: never
+
 stages:
   - test
+  - quality
   - build
+  - release
+  - deploy
+  - verify
 
-test-front:
-  image: cypress/browsers:latest
-  stage: test
-  script:
-    - cd front
-    - npm ci
-    - CHROME_BIN=/opt/google/chrome/chrome npx @angular/cli test --no-watch --no-progress --browsers=ChromeHeadlessNoSandbox
+variables:
+  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
+  BACKEND_IMAGE: "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA"
 
-test-back:
-  image: gradle:jdk17
-  stage: test
-  script:
-    - cd back
-    - ./gradlew test
-
-build-front:
-  image: node
-  stage: build
-  script:
-    - cd front
-    - npm ci
-    - npx @angular/cli build --optimization
-
-build-back:
-  image: gradle:jdk17
-  stage: build
-  script:
-    - cd back
-    - ./gradlew build
+include:
+  - local: .gitlab/ci/common.yml
+  - local: .gitlab/ci/test.yml
+  - local: .gitlab/ci/build.yml
+  - local: .gitlab/ci/release.yml

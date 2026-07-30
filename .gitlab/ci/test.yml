@@ -1,0 +1,25 @@
+test:frontend:
+  extends: .frontend-node
+  image: cypress/browsers:node-20.10.0-chrome-121.0.6167.85-1-ff-118.0.2-edge-118.0.2088.46-1
+  stage: test
+  script:
+    - CHROME_BIN=/opt/google/chrome/chrome npm test -- --no-watch --no-progress --browsers=ChromeHeadlessNoSandbox --code-coverage
+  coverage: '/Statements\s*:\s*([\d.]+)%/'
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - front/coverage/
+
+test:backend:
+  extends: .backend-java
+  stage: test
+  script:
+    - ./gradlew --no-daemon test
+  artifacts:
+    when: always
+    expire_in: 7 days
+    reports:
+      junit: back/build/test-results/test/*.xml
+    paths:
+      - back/build/reports/tests/test/

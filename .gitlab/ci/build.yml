@@ -1,0 +1,55 @@
+build:frontend:
+  extends: .frontend-node
+  stage: build
+  needs:
+    - job: test:frontend
+      artifacts: false
+  script:
+    - npm run build -- --configuration production
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - front/dist/microcrm/browser/
+
+build:backend:
+  extends: .backend-java
+  stage: build
+  needs:
+    - job: test:backend
+      artifacts: false
+  script:
+    - ./gradlew --no-daemon bootJar -x test
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - back/build/libs/microcrm-0.0.1-SNAPSHOT.jar
+
+build:image:frontend:
+  extends: .docker-job
+  stage: build
+  needs:
+    - job: build:frontend
+      artifacts: true
+  script:
+    - docker build --pull --file misc/docker/frontend.Dockerfile --tag "$FRONTEND_IMAGE" .
+    - mkdir -p .ci/images
+    - docker save --output .ci/images/frontend.tar "$FRONTEND_IMAGE"
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - .ci/images/frontend.tar
+
+build:image:backend:
+  extends: .docker-job
+  stage: build
+  needs:
+    - job: build:backend
+      artifacts: true
+  script:
+    - docker build --pull --file misc/docker/backend.Dockerfile --tag "$BACKEND_IMAGE" .
+    - mkdir -p .ci/images
+    - docker save --output .ci/images/backend.tar "$BACKEND_IMAGE"
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - .ci/images/backend.tar
