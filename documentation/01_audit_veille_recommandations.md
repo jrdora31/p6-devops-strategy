@@ -6,6 +6,12 @@
 
 **Baseline de l’audit :** 26 juillet 2026
 
+> Le plan présenté dans ce document est proposé à titre d’exemple, illustrant la structure attendue dans le cadre d’un projet réel.
+>
+> Dans le contexte de cet exercice, ne cherchez pas à détailler chaque section de manière excessive, cela prendrait trop de temps.
+>
+> Considérez ce document comme un guide plutôt qu’une liste d’attentes strictes à respecter à la lettre.
+
 ## Sommaire
 
 1. [Introduction](#1-introduction)
@@ -18,9 +24,13 @@
 
 ### 1.1 Objectif
 
+> Décrire l’objectif général du document et son importance pour le projet de l’entreprise.
+
 Établir l’état de la chaîne CI/CD de MicroCRM, rapprocher les besoins des équipes Dev et Ops, puis identifier les améliorations à comparer pendant la veille technologique.
 
 ### 1.2 Contexte
+
+> Fournir le contexte dans lequel cette veille technologique est réalisée, notamment les motivations à l’origine de celle-ci et les besoins spécifiques au contexte du projet.
 
 MicroCRM est un monorepo GitLab composé d’un frontend Angular et d’un backend Spring Boot. La CI actuelle teste et construit les deux composants. Les images Docker sont ensuite construites, contrôlées et transmises manuellement selon les équipes.
 
@@ -39,6 +49,8 @@ MicroCRM est un monorepo GitLab composé d’un frontend Angular et d’un backe
 
 ### 2.1 Méthodologie
 
+> Décrire les méthodes (essayer de modéliser l’approche qui a été suivie pour la recherche d’information) et les sources utilisées pour la veille technologique (ex : bibliographie des ressources documentaires, numériques ou physiques).
+
 La veille technologique s’appuie sur les résultats de l’audit du repository MicroCRM et sur les besoins exprimés dans les sondages Dev et Ops.
 
 Les recherches sont limitées aux solutions répondant aux difficultés constatées : automatisation, qualité du code, sécurité, gestion des images, portabilité, persistance des données et traçabilité des releases.
@@ -50,6 +62,14 @@ Les technologies sans besoin identifié sont écartées afin de conserver une so
 Les références utilisées sont indiquées dans chaque fiche technologique avec le nom de l’organisme, l’URL et la date de consultation. Aucune source physique n’a été nécessaire.
 
 ### 2.2 Technologies évaluées
+
+> Lister les différentes technologies évaluées dans le cadre de la veille technologique.
+>
+> - **Description :** rédiger une courte description de la technologie.
+> - **Catégorisation :** identifier et assigner une catégorie à la technologie dans l’optique de réaliser la matrice comparative.
+> - **Fonctionnalités clés :** lister les fonctionnalités clés associées à la technologie.
+> - **Cas d’usages :** décrire les cas d’usages nominaux associés à la technologie.
+> - **Références :** lister les références documentaires (URL, identifiant ISBN) qui ont servi à la réalisation de la veille pour cette technologie.
 
 #### 2.2.1 GitLab CI/CD
 
@@ -154,6 +174,8 @@ Les autres éléments étudiés sont des pratiques ou des mécanismes associés 
 
 ### 2.3 Matrices comparatives
 
+> Créer des matrices comparatives par catégorie listant les avantages/inconvénients des différentes technologies évaluées.
+
 Les technologies sont comparées par catégorie selon leurs principaux avantages et inconvénients pour MicroCRM.
 
 #### 2.3.1 Analyse continue du code
@@ -194,6 +216,8 @@ Les choix définitifs seront formulés dans les recommandations après vérifica
 
 ### 3.1 Objectifs
 
+> Décrire les objectifs associés à l’audit et les points que l’on cherche à évaluer ou à améliorer.
+
 L’audit vise à :
 
 - reconstituer le workflow réel, du changement de code à la transmission aux Ops ;
@@ -205,6 +229,8 @@ L’audit vise à :
 Cette baseline servira de point de comparaison avec la future chaîne CI/CD.
 
 ### 3.2 Méthodologie
+
+> Décrire la méthodologie suivie pour réaliser l’audit (par ex : entretiens, observations, analyses de documents, etc.).
 
 L’audit a été réalisé sur la branch `dev`, au commit `526bd96cddd2903676988b56dfeb2778667aa435`.
 
@@ -232,6 +258,13 @@ Le workflow distingue les faits observés dans le repository du flux Docker manu
 ![Workflow CI actuel de MicroCRM](diagrammes/workflow_ci_actuel.svg)
 
 ### 3.3 Processus audités
+
+> Lister les processus audités et fournir une analyse détaillée pour chacun.
+>
+> - **Description :** décrire le processus en détail.
+> - **Forces :** décrire les forces du processus actuel (ce qui fonctionne).
+> - **Faiblesses :** décrire les faiblesses du processus actuel (ce qui mériterait d’être amélioré).
+> - **Risques :** décrire les risques potentiels liés aux faiblesses identifiées.
 
 #### 3.3.1 Repository et pipeline GitLab CI
 
@@ -284,6 +317,8 @@ Le workflow distingue les faits observés dans le repository du flux Docker manu
 | Preuves | `config.ts`, bundle Angular, configuration Spring et tests contrôlés. |
 
 ### 3.4 Synthèse
+
+> Résumer les principaux constats de l’audit avec une vue d’ensemble des points forts et des faiblesses des processus de développement actuels.
 
 MicroCRM possède une base exploitable : code centralisé, dépendances reproductibles, tests et builds fonctionnels, et trois cibles Docker constructibles.
 
@@ -338,6 +373,8 @@ Les besoins techniques suivants sont issus de l’audit du repository, et non d�
 
 ### 4.1 Objectifs
 
+> Décrire les objectifs liés aux recommandations formulées dans le rapport et leur importance pour l’amélioration de la chaîne CI.
+
 Les recommandations visent à rendre la chaîne CI de MicroCRM plus fiable, sécurisée et reproductible. Elles répondent aux faiblesses relevées pendant l’audit : contrôles de sécurité tardifs ou absents, tests limités, absence de rapports conservés et opérations de release encore manuelles.
 
 Leur mise en œuvre doit permettre :
@@ -351,6 +388,13 @@ Leur mise en œuvre doit permettre :
 Les solutions proposées ci-dessous résultent de l’audit et de la veille. Leur périmètre d’implémentation sera défini dans le plan de mise en œuvre.
 
 ### 4.2 Recommandations pour l’automatisation et la chaîne CI
+
+> Fournir la liste des recommandations pour la chaîne CI et les autres processus de développement qui pourraient profiter d’une automatisation, toutes basées sur les constats de l’audit.
+>
+> - **Description :** décrire en détail la recommandation.
+> - **Raisonnement :** justifier le raisonnement à l’origine de cette recommandation, expliquant pourquoi celle-ci est importante.
+> - **Implémentation :** décrire les étapes/actions nécessaires pour mettre en place cette recommandation.
+> - **Impacts :** lister les bénéfices attendus suite à la mise en œuvre de cette recommandation.
 
 #### 4.2.1 Automatiser les contrôles de sécurité
 
@@ -447,10 +491,27 @@ Les solutions proposées ci-dessous résultent de l’audit et de la veille. Leu
 
 ### 5.1 Synthèse des constats
 
+> Récapituler les principaux constats de la veille technologique et de l’audit, ainsi que les recommandations proposées.
+
 MicroCRM dispose déjà de GitLab, d’une CI minimale et de conteneurs Docker fonctionnels. L’audit montre cependant des tests limités, des contrôles de sécurité tardifs ou absents, aucune conservation des rapports et un processus de release encore largement manuel.
 
 Les recommandations portent donc sur l’automatisation des contrôles, la conservation des preuves, la traçabilité des images, la portabilité de l’application, la persistance des données et la maîtrise des releases.
 
 ### 5.2 Prochaines étapes
 
-Les recommandations seront classées selon leur priorité et leur périmètre, puis intégrées au plan de mise en œuvre. Toutes ne devront pas nécessairement être implémentées : les choix, reports et rejets seront justifiés.
+> Identifier les prochaines étapes pour la mise en œuvre des recommandations et proposer une trame de planification de celles-ci. Notez qu’il n’est pas nécessaire d’implémenter toutes ces recommandations dans le cadre de ce projet.
+
+La mise en œuvre suivra cette trame :
+
+| Ordre | Étape | Résultat attendu |
+|---:|---|---|
+| 1 | Définir la structure de la nouvelle CI | Workflow cible, stages, outils et règles de validation |
+| 2 | Mettre en œuvre le pipeline GitLab CI/CD | Templates, tests, builds, rapports, artifacts et images |
+| 3 | Développer les scripts d’automatisation | Commandes communes pour les dépendances, tests, builds, releases et notifications |
+| 4 | Automatiser la qualité et la sécurité | SonarQube, scans de dépendances, secrets et images |
+| 5 | Normaliser les releases | Versioning, traçabilité, documentation et critères de validation |
+| 6 | Déployer l’environnement AWS | Infrastructure, Kubernetes, Helm, persistance, monitoring, backup et rollback |
+
+Cet ordre suit les dépendances techniques : chaque étape produit les éléments nécessaires à la suivante. La chaîne est d’abord conçue et testée, puis sécurisée et versionnée avant tout deployment sur AWS.
+
+Le plan de mise en œuvre précisera ensuite les responsables, les ressources, les dépendances, les risques et le calendrier. Les recommandations non retenues ne seront pas intégrées à cette planification.
