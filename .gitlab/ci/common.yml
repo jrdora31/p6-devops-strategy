@@ -1,0 +1,44 @@
+.frontend-node:
+  image: node:20.19.5-bookworm-slim
+  variables:
+    NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.cache/npm"
+  cache:
+    key:
+      files:
+        - front/package-lock.json
+      prefix: frontend
+    paths:
+      - .cache/npm/
+  before_script:
+    - cd front
+    - npm ci --prefer-offline
+
+.backend-java:
+  image: eclipse-temurin:21.0.10_7-jdk-jammy
+  variables:
+    GRADLE_USER_HOME: "$CI_PROJECT_DIR/.cache/gradle"
+  cache:
+    key:
+      files:
+        - back/gradle/wrapper/gradle-wrapper.properties
+        - back/build.gradle
+      prefix: backend
+    paths:
+      - .cache/gradle/wrapper/
+      - .cache/gradle/caches/
+  before_script:
+    - cd back
+    - chmod +x gradlew
+
+.docker-job:
+  image: docker:24.0.5-cli
+  services:
+    - name: docker:24.0.5-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: "tcp://docker:2376"
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_VERIFY: "1"
+    DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  before_script:
+    - docker info

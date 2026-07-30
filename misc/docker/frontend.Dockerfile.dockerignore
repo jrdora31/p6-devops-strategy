@@ -1,0 +1,9 @@
+*
+!front/
+!front/dist/
+!front/dist/microcrm/
+!front/dist/microcrm/browser/
+!front/dist/microcrm/browser/**
+!misc/
+!misc/docker/
+!misc/docker/Caddyfile
