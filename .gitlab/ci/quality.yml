@@ -13,17 +13,27 @@ quality:sonarqube:
   stage: quality
   variables:
     SONAR_USER_HOME: "$CI_PROJECT_DIR/.sonar"
+    GRADLE_USER_HOME: "$CI_PROJECT_DIR/.cache/gradle"
     GIT_DEPTH: "0"
   cache:
-    key: sonar
-    paths:
-      - .sonar/cache/
+    - key: sonar
+      paths:
+        - .sonar/cache/
+    - key:
+        files:
+          - back/gradle/wrapper/gradle-wrapper.properties
+          - back/build.gradle
+        prefix: backend
+      paths:
+        - .cache/gradle/wrapper/
+        - .cache/gradle/caches/
   dependencies:
     - test:frontend
     - test:backend
   script:
+    - chmod +x back/gradlew
+    - back/gradlew --no-daemon -p back copySonarLibraries
     - sonar-scanner -Dsonar.qualitygate.wait=true
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "dev"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

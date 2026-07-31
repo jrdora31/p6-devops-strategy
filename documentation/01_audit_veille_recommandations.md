@@ -86,7 +86,7 @@ Les références utilisées sont indiquées dans chaque fiche technologique avec
 - **Catégorisation :** qualité du code et sécurité applicative.
 - **Fonctionnalités clés :** analyse des bugs, vulnérabilités, code smells, duplications et couverture, avec quality profiles et quality gates.
 - **Cas d’usage MicroCRM :** analyser le frontend Angular et le backend Spring depuis GitLab CI, puis contrôler la qualité du nouveau code.
-- **Contraintes et coût :** aucun serveur à maintenir, mais le code et les résultats sont traités par un service externe ; les limites du plan dépendent notamment du volume de code privé.
+- **Contraintes et coût :** aucun serveur à maintenir, mais le code et les résultats sont traités par un service externe. Le plan Free retenu analyse les merge requests et `main`, mais pas directement la branche `dev`.
 - **Références :** Sonar, [Getting started with GitLab](https://docs.sonarsource.com/sonarqube-cloud/getting-started/gitlab) et [Quality gates](https://docs.sonarsource.com/sonarqube-cloud/standards/quality-gates), consultés le 29 juillet 2026.
 
 #### 2.2.3 SonarQube Server Community Build
@@ -183,7 +183,7 @@ Les technologies sont comparées par catégorie selon leurs principaux avantages
 | Comparé à | SonarQube Cloud | SonarQube Server Community Build |
 |---|---|---|
 | SonarQube Cloud | — | Par rapport à SonarQube Cloud, **SonarQube Server** permet de conserver le code en interne. En revanche, il faut maintenir un serveur, une base, les mises à jour et la supervision. |
-| SonarQube Server Community Build | Par rapport à SonarQube Server, **SonarQube Cloud** ne demande aucune infrastructure et son plan Free convient à la taille actuelle du projet. En revanche, le code est analysé par un service externe. | — |
+| SonarQube Server Community Build | Par rapport à SonarQube Server, **SonarQube Cloud** ne demande aucune infrastructure et son plan Free convient à la taille actuelle du projet. En revanche, le code est analysé par un service externe et l’analyse de branche directe est limitée à `main`. | — |
 
 #### 2.3.2 Container registry
 
@@ -421,7 +421,7 @@ Les solutions proposées ci-dessous résultent de l’audit et de la veille. Leu
 
 - **Description :** intégrer SonarQube dans la CI et contrôler les nouvelles anomalies.
 - **Raisonnement :** aucun outil ne mesure actuellement la qualité du code et l’évolution de la dette technique.
-- **Implémentation :** utiliser SonarQube Cloud Free si les limites du plan sont respectées, produire une baseline puis appliquer un quality gate centré sur le nouveau code.
+- **Implémentation :** utiliser SonarQube Cloud Free sur les merge requests et `main`, produire une baseline sur `main`, puis appliquer un quality gate centré sur le nouveau code.
 - **Impacts :** rendre la qualité et la dette technique mesurables.
 
 #### 4.2.5 Automatiser le build et la traçabilité des images

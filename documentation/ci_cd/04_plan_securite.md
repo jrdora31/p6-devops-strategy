@@ -5,7 +5,7 @@
 | Faiblesse observée | Preuve / emplacement | Risque | Traitement | État |
 |---|---|---|---|---|
 | Les dépendances ne font l’objet d’aucun contrôle dédié dans la CI. | Aucun job de scan dans `.gitlab/ci/` ; 64 alertes npm consignées dans l’audit. | Une dépendance vulnérable peut être livrée. | Ajouter les scans des dépendances frontend et backend. | À faire |
-| L’analyse automatique du code et des images n’est pas encore entièrement validée. | Le job `quality:sonarqube` est configuré dans `.gitlab/ci/quality.yml` ; aucun job Trivy n’est encore présent. | Une faille peut être découverte après la publication. | Valider SonarQube dans GitLab puis ajouter Trivy avant la publication des images. | SonarQube configuré, validation CI à faire ; Trivy à faire |
+| L’analyse automatique du code et des images n’est pas encore entièrement validée. | Le job `quality:sonarqube` a réussi dans la pipeline `#2721562540` avec un quality gate passé ; aucun job Trivy n’est encore présent. | Une faille peut être découverte après la publication. | Conserver SonarQube sur les merge requests et `main`, puis ajouter Trivy avant la publication des images. | SonarQube validé sur MR ; baseline `main` et Trivy à faire |
 | Aucun contrôle automatique des secrets n’est présent dans la CI cible. | Aucun job de détection de secrets dans `.gitlab/ci/`. | Un secret publié peut compromettre la registry ou un environnement. | Scanner le repository et révoquer immédiatement tout secret exposé. | À faire |
 | Les images utilisées par la CI ne sont pas épinglées par digest. | Tags complets dans `.gitlab/ci/common.yml`, mais aucune référence `@sha256`. | Une image amont peut changer sans modification du repository. | Enregistrer puis utiliser les digests des images CI validées. | Partiel |
 | Tous les conteneurs ne sont pas encore non privilégiés. | `USER microcrm` dans `misc/docker/backend.Dockerfile` ; aucun `USER` explicite dans l’image frontend. | Une compromission peut disposer de privilèges excessifs. | Vérifier l’utilisateur runtime de Caddy et imposer un compte non privilégié lorsque nécessaire. | Partiel |
@@ -21,7 +21,7 @@ Aucune valeur de secret ne doit apparaître dans le repository ou dans les logs.
 | Secret ou identité | Usage | Stockage attendu | Droits minimaux | En cas de fuite |
 |---|---|---|---|---|
 | Identifiants temporaires de registry GitLab | Publier les images | Variables fournies au job GitLab | Push sur la registry du projet | Invalider le job/token et contrôler les images publiées |
-| Token SonarQube | Envoyer les analyses | Variable GitLab masquée et protégée | Analyse du seul projet MicroCRM | Révoquer puis générer un nouveau token |
+| Token SonarQube | Envoyer les analyses | Variable GitLab masquée, non protégée pour être disponible dans les merge requests du repository | Analyse du seul projet MicroCRM | Révoquer puis générer un nouveau token |
 | Webhook de notification | Envoyer le statut du pipeline | Variable GitLab masquée | Publication sur le seul canal retenu | Révoquer le webhook et contrôler les messages envoyés |
 | Identité AWS | Provisionner et déployer | Identité temporaire fédérée depuis GitLab | Rôle limité aux ressources MicroCRM | Révoquer la session, auditer CloudTrail et réduire la policy |
 
@@ -31,12 +31,13 @@ Aucune valeur de secret ne doit apparaître dans le repository ou dans les logs.
 
 | Réglage | État |
 |---|---|
-| Variables CI/CD du projet | Aucune |
+| `SONAR_TOKEN` | Ajoutée, masquée et non protégée |
+| `SONAR_HOST_URL` | Ajoutée, visible et non protégée ; cette URL n’est pas un secret |
 | Variables héritées du groupe | Aucune |
 | Variables saisies au lancement manuel | Interdites |
 | Affichage des variables manuelles | Désactivé |
 | Ressources protégées dans les pipelines de MR | Autorisées uniquement lorsque les branches source et cible sont protégées |
 
-La publication actuelle utilise les identifiants temporaires fournis par GitLab. Les tokens SonarQube, notification et AWS devront être ajoutés ultérieurement comme variables masquées et protégées.
+La publication actuelle utilise les identifiants temporaires fournis par GitLab. Le token SonarQube est limité à l’analyse de MicroCRM. Les futurs secrets de notification et identités AWS seront protégés et limités à leur usage ; leur disponibilité dans les merge requests ne sera ouverte que si elle est nécessaire et sûre.
 
 La maintenance de ces contrôles relève du maintainer du repository MicroCRM. Les exceptions doivent être documentées avec leur risque, leur responsable et leur date de correction.

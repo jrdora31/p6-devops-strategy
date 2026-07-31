@@ -11,6 +11,7 @@
 | Scripts Bash | Tests fonctionnels des commandes | Aide, dépendances verrouillées, dry-run et refus des paramètres dangereux | À chaque merge request et push sur `dev` ou `main` | 7 tests réussissent | Log du job `test:scripts:bash` |
 | Scripts Python | Tests unitaires | Manifeste SemVer, notification locale, erreurs de webhook et absence de fuite | À chaque merge request et push sur `dev` ou `main` | 5 tests réussissent | Rapport JUnit pytest |
 | Scripts Bash | Analyse statique | Erreurs et pratiques dangereuses détectées par ShellCheck | À chaque merge request et push sur `dev` ou `main` | Aucun diagnostic ShellCheck | Log du job `quality:shellcheck` |
+| Application full-stack | Analyse statique SonarQube | Bugs, vulnérabilités, security hotspots, code smells, duplication et couverture | À chaque merge request et sur `main` | Quality gate réussi | Dashboard SonarQube et job `quality:sonarqube` |
 
 ## Tests à ajouter
 
@@ -18,7 +19,6 @@
 |---|---|---|---|
 | Requêtes HTTP des services Angular | Vérifier les URL, méthodes et données échangées | `test` | Requêtes attendues et réponses simulées conformes |
 | Opérations CRUD de l’API Spring | Vérifier le comportement métier exposé par l’API | `test` | Création, lecture, modification et suppression conformes |
-| SonarQube | Détecter bugs, vulnérabilités, code smells, duplication et couverture | `quality` | Quality gate réussi |
 | Scan des dépendances | Détecter les dépendances vulnérables | `quality` | Aucune nouvelle vulnérabilité bloquante selon la politique retenue |
 | Détection de secrets | Empêcher la publication d’un secret | `quality` | Aucun secret confirmé dans le repository |
 | Scan Trivy des images | Détecter les vulnérabilités des images construites | `release` | Aucune nouvelle vulnérabilité bloquante selon la politique retenue |
@@ -26,3 +26,5 @@
 | Parcours full-stack critique | Vérifier la communication frontend–backend | `verify` | Un enregistrement peut être créé puis consulté |
 
 Les seuils SonarQube et de vulnérabilités seront définis après mesure de la baseline. Une anomalie acceptée devra être justifiée et suivie ; elle ne sera pas masquée pour obtenir artificiellement un pipeline vert.
+
+Le plan SonarQube Cloud Free analyse les merge requests et la branche principale `main`. Les pipelines directs sur `dev` conservent les tests applicatifs et les autres contrôles, mais n’exécutent pas SonarQube. Les changements doivent donc passer par une merge request avant leur intégration ; l’analyse complète de référence est produite sur `main`.

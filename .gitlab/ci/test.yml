@@ -26,6 +26,7 @@ test:backend:
       - back/build/reports/jacoco/test/jacocoTestReport.xml
       - back/build/reports/jacoco/test/html/
       - back/build/classes/java/main/
+      - back/build/classes/java/test/
 
 test:scripts:bash:
   image: node:20.19.5-bookworm-slim
