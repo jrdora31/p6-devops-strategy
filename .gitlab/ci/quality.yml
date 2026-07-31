@@ -1,0 +1,7 @@
+quality:shellcheck:
+  image:
+    name: koalaman/shellcheck-alpine:v0.11.0
+    entrypoint: [""]
+  stage: quality
+  script:
+    - shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh

@@ -2,6 +2,7 @@
 
 set -Eeuo pipefail
 # Charge les fonctions partagées de journalisation et de validation.
+# shellcheck source=scripts/ci/common.sh
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 usage() {

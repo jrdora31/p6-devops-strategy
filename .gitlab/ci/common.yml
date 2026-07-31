@@ -10,8 +10,8 @@
     paths:
       - .cache/npm/
   before_script:
-    - cd front
-    - npm ci --prefer-offline
+    - cd "$CI_PROJECT_DIR"
+    - bash scripts/ci/dependencies.sh --component frontend --action install
 
 .backend-java:
   image: eclipse-temurin:21.0.10_7-jdk-jammy
@@ -27,8 +27,9 @@
       - .cache/gradle/wrapper/
       - .cache/gradle/caches/
   before_script:
-    - cd back
-    - chmod +x gradlew
+    - cd "$CI_PROJECT_DIR"
+    - chmod +x back/gradlew
+    - bash scripts/ci/dependencies.sh --component backend --action check
 
 .docker-job:
   image: docker:24.0.5-cli

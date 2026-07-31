@@ -12,6 +12,7 @@
 | L’API autorise toutes les origines et ne possède pas de contrôle d’accès. | `allowedOrigins("*")` dans `SpringDataRestCustomization.java` ; aucune dépendance Spring Security. | Des données peuvent être consultées ou modifiées sans autorisation. | Restreindre CORS et définir l’authentification avant l’exposition publique. | À faire |
 | Les données ne sont pas persistantes. | HSQLDB dans `back/build.gradle` ; aucune datasource persistante configurée. | Les données disparaissent avec le conteneur. | Définir la persistance, le backup et le restore. | Partie 2 |
 | Le routage et la santé des services ne sont pas automatisés. | URL `localhost:8080` dans le frontend et aucun healthcheck dans les images runtime. | Une release peut être déclarée réussie alors que l’application est indisponible. | Externaliser la route API, ajouter des healthchecks et automatiser les smoke tests. | À faire |
+| Un script d’automatisation peut recevoir une valeur invalide, exposer un secret ou déclencher une action externe non maîtrisée. | `scripts/ci/` contient les commandes de backup, release et notification. | Le pipeline peut produire un résultat incorrect, divulguer une donnée ou modifier une cible inattendue. | Valider les paramètres, imposer le dry-run du backup en partie 1, lire les webhooks depuis l’environnement, tester les erreurs et exécuter ShellCheck. | Configuré ; validation GitLab à faire |
 
 ## Inventaire des secrets
 

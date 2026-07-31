@@ -12,9 +12,9 @@ Une release doit permettre de relier sans ambiguïté le code, le pipeline et le
 | Registry | GitLab Container Registry du repository |
 | Manifest | Version, commit, pipeline et digests frontend/backend |
 
-Le pipeline actuel publie sur `main` et sur les tags. Les images sont identifiées par le commit SHA et le job `release:images` produit `.ci/release/images.env`.
+Le pipeline publie sur `main` et sur les tags SemVer. Les images sont identifiées par le commit SHA et le job `release:images` produit `.ci/release/images.env`.
 
-L’automatisation SemVer et la génération du manifeste complet restent à intégrer aux scripts de release.
+Sur un tag SemVer, `release:manifest` doit ensuite appeler `release_manifest.py` et conserver `.ci/release/release-manifest.json`. L’exécution distante de ce chemin devra être prouvée avec le premier tag de release.
 
 ## Déclenchement
 
@@ -23,11 +23,19 @@ L’automatisation SemVer et la génération du manifeste complet restent à int
 | Merge request | Tests et builds | Non |
 | `dev` | Tests et builds | Non |
 | `main` | Tests et builds | Images identifiées par SHA |
-| Tag SemVer | Tests et builds | Release versionnée à finaliser |
+| Tag SemVer | Tests, builds et manifeste | Images et manifeste de release |
+
+## Responsabilités et contrôles
+
+| Opération | Prérequis | Contrôle final | Responsable |
+|---|---|---|---|
+| Release | Pipeline vert et tag SemVer | Images, digests et manifeste présents | Maintainer GitLab |
+| Rollback | Manifeste d’une release précédente validée | Smoke tests après redéploiement | Maintainer du déploiement |
+| Backup | Stockage persistant disponible | Restore exécuté sur une cible contrôlée | Maintainer de l’infrastructure |
 
 ## Rollback
 
-Le rollback applicatif consiste à redéployer les digests de la dernière release validée, puis à exécuter les smoke tests.
+Le rollback applicatif consiste à sélectionner le manifeste de la dernière release validée, redéployer ses digests, puis exécuter les smoke tests. En cas d’échec des smoke tests, le déploiement reste déclaré en échec et nécessite une intervention.
 
 En partie 1, le pipeline conserve les identifiants nécessaires. Le rollback réel sera exécuté après le deployment Kubernetes en partie 2.
 
@@ -35,7 +43,7 @@ En partie 1, le pipeline conserve les identifiants nécessaires. Le rollback ré
 
 Le backup concerne les données persistantes, pas les images déjà conservées dans la registry.
 
-La base actuelle étant éphémère, aucune preuve de backup réelle ne peut encore être produite. La procédure sera définie et testée avec le stockage persistant retenu en partie 2.
+La base actuelle étant éphémère, aucune preuve de backup réelle ne peut encore être produite. `backup.sh --dry-run` vérifie uniquement les paramètres et les garde-fous. La création du backup et le restore seront définis et testés avec le stockage persistant retenu en partie 2.
 
 ## Preuves actuelles
 

@@ -2,6 +2,7 @@
 
 set -Eeuo pipefail
 # Charge les fonctions partagées de journalisation et de validation.
+# shellcheck source=scripts/ci/common.sh
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 usage() {
@@ -42,6 +43,7 @@ frontend_build() {
 }
 
 backend_build() {
+  require_file "${REPOSITORY_ROOT}/back/gradlew"
   log_info "Construction du JAR backend"
   # Les tests sont exclus ici car ils sont exécutés séparément par test.sh.
   (cd "${REPOSITORY_ROOT}/back" && ./gradlew --no-daemon bootJar -x test)

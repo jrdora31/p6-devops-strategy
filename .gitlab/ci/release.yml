@@ -22,5 +22,28 @@ release:images:
     paths:
       - .ci/release/images.env
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+release:manifest:
+  image: python:3.12.11-slim
+  stage: release
+  needs:
+    - job: release:images
+      artifacts: true
+  script:
+    - >-
+      python scripts/ci/release_manifest.py
+      --version "$CI_COMMIT_TAG"
+      --commit "$CI_COMMIT_SHA"
+      --pipeline-id "$CI_PIPELINE_ID"
+      --pipeline-url "$CI_PIPELINE_URL"
+      --frontend-image "$FRONTEND_IMAGE_DIGEST"
+      --backend-image "$BACKEND_IMAGE_DIGEST"
+      --output .ci/release/release-manifest.json
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - .ci/release/release-manifest.json
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'

@@ -21,5 +21,6 @@ variables:
 include:
   - local: .gitlab/ci/common.yml
   - local: .gitlab/ci/test.yml
+  - local: .gitlab/ci/quality.yml
   - local: .gitlab/ci/build.yml
   - local: .gitlab/ci/release.yml
