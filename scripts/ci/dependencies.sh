@@ -2,6 +2,7 @@
 
 set -Eeuo pipefail
 # Charge les fonctions partagées de journalisation et de validation.
+# shellcheck source=scripts/ci/common.sh
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 usage() {
@@ -44,10 +45,10 @@ validate_component "$component"
   die "Action invalide : $action (valeurs : check, install)"
 
 frontend_dependencies() {
+  require_command node
   require_command npm
   # Le lockfile garantit que npm installe les versions déjà validées.
-  [[ -f "${REPOSITORY_ROOT}/front/package-lock.json" ]] ||
-    die "Lockfile frontend introuvable"
+  require_file "${REPOSITORY_ROOT}/front/package-lock.json"
 
   log_info "Frontend : Node $(node --version), npm $(npm --version)"
   if [[ "$action" == "install" ]]; then
@@ -57,8 +58,8 @@ frontend_dependencies() {
 
 backend_dependencies() {
   # Le Gradle Wrapper fixe la version de Gradle utilisée par le projet.
-  [[ -f "${REPOSITORY_ROOT}/back/gradle/wrapper/gradle-wrapper.properties" ]] ||
-    die "Gradle Wrapper backend introuvable"
+  require_file "${REPOSITORY_ROOT}/back/gradle/wrapper/gradle-wrapper.properties"
+  require_file "${REPOSITORY_ROOT}/back/gradlew"
 
   log_info "Backend : Gradle Wrapper présent"
   if [[ "$action" == "install" ]]; then

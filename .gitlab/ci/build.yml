@@ -5,7 +5,7 @@ build:frontend:
     - job: test:frontend
       artifacts: false
   script:
-    - npm run build -- --configuration production
+    - bash scripts/ci/build.sh --component frontend
   artifacts:
     expire_in: 1 day
     paths:
@@ -18,7 +18,7 @@ build:backend:
     - job: test:backend
       artifacts: false
   script:
-    - ./gradlew --no-daemon bootJar -x test
+    - bash scripts/ci/build.sh --component backend
   artifacts:
     expire_in: 1 day
     paths:

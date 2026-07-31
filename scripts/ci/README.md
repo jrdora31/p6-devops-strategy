@@ -2,8 +2,7 @@
 
 Ces scripts regroupent les commandes répétitives du projet. Ils sont conçus pour
 être lancés avec la même commande sur le poste du développeur et dans un job
-GitLab. GitLab ne les appelle pas encore : leur intégration au pipeline est
-prévue après leur validation.
+GitLab.
 
 | Besoin | Script | Langage | Effet |
 |---|---|---|---|
@@ -16,6 +15,17 @@ prévue après leur validation.
 
 Chaque commande accepte `--help`. Elle retourne `0` en cas de succès et un code
 différent de zéro en cas d’erreur, ce qui permet à GitLab d'arrêter le job.
+
+## Utilisation dans GitLab
+
+| Script | Utilisation actuelle |
+|---|---|
+| `dependencies.sh` | Installation frontend et vérification du Gradle Wrapper avant les jobs applicatifs |
+| `test.sh` | Jobs `test:frontend` et `test:backend` |
+| `build.sh` | Jobs `build:frontend` et `build:backend` |
+| `release_manifest.py` | Génération du manifeste après publication d’un tag SemVer |
+| `backup.sh` | Dry-run testé ; backup réel réservé au stockage persistant de la partie 2 |
+| `notify.py` | Comportement testé sans envoi ; canal réel encore à choisir |
 
 ## Commandes Bash
 
@@ -64,3 +74,18 @@ Par défaut, cette commande prépare et affiche seulement un résumé du pipelin
 elle n'envoie aucun message. Le canal et l'envoi réel seront décidés plus tard
 dans l'arbitrage `ARB-07`. L'adresse d'un éventuel webhook restera dans une
 variable protégée GitLab et ne sera jamais écrite dans le repository.
+
+## Vérification des scripts
+
+```shell
+bash scripts/ci/tests/test_scripts.sh
+python -m pytest scripts/ci/tests/test_python_scripts.py
+shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
+```
+
+- le premier test vérifie les commandes Bash et leurs erreurs attendues ;
+- le second vérifie le manifeste, la notification et l’indisponibilité d’un webhook ;
+- ShellCheck détecte les erreurs et pratiques fragiles dans les scripts Bash.
+
+Dans GitLab, les tests Python produisent un rapport JUnit consultable depuis la
+merge request et le pipeline.

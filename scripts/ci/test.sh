@@ -2,6 +2,7 @@
 
 set -Eeuo pipefail
 # Charge les fonctions partagées de journalisation et de validation.
+# shellcheck source=scripts/ci/common.sh
 source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
 usage() {
@@ -49,6 +50,7 @@ frontend_tests() {
 }
 
 backend_tests() {
+  require_file "${REPOSITORY_ROOT}/back/gradlew"
   log_info "Exécution des tests backend"
   # Le Gradle Wrapper fournit la même version de Gradle en local et dans GitLab.
   (cd "${REPOSITORY_ROOT}/back" && ./gradlew --no-daemon test)

@@ -3,7 +3,7 @@ test:frontend:
   image: cypress/browsers:node-20.10.0-chrome-121.0.6167.85-1-ff-118.0.2-edge-118.0.2088.46-1
   stage: test
   script:
-    - CHROME_BIN=/opt/google/chrome/chrome npm test -- --no-watch --no-progress --browsers=ChromeHeadlessNoSandbox --code-coverage
+    - CHROME_BIN=/opt/google/chrome/chrome bash scripts/ci/test.sh --component frontend
   coverage: '/Statements\s*:\s*([\d.]+)%/'
   artifacts:
     when: always
@@ -15,7 +15,7 @@ test:backend:
   extends: .backend-java
   stage: test
   script:
-    - ./gradlew --no-daemon test
+    - bash scripts/ci/test.sh --component backend
   artifacts:
     when: always
     expire_in: 7 days
@@ -23,3 +23,25 @@ test:backend:
       junit: back/build/test-results/test/*.xml
     paths:
       - back/build/reports/tests/test/
+
+test:scripts:bash:
+  image: node:20.19.5-bookworm-slim
+  stage: test
+  script:
+    - bash scripts/ci/tests/test_scripts.sh
+
+test:scripts:python:
+  image: python:3.12.11-slim
+  stage: test
+  before_script:
+    - python -m pip install --disable-pip-version-check --no-cache-dir -r scripts/ci/requirements-test.txt
+  script:
+    - mkdir -p .ci/reports
+    - python -m pytest scripts/ci/tests/test_python_scripts.py --junitxml=.ci/reports/scripts-python.xml
+  artifacts:
+    when: always
+    expire_in: 7 days
+    reports:
+      junit: .ci/reports/scripts-python.xml
+    paths:
+      - .ci/reports/scripts-python.xml

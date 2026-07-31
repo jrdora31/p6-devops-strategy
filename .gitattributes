@@ -1,0 +1,4 @@
+# Les scripts Bash sont exécutés par des runners Linux et doivent rester en LF,
+# même lorsque le repository est modifié depuis Windows.
+scripts/ci/*.sh text eol=lf
+scripts/ci/tests/*.sh text eol=lf
