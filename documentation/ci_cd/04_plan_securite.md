@@ -1,11 +1,14 @@
 # Plan de sécurité
 
+Ce plan vise à détecter les défauts et vulnérabilités avant la release, protéger
+les secrets utilisés par la CI et conserver une preuve de chaque contrôle.
+
 ## Risques et traitements
 
 | Faiblesse observée | Preuve / emplacement | Risque | Traitement | État |
 |---|---|---|---|---|
 | Les dépendances ne font l’objet d’aucun contrôle dédié dans la CI. | Aucun job de scan dans `.gitlab/ci/` ; 64 alertes npm consignées dans l’audit. | Une dépendance vulnérable peut être livrée. | Ajouter les scans des dépendances frontend et backend. | À faire |
-| L’analyse automatique du code et des images n’est pas encore entièrement validée. | Le job `quality:sonarqube` a réussi dans la pipeline `#2721562540` avec un quality gate passé ; aucun job Trivy n’est encore présent. | Une faille peut être découverte après la publication. | Conserver SonarQube sur les merge requests et `main`, puis ajouter Trivy avant la publication des images. | SonarQube validé sur MR ; baseline `main` et Trivy à faire |
+| L’analyse automatique du code et des images n’est pas encore entièrement validée. | Le job `quality:sonarqube` a réussi dans la pipeline `#2721899884` avec un quality gate passé ; aucun job Trivy n’est encore présent. | Une faille peut être découverte après la publication. | Conserver SonarQube sur les merge requests et `main`, puis ajouter Trivy avant la publication des images. | SonarQube validé sur MR ; baseline `main` et Trivy à faire |
 | Aucun contrôle automatique des secrets n’est présent dans la CI cible. | Aucun job de détection de secrets dans `.gitlab/ci/`. | Un secret publié peut compromettre la registry ou un environnement. | Scanner le repository et révoquer immédiatement tout secret exposé. | À faire |
 | Les images utilisées par la CI ne sont pas épinglées par digest. | Tags complets dans `.gitlab/ci/common.yml`, mais aucune référence `@sha256`. | Une image amont peut changer sans modification du repository. | Enregistrer puis utiliser les digests des images CI validées. | Partiel |
 | Tous les conteneurs ne sont pas encore non privilégiés. | `USER microcrm` dans `misc/docker/backend.Dockerfile` ; aucun `USER` explicite dans l’image frontend. | Une compromission peut disposer de privilèges excessifs. | Vérifier l’utilisateur runtime de Caddy et imposer un compte non privilégié lorsque nécessaire. | Partiel |
@@ -13,6 +16,22 @@
 | Les données ne sont pas persistantes. | HSQLDB dans `back/build.gradle` ; aucune datasource persistante configurée. | Les données disparaissent avec le conteneur. | Définir la persistance, le backup et le restore. | Partie 2 |
 | Le routage et la santé des services ne sont pas automatisés. | URL `localhost:8080` dans le frontend et aucun healthcheck dans les images runtime. | Une release peut être déclarée réussie alors que l’application est indisponible. | Externaliser la route API, ajouter des healthchecks et automatiser les smoke tests. | À faire |
 | Un script d’automatisation peut recevoir une valeur invalide, exposer un secret ou déclencher une action externe non maîtrisée. | `scripts/ci/` contient les commandes de backup, release et notification ; pipeline `#2721317021`. | Le pipeline peut produire un résultat incorrect, divulguer une donnée ou modifier une cible inattendue. | Valider les paramètres, imposer le dry-run du backup en partie 1, lire les webhooks depuis l’environnement, tester les erreurs et exécuter ShellCheck. | Validé en CI : 7 tests Bash, 5 tests Python et ShellCheck |
+
+## Contrôles, outils et preuves
+
+| Contrôle | Outil ou job | Fréquence | Critère | Preuve | État |
+|---|---|---|---|---|---|
+| Analyse du code | SonarQube Cloud — `quality:sonarqube` | Merge requests et `main` | Quality gate réussi | Dashboard SonarQube et pipeline `#2721899884` | Actif |
+| Analyse des scripts Bash | ShellCheck — `quality:shellcheck` | MR, `dev`, `main` et tags | Aucun diagnostic | Log GitLab | Actif |
+| Tests des scripts | Bash et pytest | MR, `dev`, `main` et tags | Tous les tests réussissent | Logs et rapport JUnit pytest | Actif |
+| Dépendances | Scanner à intégrer | À chaque changement et contrôle planifié | Aucune nouvelle vulnérabilité bloquante | Rapport GitLab | À faire |
+| Secrets | Scanner à intégrer | À chaque changement | Aucun secret confirmé | Rapport GitLab | À faire |
+| Images | Trivy avant publication | `main` et tags | Aucune nouvelle vulnérabilité bloquante | Rapport Trivy relié à l’image | À faire |
+
+SonarJava analyse les classes compilées et les rapports JaCoCo, mais signale
+l’absence du classpath complet des dépendances. Certains imports et types sont
+donc résolus avec moins de précision ; cette limite est conservée avec la preuve
+du quality gate au lieu d’être masquée.
 
 ## Inventaire des secrets
 

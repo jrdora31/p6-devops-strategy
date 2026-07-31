@@ -108,6 +108,42 @@ cd back
 ./gradlew test
 ```
 
+#### Tests automatisés dans GitLab CI
+
+La pipeline exécute les tests du frontend, du backend et des scripts à chaque
+merge request ainsi que sur `dev`, `main` et les tags.
+
+L’exécution locale nécessite Bash, Python avec les dépendances de test,
+ShellCheck et Chrome ou Chromium. Si le navigateur n’est pas détecté,
+`CHROME_BIN` doit contenir le chemin de son exécutable.
+
+Depuis la racine du repository, les mêmes tests peuvent être lancés avec :
+
+```shell
+bash scripts/ci/test.sh --component frontend
+bash scripts/ci/test.sh --component backend
+bash scripts/ci/tests/test_scripts.sh
+python -m pip install -r scripts/ci/requirements-test.txt
+python -m pytest scripts/ci/tests/test_python_scripts.py
+shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
+```
+
+| Job GitLab | Vérification | Résultat conservé |
+|---|---|---|
+| `test:frontend` | Tests Angular et couverture | Rapport de couverture HTML et LCOV |
+| `test:backend` | Tests JUnit et couverture | Rapport JUnit, rapport HTML et JaCoCo XML |
+| `test:scripts:bash` | Commandes Bash, erreurs et dry-run | Log du job |
+| `test:scripts:python` | Manifeste et notification | Rapport JUnit pytest |
+| `quality:shellcheck` | Analyse statique des scripts Bash | Log du job |
+| `quality:sonarqube` | Qualité, sécurité et couverture du code | Dashboard SonarQube et quality gate |
+
+Avec SonarQube Cloud Free, `quality:sonarqube` s’exécute sur les merge requests
+et sur `main`, mais pas sur les push directs vers `dev`.
+
+Le détail des scripts se trouve dans [`scripts/ci/README.md`](scripts/ci/README.md)
+et la matrice complète dans
+[`documentation/ci_cd/05_plan_tests_automatises.md`](documentation/ci_cd/05_plan_tests_automatises.md).
+
 ### Images Docker
 
 #### Client
