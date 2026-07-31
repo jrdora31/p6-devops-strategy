@@ -1,0 +1,26 @@
+release:images:
+  extends: .docker-job
+  stage: release
+  needs:
+    - job: build:image:frontend
+      artifacts: true
+    - job: build:image:backend
+      artifacts: true
+  script:
+    - docker load --input .ci/images/frontend.tar
+    - docker load --input .ci/images/backend.tar
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
+    - docker push "$FRONTEND_IMAGE"
+    - docker push "$BACKEND_IMAGE"
+    - mkdir -p .ci/release
+    - docker image inspect "$FRONTEND_IMAGE" --format 'FRONTEND_IMAGE_DIGEST={{index .RepoDigests 0}}' > .ci/release/images.env
+    - docker image inspect "$BACKEND_IMAGE" --format 'BACKEND_IMAGE_DIGEST={{index .RepoDigests 0}}' >> .ci/release/images.env
+  artifacts:
+    expire_in: 30 days
+    reports:
+      dotenv: .ci/release/images.env
+    paths:
+      - .ci/release/images.env
+  rules:
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
