@@ -89,6 +89,7 @@ flowchart TB
 ## Règles de circulation
 
 - une merge request exécute `test → quality → build` ;
+- avec SonarQube Cloud Free, le job `quality:sonarqube` analyse les merge requests et `main`, mais pas les push directs sur `dev` ;
 - `release` publie uniquement depuis la branche principale ou un tag autorisé ;
 - `deploy` consomme les images et le manifeste produits par la release ;
 - le frontend rejoint le backend par un nom de service, sans adresse IP codée en dur ;

@@ -88,6 +88,8 @@ La nouvelle CI sera organisée dans l’ordre suivant :
 
 Les contrôles rapides sont placés dans les premiers jobs afin d’interrompre tôt un pipeline invalide. La syntaxe CI est vérifiée par GitLab avant la création du pipeline ; les linters et validations de scripts sont donc exécutés dans `test` ou `quality`, sans stage supplémentaire. Les livrables sont construits une seule fois. Le stage `release` scanne les images avant de les publier ; le deployment utilise ainsi une version testée, contrôlée et traçable.
 
+Les pipelines sont créés pour les merge requests, `dev`, `main` et les tags. Avec le plan SonarQube Cloud Free, l’analyse SonarQube s’exécute uniquement sur les merge requests et sur `main` : les push directs sur `dev` conservent les tests et builds, mais pas l’analyse de branche SonarQube. Les changements destinés à être intégrés doivent donc passer par une merge request.
+
 #### Organisation de la configuration
 
 ```text
@@ -127,7 +129,7 @@ Le template Auto DevOps de GitLab sert de référence pour la modularité, les i
 | Frontend | Angular `17.3.8`, TypeScript `5.4.5`, RxJS `7.8.1` | Conserver les versions du `package-lock.json`. Utiliser Node `20.19.5` pour le build et une image Cypress épinglée avec Node `20.10.0` pour les tests avec Chrome ; les deux versions appartiennent à la plage supportée par Angular 17.3. Planifier ensuite la mise à niveau d’Angular car cette version n’est plus supportée. |
 | Backend | Spring Boot `3.2.5`, Gradle Wrapper `8.7`, code Java `17` | Exécuter Gradle avec un JDK `21` et conserver la cible Java `17`. Cette combinaison est supportée par Spring Boot 3.2.5 et Gradle 8.7. |
 | Tests | Karma/Jasmine et JUnit | Produire des rapports JUnit XML pour GitLab. Conserver LCOV pour la couverture frontend destinée à SonarQube ; ajouter JaCoCo XML pour le backend. |
-| SonarQube Cloud | Scanner non encore configuré | Épingler le scanner lors de son intégration et conserver l’auto-provisioning du JRE. TypeScript 5.4 et LCOV sont supportés. |
+| SonarQube Cloud | Scanner CLI `12.1.0.3233_8.0.1` | Conserver l’image épinglée, importer LCOV et JaCoCo, puis appliquer le quality gate sur les merge requests et `main`. Le plan Free ne fournit pas l’analyse directe de `dev`. |
 | Images CI | Tags flottants dans la CI auditée | La CI cible utilise des tags complets pour Node, Cypress, Java et Docker. Leurs digests seront enregistrés après validation dans GitLab. |
 | GitLab Runner | Version non observée | Vérifier l’executor, sa version et la prise en charge de Docker lors du premier pipeline cible. |
 
@@ -154,7 +156,7 @@ Le schéma cible sépare la chaîne GitLab à réaliser en partie 1 du deploymen
 | Stage | Fréquence | Validation attendue | Échec contrôlé | Preuve conservée |
 |---|---|---|---|---|
 | `test` | Merge request, `main` et tag | Tests frontend, backend et scripts réussis | Test volontairement mis en échec sur une branche dédiée | Rapports JUnit XML et couverture |
-| `quality` | Merge request, `main` et tag | Quality gate et scans conformes à la politique retenue | Anomalie ou secret factice détecté dans une fixture de test | Résultats SonarQube et rapports de sécurité |
+| `quality` | Merge request et `main` pour SonarQube ; autres contrôles selon le pipeline | Quality gate et scans conformes à la politique retenue | Anomalie ou secret factice détecté dans une fixture de test | Résultats SonarQube et rapports de sécurité |
 | `build` | Merge request, `main` et tag | Build Angular, JAR et images construits | Erreur de compilation ou configuration invalide dans une branche dédiée | Artifacts, logs et smoke tests des images |
 | `release` | `main` et tag | Images scannées, publiées et reliées au commit | Métadonnée de release invalide ou scan bloquant | Rapport de scan, tags, digests et manifeste |
 | `deploy` | Déclenchement protégé en partie 2 | Chart Helm valide et deployment terminé | Valeurs Helm invalides testées sans modifier l’environnement | Résultat de `helm lint`, dry-run et statut du rollout |

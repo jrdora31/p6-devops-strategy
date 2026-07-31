@@ -37,6 +37,7 @@ validate_component "$component"
 
 frontend_tests() {
   require_command npm
+  require_command sed
   log_info "Exécution des tests frontend"
   # Le mode headless permet d'exécuter Angular sans fenêtre graphique dans la CI.
   (
@@ -47,6 +48,13 @@ frontend_tests() {
       --browsers=ChromeHeadlessNoSandbox \
       --code-coverage
   )
+
+  # Karma écrit des chemins relatifs au dossier front. Le scanner SonarQube
+  # s'exécute depuis la racine du repository et attend donc le préfixe front/.
+  local lcov_report="${REPOSITORY_ROOT}/front/coverage/microcrm/lcov.info"
+  if [[ -f "${lcov_report}" ]]; then
+    sed -i -e 's#\\#/#g' -e 's#^SF:src/#SF:front/src/#' "${lcov_report}"
+  fi
 }
 
 backend_tests() {
