@@ -27,12 +27,6 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-def copySonarLibraries = tasks.register('copySonarLibraries', Copy) {
-    // Le scanner CLI a besoin du classpath Spring/JPA pour résoudre les types Java.
-    from configurations.testRuntimeClasspath
-    into layout.buildDirectory.dir('sonar-libraries')
-}
-
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
