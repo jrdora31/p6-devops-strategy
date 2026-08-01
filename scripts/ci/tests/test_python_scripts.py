@@ -32,7 +32,7 @@ def run_script(
     )
 
 
-def manifest_arguments(output: Path, version: str = "v1.2.3") -> list[str]:
+def manifest_arguments(version: str = "v1.2.3") -> list[str]:
     """Construit un jeu d'arguments valide réutilisé dans plusieurs tests."""
     return [
         "--version",
@@ -47,8 +47,6 @@ def manifest_arguments(output: Path, version: str = "v1.2.3") -> list[str]:
         FRONTEND_IMAGE,
         "--backend-image",
         BACKEND_IMAGE,
-        "--output",
-        str(output),
     ]
 
 
@@ -69,11 +67,11 @@ def notification_arguments() -> list[str]:
 
 
 def test_release_manifest_is_written_and_traceable(tmp_path: Path) -> None:
-    output = tmp_path / "release-manifest.json"
+    output = tmp_path / ".ci" / "release" / "release-manifest.json"
 
     result = run_script(
         RELEASE_SCRIPT,
-        *manifest_arguments(output),
+        *manifest_arguments(),
         working_directory=tmp_path,
     )
 
@@ -86,34 +84,16 @@ def test_release_manifest_is_written_and_traceable(tmp_path: Path) -> None:
 
 
 def test_release_manifest_rejects_invalid_semver(tmp_path: Path) -> None:
-    output = tmp_path / "release-manifest.json"
+    output = tmp_path / ".ci" / "release" / "release-manifest.json"
 
     result = run_script(
         RELEASE_SCRIPT,
-        *manifest_arguments(output, version="release-finale"),
+        *manifest_arguments(version="release-finale"),
         working_directory=tmp_path,
     )
 
     assert result.returncode != 0
     assert "SemVer invalide" in result.stderr
-    assert not output.exists()
-
-
-def test_release_manifest_rejects_output_outside_working_directory(
-    tmp_path: Path,
-) -> None:
-    working_directory = tmp_path / "work"
-    working_directory.mkdir()
-    output = tmp_path / "outside-release-manifest.json"
-
-    result = run_script(
-        RELEASE_SCRIPT,
-        *manifest_arguments(output),
-        working_directory=working_directory,
-    )
-
-    assert result.returncode != 0
-    assert "répertoire de travail" in result.stderr
     assert not output.exists()
 
 
@@ -124,26 +104,6 @@ def test_notification_is_only_printed_by_default() -> None:
     payload = json.loads(result.stdout)
     assert payload["status"] == "success"
     assert payload["pipeline"]["id"] == "12345"
-
-
-def test_notification_rejects_output_outside_working_directory(
-    tmp_path: Path,
-) -> None:
-    working_directory = tmp_path / "work"
-    working_directory.mkdir()
-    output = tmp_path / "outside-notification.json"
-
-    result = run_script(
-        NOTIFY_SCRIPT,
-        *notification_arguments(),
-        "--output",
-        str(output),
-        working_directory=working_directory,
-    )
-
-    assert result.returncode != 0
-    assert "répertoire de travail" in result.stderr
-    assert not output.exists()
 
 
 def test_notification_rejects_missing_webhook_variable() -> None:

@@ -21,7 +21,7 @@ L’audit du repository a établi la baseline suivante avant la refonte de la CI
 | Blocage sur erreur | Non démontré | Échec volontaire, pipeline bloquée, puis retour au vert | `#2721003734` et `#2721023911` |
 | Tests frontend | 8 tests | 12 tests, dont les appels HTTP des services | Job `test:frontend` de `#2723639714` |
 | Tests backend | 2 tests | 3 tests, dont un parcours CRUD HTTP complet | Rapport JUnit de `#2723639714` |
-| Scripts | Aucun test dédié | 7 tests Bash, 7 tests Python et ShellCheck | Pipeline du correctif Quality Gate à renseigner |
+| Scripts | Aucun test dédié | 7 tests Bash, 5 tests Python et ShellCheck | Pipeline du correctif Quality Gate à renseigner |
 | Qualité | Aucun contrôle continu | Quality gate réussi ; 0 bug, 0 vulnérabilité, 0 hotspot, 2 code smells et 33,3 % de couverture globale analysée | SonarQube et `#2723633630` |
 | Sécurité du repository | Aucun scan CI | 12 `HIGH`, 0 `CRITICAL`, aucun secret détecté | Artifacts Trivy de `#2723610499` |
 | Disponibilité des images | Aucun healthcheck ni test full-stack automatisé | Deux healthchecks et parcours create/read via Caddy réussis | Job `verify:images` de `#2723610499` |
