@@ -1,3 +1,101 @@
+release:scan:image:frontend:
+  extends: .trivy-job
+  stage: release
+  needs:
+    - job: build:image:frontend
+      artifacts: true
+  script:
+    - mkdir -p .ci/reports/security
+    - >-
+      trivy image
+      --input .ci/images/frontend.tar
+      --scanners vuln
+      --severity HIGH,CRITICAL
+      --ignore-unfixed
+      --format json
+      --output .ci/reports/security/trivy-image-frontend-vulnerabilities.json
+    - >-
+      trivy convert
+      --severity HIGH,CRITICAL
+      --format table
+      --output .ci/reports/security/trivy-image-frontend-vulnerabilities.txt
+      .ci/reports/security/trivy-image-frontend-vulnerabilities.json
+    - >-
+      trivy convert
+      --severity CRITICAL
+      --exit-code 1
+      --format table
+      --output /dev/null
+      .ci/reports/security/trivy-image-frontend-vulnerabilities.json
+    - >-
+      trivy image
+      --input .ci/images/frontend.tar
+      --scanners secret
+      --exit-code 1
+      --format json
+      --output .ci/reports/security/trivy-image-frontend-secrets.json
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - .ci/reports/security/trivy-image-frontend-vulnerabilities.json
+      - .ci/reports/security/trivy-image-frontend-vulnerabilities.txt
+      - .ci/reports/security/trivy-image-frontend-secrets.json
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+release:scan:image:backend:
+  extends: .trivy-job
+  stage: release
+  needs:
+    - job: build:image:backend
+      artifacts: true
+  script:
+    - mkdir -p .ci/reports/security
+    - >-
+      trivy image
+      --input .ci/images/backend.tar
+      --scanners vuln
+      --severity HIGH,CRITICAL
+      --ignore-unfixed
+      --format json
+      --output .ci/reports/security/trivy-image-backend-vulnerabilities.json
+    - >-
+      trivy convert
+      --severity HIGH,CRITICAL
+      --format table
+      --output .ci/reports/security/trivy-image-backend-vulnerabilities.txt
+      .ci/reports/security/trivy-image-backend-vulnerabilities.json
+    - >-
+      trivy convert
+      --severity CRITICAL
+      --exit-code 1
+      --format table
+      --output /dev/null
+      .ci/reports/security/trivy-image-backend-vulnerabilities.json
+    - >-
+      trivy image
+      --input .ci/images/backend.tar
+      --scanners secret
+      --exit-code 1
+      --format json
+      --output .ci/reports/security/trivy-image-backend-secrets.json
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - .ci/reports/security/trivy-image-backend-vulnerabilities.json
+      - .ci/reports/security/trivy-image-backend-vulnerabilities.txt
+      - .ci/reports/security/trivy-image-backend-secrets.json
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
 release:images:
   extends: .docker-job
   stage: release
@@ -6,6 +104,10 @@ release:images:
       artifacts: true
     - job: build:image:backend
       artifacts: true
+    - job: release:scan:image:frontend
+      artifacts: false
+    - job: release:scan:image:backend
+      artifacts: false
   script:
     - docker load --input .ci/images/frontend.tar
     - docker load --input .ci/images/backend.tar

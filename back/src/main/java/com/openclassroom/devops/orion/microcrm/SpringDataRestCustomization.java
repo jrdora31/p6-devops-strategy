@@ -11,11 +11,6 @@ public class SpringDataRestCustomization implements RepositoryRestConfigurer {
     @Override
     public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
         config.exposeIdsFor(Person.class, Organization.class);
-        cors.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "POST", "PATCH", "DELETE")
-                .exposedHeaders("Access-Control-Allow-Origin")
-                .allowCredentials(false).maxAge(3600);
         RepositoryRestConfigurer.super.configureRepositoryRestConfiguration(config, cors);
     }
 }

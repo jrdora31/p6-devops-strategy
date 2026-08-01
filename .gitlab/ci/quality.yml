@@ -6,6 +6,59 @@ quality:shellcheck:
   script:
     - shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
 
+quality:trivy:repository:
+  extends: .trivy-job
+  stage: quality
+  script:
+    - mkdir -p .ci/reports/security
+    - >-
+      trivy filesystem
+      --scanners vuln
+      --severity HIGH,CRITICAL
+      --ignore-unfixed
+      --skip-dirs "$TRIVY_CACHE_DIR"
+      --skip-dirs .git
+      --skip-dirs front/.angular
+      --skip-dirs front/node_modules
+      --skip-dirs front/dist
+      --skip-dirs back/build
+      --format json
+      --output .ci/reports/security/trivy-repository-vulnerabilities.json
+      .
+    - >-
+      trivy convert
+      --severity HIGH,CRITICAL
+      --format table
+      --output .ci/reports/security/trivy-repository-vulnerabilities.txt
+      .ci/reports/security/trivy-repository-vulnerabilities.json
+    - >-
+      trivy convert
+      --severity CRITICAL
+      --exit-code 1
+      --format table
+      --output /dev/null
+      .ci/reports/security/trivy-repository-vulnerabilities.json
+    - >-
+      trivy filesystem
+      --scanners secret
+      --skip-dirs "$TRIVY_CACHE_DIR"
+      --skip-dirs .git
+      --skip-dirs front/.angular
+      --skip-dirs front/node_modules
+      --skip-dirs front/dist
+      --skip-dirs back/build
+      --exit-code 1
+      --format json
+      --output .ci/reports/security/trivy-repository-secrets.json
+      .
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - .ci/reports/security/trivy-repository-vulnerabilities.json
+      - .ci/reports/security/trivy-repository-vulnerabilities.txt
+      - .ci/reports/security/trivy-repository-secrets.json
+
 quality:sonarqube:
   image:
     name: sonarsource/sonar-scanner-cli:12.1.0.3233_8.0.1
