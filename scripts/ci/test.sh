@@ -61,7 +61,9 @@ backend_tests() {
   require_file "${REPOSITORY_ROOT}/back/gradlew"
   log_info "Exécution des tests backend"
   # Le Gradle Wrapper fournit la même version de Gradle en local et dans GitLab.
-  (cd "${REPOSITORY_ROOT}/back" && ./gradlew --no-daemon test)
+  # prepareSonarAnalysis rassemble ensuite les classes et dependances dont
+  # SonarQube a besoin pour analyser correctement le code Java et ses tests.
+  (cd "${REPOSITORY_ROOT}/back" && ./gradlew --no-daemon test prepareSonarAnalysis)
 }
 
 # Lance uniquement le composant demandé, ou les deux avec --component all.

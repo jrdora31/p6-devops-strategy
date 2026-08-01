@@ -39,3 +39,21 @@ jacocoTestReport {
         html.required = true
     }
 }
+
+// Copie les dependances deja resolues par Gradle dans des dossiers transmis
+// au scanner SonarQube. Le scanner peut ainsi resoudre les types utilises par
+// le code principal et les tests sans dependre du cache interne de Gradle.
+tasks.register('sonarMainLibraries', Sync) {
+	from configurations.compileClasspath
+	into layout.buildDirectory.dir('sonar-libraries/main')
+}
+
+tasks.register('sonarTestLibraries', Sync) {
+	// Les dependances principales sont deja presentes dans le dossier main.
+	from(configurations.testCompileClasspath - configurations.compileClasspath)
+	into layout.buildDirectory.dir('sonar-libraries/test')
+}
+
+tasks.register('prepareSonarAnalysis') {
+	dependsOn classes, testClasses, sonarMainLibraries, sonarTestLibraries
+}
