@@ -1,16 +1,22 @@
+# Construit les fichiers statiques Angular après la réussite des tests frontend.
 build:frontend:
+  # Hérite de l'image Node, du cache npm et de l'installation des dépendances.
   extends: .frontend-node
   stage: build
   needs:
+    # `needs` crée une dépendance explicite et peut raccourcir le pipeline.
     - job: test:frontend
+      # Le build relance sa propre compilation et n'utilise pas les rapports du test.
       artifacts: false
   script:
     - bash scripts/ci/build.sh --component frontend
   artifacts:
+    # Ces fichiers servent seulement aux jobs suivants, pas à un archivage durable.
     expire_in: 1 day
     paths:
       - front/dist/microcrm/browser/
 
+# Produit le JAR Spring Boot utilisé ensuite pour fabriquer l'image backend.
 build:backend:
   extends: .backend-java
   stage: build
@@ -24,21 +30,27 @@ build:backend:
     paths:
       - back/build/libs/microcrm-0.0.1-SNAPSHOT.jar
 
+# Transforme l'artifact Angular en image Caddy sans recompiler le frontend.
 build:image:frontend:
   extends: .docker-job
   stage: build
   needs:
     - job: build:frontend
+      # Télécharge automatiquement `front/dist/...` depuis le job précédent.
       artifacts: true
   script:
+    # `--pull` vérifie l'image de base ; le fichier Docker spécialisé ne contient
+    # que le runtime frontend, contrairement au Dockerfile historique à la racine.
     - docker build --pull --file misc/docker/frontend.Dockerfile --tag "$FRONTEND_IMAGE" .
     - mkdir -p .ci/images
+    # Sauvegarde l'image en archive pour la transmettre sans registre entre stages.
     - docker save --output .ci/images/frontend.tar "$FRONTEND_IMAGE"
   artifacts:
     expire_in: 1 day
     paths:
       - .ci/images/frontend.tar
 
+# Même chaîne pour le JAR backend et son image Java d'exécution.
 build:image:backend:
   extends: .docker-job
   stage: build
