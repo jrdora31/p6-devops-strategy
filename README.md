@@ -111,7 +111,7 @@ cd back
 #### Tests automatisés dans GitLab CI
 
 La pipeline exécute les tests du frontend, du backend et des scripts à chaque
-merge request ainsi que sur `dev`, `main` et les tags.
+merge request ainsi que sur `dev`, `main`, les tags et les pipelines planifiées.
 
 L’exécution locale nécessite Bash, Python avec les dépendances de test,
 ShellCheck et Chrome ou Chromium. Si le navigateur n’est pas détecté,
@@ -130,15 +130,23 @@ shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
 
 | Job GitLab | Vérification | Résultat conservé |
 |---|---|---|
-| `test:frontend` | Tests Angular et couverture | Rapport de couverture HTML et LCOV |
-| `test:backend` | Tests JUnit et couverture | Rapport JUnit, rapport HTML et JaCoCo XML |
+| `test:frontend` | Tests Angular, dont les échanges HTTP simulés, et couverture | Rapport de couverture HTML et LCOV |
+| `test:backend` | Tests JUnit du contexte, du repository et du CRUD HTTP | Rapport JUnit, rapport HTML et JaCoCo XML |
 | `test:scripts:bash` | Commandes Bash, erreurs et dry-run | Log du job |
 | `test:scripts:python` | Manifeste et notification | Rapport JUnit pytest |
 | `quality:shellcheck` | Analyse statique des scripts Bash | Log du job |
 | `quality:sonarqube` | Qualité, sécurité et couverture du code | Dashboard SonarQube et quality gate |
+| `quality:trivy:repository` | Vulnérabilités des dépendances et secrets | Rapports Trivy JSON et texte |
+| `release:scan:image:frontend` | Vulnérabilités de l’image frontend avant publication | Rapports Trivy JSON et texte |
+| `release:scan:image:backend` | Vulnérabilités de l’image backend avant publication | Rapports Trivy JSON et texte |
 
 Avec SonarQube Cloud Free, `quality:sonarqube` s’exécute sur les merge requests
 et sur `main`, mais pas sur les push directs vers `dev`.
+
+Les jobs Trivy conservent les vulnérabilités élevées et critiques dans leurs
+rapports. Une erreur du scanner, un secret détecté ou une vulnérabilité critique
+corrigible fait échouer le job ; les vulnérabilités élevées existantes restent
+visibles pour un traitement progressif.
 
 Le détail des scripts se trouve dans [`scripts/ci/README.md`](scripts/ci/README.md)
 et la matrice complète dans
@@ -157,10 +165,11 @@ docker build --target front -t orion-microcrm-front:latest .
 ##### Exécuter l'image
 
 ```shell
-docker run -it --rm -p 80:80 -p 443:443 orion-microcrm-front:latest
+docker run -it --rm -p 80:80 orion-microcrm-front:latest
 ```
 
-L'application sera disponible sur https://localhost.
+L'application sera disponible sur http://localhost. En environnement déployé,
+HTTPS sera terminé par le point d'entrée du cluster.
 
 #### Serveur
 

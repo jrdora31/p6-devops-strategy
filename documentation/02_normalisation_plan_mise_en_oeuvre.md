@@ -127,7 +127,7 @@ Le template Auto DevOps de GitLab sert de référence pour la modularité, les i
 | Élément | Version du repository | Décision pour la CI |
 |---|---|---|
 | Frontend | Angular `17.3.8`, TypeScript `5.4.5`, RxJS `7.8.1` | Conserver les versions du `package-lock.json`. Utiliser Node `20.19.5` pour le build et une image Cypress épinglée avec Node `20.10.0` pour les tests avec Chrome ; les deux versions appartiennent à la plage supportée par Angular 17.3. Planifier ensuite la mise à niveau d’Angular car cette version n’est plus supportée. |
-| Backend | Spring Boot `3.2.5`, Gradle Wrapper `8.7`, code Java `17` | Exécuter Gradle avec un JDK `21` et conserver la cible Java `17`. Cette combinaison est supportée par Spring Boot 3.2.5 et Gradle 8.7. |
+| Backend | Spring Boot `3.5.16`, Gradle Wrapper `8.7`, code Java `17` | Exécuter Gradle avec un JDK `21` et conserver la cible Java `17`. Cette combinaison est supportée par Spring Boot 3.5.16 et Gradle 8.7. |
 | Tests | Karma/Jasmine et JUnit | Produire des rapports JUnit XML pour GitLab. Conserver LCOV pour la couverture frontend destinée à SonarQube ; ajouter JaCoCo XML pour le backend. |
 | SonarQube Cloud | Scanner CLI `12.1.0.3233_8.0.1` | Conserver l’image épinglée, importer LCOV et JaCoCo, puis appliquer le quality gate sur les merge requests et `main`. Le plan Free ne fournit pas l’analyse directe de `dev`. |
 | Images CI | Tags flottants dans la CI auditée | La CI cible utilise des tags complets pour Node, Cypress, Java et Docker. Leurs digests seront enregistrés après validation dans GitLab. |
@@ -135,7 +135,7 @@ Le template Auto DevOps de GitLab sert de référence pour la modularité, les i
 
 La machine locale utilise Node `24.14.0`, qui n’est pas dans la plage supportée par Angular 17.3. Les commandes frontend devront donc être exécutées dans l’image CI compatible, et non dépendre de la version installée sur le poste.
 
-Références de compatibilité : [Angular](https://angular.dev/reference/versions), [Spring Boot 3.2.5](https://docs.spring.io/spring-boot/docs/3.2.5/reference/html/getting-started.html#getting-started.system-requirements), [Gradle](https://docs.gradle.org/current/userguide/compatibility.html), [rapports JUnit GitLab](https://docs.gitlab.com/ci/testing/unit_test_reports/) et [SonarQube Cloud](https://docs.sonarsource.com/sonarqube-cloud/advanced-setup/scanner-environment/general-requirements/).
+Références de compatibilité : [Angular](https://angular.dev/reference/versions), [Spring Boot 3.5](https://docs.spring.io/spring-boot/3.5/system-requirements.html), [Gradle](https://docs.gradle.org/current/userguide/compatibility.html), [rapports JUnit GitLab](https://docs.gitlab.com/ci/testing/unit_test_reports/) et [SonarQube Cloud](https://docs.sonarsource.com/sonarqube-cloud/advanced-setup/scanner-environment/general-requirements/).
 
 #### Architecture avant/après
 
@@ -162,7 +162,7 @@ Le schéma cible sépare la chaîne GitLab à réaliser en partie 1 du deploymen
 | `deploy` | Déclenchement protégé en partie 2 | Chart Helm valide et deployment terminé | Valeurs Helm invalides testées sans modifier l’environnement | Résultat de `helm lint`, dry-run et statut du rollout |
 | `verify` | Après chaque deployment | Frontend, API et communication entre services disponibles | Endpoint de test volontairement indisponible | Rapports de smoke tests, tests API et mesures |
 
-Les échecs seront provoqués uniquement dans une branche, une fixture ou un dry-run contrôlé. Les seuils de couverture, de quality gate et de vulnérabilités seront définis en `I` à partir des premières mesures.
+Les échecs sont provoqués uniquement dans une branche, une fixture ou un dry-run contrôlé. Le quality gate SonarQube et le blocage des vulnérabilités `CRITICAL` corrigibles ont été définis en `I` à partir des premières mesures ; la couverture reste suivie sans seuil arbitraire.
 
 ### 2.7 Sécurité
 

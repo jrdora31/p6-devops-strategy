@@ -1,0 +1,21 @@
+verify:images:
+  extends: .docker-job
+  stage: verify
+  needs:
+    - job: build:image:frontend
+      artifacts: true
+    - job: build:image:backend
+      artifacts: true
+    - job: release:scan:image:frontend
+      artifacts: false
+      optional: true
+    - job: release:scan:image:backend
+      artifacts: false
+      optional: true
+  script:
+    - docker load --input .ci/images/frontend.tar
+    - docker load --input .ci/images/backend.tar
+    - >-
+      sh scripts/ci/smoke.sh
+      --frontend-image "$FRONTEND_IMAGE"
+      --backend-image "$BACKEND_IMAGE"
