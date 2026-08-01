@@ -13,22 +13,24 @@ L’audit du repository a établi la baseline suivante avant la refonte de la CI
 | Livraison | Aucun artifact durable, image publiée ou manifeste de release |
 | Production | Aucun deployment AWS observable |
 
-## Résultats de la partie 1
+## Comparaison avant/après la partie 1
 
-| Indicateur | Résultat vérifié | Preuve |
-|---|---|---|
-| Pipeline CI | Pipeline modulaire de bout en bout jusqu’au build et à la préparation de release | GitLab `#2721992698` |
-| Blocage sur erreur | Échec volontaire puis retour au vert | GitLab `#2721003734` et `#2721023911` |
-| Tests frontend | 12 tests réussis localement, dont des contrôles HTTP | Résultat local du 31 juillet 2026 ; validation GitLab attendue |
-| Tests backend | 3 tests réussis localement, dont un CRUD HTTP complet | Rapport JUnit local du 31 juillet 2026 ; validation GitLab attendue |
-| Scripts | 7 tests Bash, 5 tests Python et ShellCheck réussis | GitLab `#2721317021` |
-| Qualité | Quality gate SonarQube réussi | GitLab `#2721899884` et dashboard SonarQube |
-| Sécurité du repository | Baseline locale Trivy : 12 vulnérabilités `HIGH`, 0 `CRITICAL`, aucun secret détecté | Scan Trivy local du 31 juillet 2026 |
-| Disponibilité des images | Deux healthchecks réussis et appel API via le reverse proxy | Smoke test Docker local du 31 juillet 2026 |
-| Sécurité des images | Frontend : 10 `HIGH`, 0 `CRITICAL` ; backend : 4 `HIGH`, 0 `CRITICAL` ; aucun secret détecté après durcissement | Scans Trivy locaux du 31 juillet 2026 ; confirmation GitLab attendue |
+| Indicateur | Avant | Après | Preuve |
+|---|---|---|---|
+| Pipeline CI | 2 stages et 4 jobs de test/build | Pipeline modulaire : tests, qualité, sécurité, builds, scans de release et vérification des images | MR `#2723633630` et pipeline `dev` `#2723639714` |
+| Blocage sur erreur | Non démontré | Échec volontaire, pipeline bloquée, puis retour au vert | `#2721003734` et `#2721023911` |
+| Tests frontend | 8 tests | 12 tests, dont les appels HTTP des services | Job `test:frontend` de `#2723639714` |
+| Tests backend | 2 tests | 3 tests, dont un parcours CRUD HTTP complet | Rapport JUnit de `#2723639714` |
+| Scripts | Aucun test dédié | 7 tests Bash, 5 tests Python et ShellCheck | `#2723639714` |
+| Qualité | Aucun contrôle continu | Quality gate réussi ; 0 bug, 0 vulnérabilité, 0 hotspot, 2 code smells et 33,3 % de couverture globale analysée | SonarQube et `#2723633630` |
+| Sécurité du repository | Aucun scan CI | 12 `HIGH`, 0 `CRITICAL`, aucun secret détecté | Artifacts Trivy de `#2723610499` |
+| Disponibilité des images | Aucun healthcheck ni test full-stack automatisé | Deux healthchecks et parcours create/read via Caddy réussis | Job `verify:images` de `#2723610499` |
+| Sécurité des images | Frontend : 64 `HIGH` et 6 `CRITICAL` ; backend : 37 `HIGH` et 6 `CRITICAL` | Frontend : 10 `HIGH`, 0 `CRITICAL` ; backend : 3 `HIGH`, 0 `CRITICAL` ; aucun secret | Artifacts Trivy de `#2723610499` |
+| Livraison | Aucun artifact durable, image publiée ou manifeste | Artifacts et images identifiées par commit ; manifeste prévu pour le tag SemVer final | Jobs de release et plan de release |
 
-Les résultats Trivy seront confirmés par le pipeline de validation. Aucune
-valeur non observée n’est estimée.
+Toutes les valeurs de la colonne « après » proviennent d’une exécution locale
+ou GitLab observable. La référence `main` et le manifeste SemVer seront ajoutés
+après la release finale de la partie 1.
 
 Avant durcissement, l’image frontend contenait 64 vulnérabilités `HIGH` et 6
 `CRITICAL`, contre 37 `HIGH` et 6 `CRITICAL` pour l’image backend. La mise à

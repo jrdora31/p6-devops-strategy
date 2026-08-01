@@ -400,7 +400,7 @@ Les solutions proposées ci-dessous résultent de l’audit et de la veille. Leu
 
 - **Description :** intégrer dans la CI les contrôles des dépendances, des secrets et des images.
 - **Raisonnement :** les contrôles sont actuellement absents de la CI ou réalisés tardivement et manuellement.
-- **Implémentation :** utiliser `npm audit` pour le frontend, OWASP Dependency-Check pour le backend et GitLab Container Scanning avec Trivy pour les images ; ajouter un contrôle des secrets compatible avec le tier GitLab.
+- **Implémentation :** utiliser Trivy directement pour les dépendances, les secrets et les images, puis conserver les rapports comme artifacts GitLab. Cette solution couvre les composants frontend et backend sans dépendre des fonctions Ultimate de GitLab.
 - **Impacts :** détecter plus tôt les vulnérabilités et conserver des résultats liés au commit contrôlé.
 
 #### 4.2.2 Conserver les rapports et les artifacts
