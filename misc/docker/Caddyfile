@@ -1,6 +1,12 @@
-* {
-	root * /app/front
-	encode gzip
-	try_files {path} /index.html
-	file_server
+:80 {
+	handle_path /api/* {
+		reverse_proxy backend:8080
+	}
+
+	handle {
+		root * /app/front
+		encode gzip
+		try_files {path} /index.html
+		file_server
+	}
 }

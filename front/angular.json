@@ -60,7 +60,8 @@
               "buildTarget": "microcrm:build:production"
             },
             "development": {
-              "buildTarget": "microcrm:build:development"
+              "buildTarget": "microcrm:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

@@ -108,50 +108,70 @@ cd back
 ./gradlew test
 ```
 
+#### Tests automatisés dans GitLab CI
+
+La pipeline exécute les tests du frontend, du backend et des scripts à chaque
+merge request ainsi que sur `dev`, `main`, les tags et les pipelines planifiés.
+
+L’exécution locale nécessite Bash, Python avec les dépendances de test,
+ShellCheck et Chrome ou Chromium. Si le navigateur n’est pas détecté,
+`CHROME_BIN` doit contenir le chemin de son exécutable.
+
+Depuis la racine du repository, les mêmes tests peuvent être lancés avec :
+
+```shell
+bash scripts/ci/test.sh --component frontend
+bash scripts/ci/test.sh --component backend
+bash scripts/ci/tests/test_scripts.sh
+python -m pip install -r scripts/ci/requirements-test.txt
+python -m pytest scripts/ci/tests/test_python_scripts.py
+shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
+```
+
+| Job GitLab | Vérification | Résultat conservé |
+|---|---|---|
+| `test:frontend` | Tests Angular, dont les échanges HTTP simulés, et couverture | Rapport de couverture HTML et LCOV |
+| `test:backend` | Tests JUnit du contexte, du repository et du CRUD HTTP | Rapport JUnit, rapport HTML et JaCoCo XML |
+| `test:scripts:bash` | Commandes Bash, erreurs et dry-run | Log du job |
+| `test:scripts:python` | Manifeste et notification | Rapport JUnit pytest |
+| `quality:shellcheck` | Analyse statique des scripts Bash | Log du job |
+| `quality:sonarqube` | Qualité, sécurité et couverture du code | Dashboard SonarQube et quality gate |
+| `quality:trivy:repository` | Vulnérabilités des dépendances et secrets | Rapports Trivy JSON et texte |
+| `release:scan:image:frontend` | Vulnérabilités de l’image frontend avant publication | Rapports Trivy JSON et texte |
+| `release:scan:image:backend` | Vulnérabilités de l’image backend avant publication | Rapports Trivy JSON et texte |
+
+Avec SonarQube Cloud Free, `quality:sonarqube` s’exécute sur les merge requests
+et sur `main`, mais pas sur les push directs vers `dev`.
+
+Les jobs Trivy conservent les vulnérabilités élevées et critiques dans leurs
+rapports. Une erreur du scanner, un secret détecté ou une vulnérabilité critique
+corrigible fait échouer le job ; les vulnérabilités élevées existantes restent
+visibles pour un traitement progressif.
+
+Le détail des scripts se trouve dans [`scripts/ci/README.md`](scripts/ci/README.md)
+et la matrice complète dans
+[`documentation/ci_cd/05_plan_tests_automatises.md`](documentation/ci_cd/05_plan_tests_automatises.md).
+
 ### Images Docker
 
-#### Client
-
-##### Construire l'image
-
-```shell
-docker build --target front -t orion-microcrm-front:latest .
-```
-
-##### Exécuter l'image
+La CI construit deux images distinctes. Les builds applicatifs doivent être
+produits avant les images :
 
 ```shell
-docker run -it --rm -p 80:80 -p 443:443 orion-microcrm-front:latest
+bash scripts/ci/build.sh --component all
+docker build --file misc/docker/frontend.Dockerfile --tag microcrm-frontend:local .
+docker build --file misc/docker/backend.Dockerfile --tag microcrm-backend:local .
 ```
 
-L'application sera disponible sur https://localhost.
+Le frontend appelle l’API avec la route relative `/api`. Caddy transmet cette
+route au conteneur backend par son nom de service ; aucune adresse IP n’est
+intégrée au code.
 
-#### Serveur
-
-##### Construire l'image
+Le test suivant crée un réseau Docker temporaire, attend les deux healthchecks,
+vérifie le routage Caddy puis exécute un parcours de création et de lecture :
 
 ```shell
-docker build --target back -t orion-microcrm-back:latest .
+sh scripts/ci/smoke.sh \
+  --frontend-image microcrm-frontend:local \
+  --backend-image microcrm-backend:local
 ```
-
-##### Exécuter l'image
-
-```shell
-docker run -it --rm -p 8080:8080 orion-microcrm-back:latest
-```
-
-L'API sera disponible sur http://localhost:8080.
-
-#### Tout en un
-
-```shell
-docker build --target standalone -t orion-microcrm-standalone:latest .
-```
-
-##### Exécuter l'image
-
-```shell
-docker run -it --rm -p 8080:8080 -p 80:80 -p 443:443 orion-microcrm-standalone:latest
-```
-
-L'application sera disponible sur https://localhost et l'API sur http://localhost:8080.

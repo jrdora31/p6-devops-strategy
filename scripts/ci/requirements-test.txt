@@ -1,0 +1,2 @@
+# Dépendance réservée aux tests des scripts Python dans la CI.
+pytest==9.1.1
