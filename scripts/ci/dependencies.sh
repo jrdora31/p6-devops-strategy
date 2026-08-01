@@ -52,7 +52,9 @@ frontend_dependencies() {
 
   log_info "Frontend : Node $(node --version), npm $(npm --version)"
   if [[ "$action" == "install" ]]; then
-    (cd "${REPOSITORY_ROOT}/front" && npm ci --prefer-offline)
+    # Les scripts de cycle de vie npm peuvent exécuter du code provenant d'une
+    # dépendance pendant l'installation. MicroCRM n'en a pas besoin pour son build.
+    (cd "${REPOSITORY_ROOT}/front" && npm ci --ignore-scripts --prefer-offline)
   fi
 }
 

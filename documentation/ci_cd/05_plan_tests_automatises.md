@@ -10,7 +10,7 @@
 | Backend Spring | Test d’intégration repository | Écriture puis recherche d’une personne par adresse e-mail | MR, `dev`, `main` et tags | La donnée obtenue correspond à la donnée enregistrée | Rapport JUnit et couverture JaCoCo |
 | Backend Spring | Test CRUD de l’API | Création, lecture, modification et suppression d’une personne via HTTP | MR, `dev`, `main`, tags et routine planifiée | Les statuts HTTP et les données retournées sont conformes | Rapport JUnit et couverture JaCoCo |
 | Scripts Bash | Tests fonctionnels des commandes | Aide, dépendances verrouillées, dry-run et refus des paramètres dangereux | MR, `dev`, `main` et tags | 7 tests réussissent | Log du job `test:scripts:bash` |
-| Scripts Python | Tests unitaires | Manifeste SemVer, notification locale, erreurs de webhook et absence de fuite | MR, `dev`, `main` et tags | 5 tests réussissent | Rapport JUnit pytest |
+| Scripts Python | Tests fonctionnels | Manifeste SemVer, notification locale, erreurs de webhook et absence de fuite | MR, `dev`, `main` et tags | 5 tests réussissent | Rapport JUnit pytest |
 | Scripts Bash | Analyse statique | Erreurs et pratiques dangereuses détectées par ShellCheck | MR, `dev`, `main` et tags | Aucun diagnostic ShellCheck | Log du job `quality:shellcheck` |
 | Application full-stack | Analyse statique SonarQube | Bugs, vulnérabilités, security hotspots, code smells, duplication et couverture | À chaque merge request et sur `main` | Quality gate réussi | Dashboard SonarQube et job `quality:sonarqube` |
 | Images frontend et backend | Smoke test full-stack | Healthchecks, réseau Docker, appel API, création et recherche d’une personne via Caddy vers Spring | MR, `dev`, `main`, tags et routine planifiée | Deux conteneurs `healthy` et parcours create/read réussi | Log du job `verify:images` |
@@ -22,6 +22,10 @@ vulnérabilités Trivy `CRITICAL` corrigibles bloquent la pipeline. Les
 vulnérabilités `HIGH` restent dans les rapports afin d’être corrigées
 progressivement. Une anomalie acceptée doit être justifiée et suivie ; elle ne
 doit pas être masquée pour obtenir artificiellement une pipeline verte.
+
+Le seuil de couverture SonarQube reste fixé à 80 % sur le nouveau code
+applicatif Angular et Java. Les scripts CI sont exclus uniquement de ce calcul :
+ils restent analysés par SonarQube et contrôlés par pytest, Bash et ShellCheck.
 
 Le plan SonarQube Cloud Free analyse les merge requests et la branche principale `main`. Les pipelines directs sur `dev` conservent les tests applicatifs et les autres contrôles, mais n’exécutent pas SonarQube. Les changements doivent donc passer par une merge request avant leur intégration ; l’analyse complète de référence est produite sur `main`.
 

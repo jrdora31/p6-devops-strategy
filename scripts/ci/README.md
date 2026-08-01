@@ -56,12 +56,13 @@ python scripts/ci/release_manifest.py \
   --pipeline-id "$CI_PIPELINE_ID" \
   --pipeline-url "$CI_PIPELINE_URL" \
   --frontend-image "$FRONTEND_IMAGE_DIGEST" \
-  --backend-image "$BACKEND_IMAGE_DIGEST" \
-  --output release-manifest.json
+  --backend-image "$BACKEND_IMAGE_DIGEST"
 ```
 
 Cette commande crée un fichier qui relie la version au commit, au pipeline et
-aux images publiées. Les valeurs entre `$...` seront fournies par GitLab.
+aux images publiées dans `.ci/release/release-manifest.json`. Ce chemin fixe
+empêche un argument CLI de choisir un autre emplacement du système. Les valeurs
+entre `$...` seront fournies par GitLab.
 
 ## Notification
 
@@ -74,8 +75,8 @@ python scripts/ci/notify.py \
   --commit "$CI_COMMIT_SHA"
 ```
 
-Par défaut, cette commande prépare et affiche seulement un résumé du pipeline :
-elle n'envoie aucun message. Le canal et l'envoi réel seront décidés plus tard
+Cette commande prépare et affiche le résumé du pipeline sur la sortie standard :
+elle n'écrit aucun fichier et n'envoie aucun message par défaut. Le canal et l'envoi réel seront décidés plus tard
 dans l'arbitrage `ARB-07`. L'adresse d'un éventuel webhook restera dans une
 variable protégée GitLab et ne sera jamais écrite dans le repository.
 

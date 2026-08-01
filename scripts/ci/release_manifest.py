@@ -4,6 +4,7 @@
 
 import argparse
 import json
+import os
 import re
 from pathlib import Path
 
@@ -15,6 +16,7 @@ SEMVER_PATTERN = re.compile(
 )
 COMMIT_PATTERN = re.compile(r"^[0-9a-f]{7,40}$")
 DIGEST_PATTERN = re.compile(r"^.+@sha256:[0-9a-f]{64}$")
+OUTPUT_PATH = Path(".ci/release/release-manifest.json")
 
 
 def parse_args() -> argparse.Namespace:
@@ -28,7 +30,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pipeline-url", required=True)
     parser.add_argument("--frontend-image", required=True, help="Image avec digest")
     parser.add_argument("--backend-image", required=True, help="Image avec digest")
-    parser.add_argument("--output", required=True, type=Path)
     return parser.parse_args()
 
 
@@ -41,6 +42,17 @@ def validate(args: argparse.Namespace) -> None:
     for image in (args.frontend_image, args.backend_image):
         if not DIGEST_PATTERN.fullmatch(image):
             raise ValueError(f"Référence d'image sans digest valide : {image}")
+
+
+def safe_path(path: Path) -> str:
+    """Garantit que le chemin canonique reste dans le répertoire de travail."""
+    resolved = os.path.realpath(path)
+    base_directory = os.path.realpath(os.getcwd())
+    if resolved != base_directory and not resolved.startswith(
+        base_directory + os.sep
+    ):
+        raise ValueError(f"Chemin hors du répertoire autorisé : {path}")
+    return resolved
 
 
 def main() -> int:
@@ -65,13 +77,16 @@ def main() -> int:
         },
     }
 
-    # Crée uniquement le dossier de sortie demandé, puis écrit un JSON lisible.
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    print(f"Manifeste généré : {args.output}")
+    # Le chemin est fixe, puis canonicalisé et contrôlé avant tout accès disque.
+    try:
+        output_path = safe_path(OUTPUT_PATH)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as output_file:
+        output_file.write(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    print(f"Manifeste généré : {OUTPUT_PATH}")
     return 0
 
 

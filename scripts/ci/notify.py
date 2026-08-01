@@ -6,7 +6,6 @@ import argparse
 import json
 import os
 import urllib.request
-from pathlib import Path
 from typing import Any
 
 ALLOWED_STATUSES = ("success", "failed", "canceled", "running")
@@ -22,7 +21,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pipeline-url", required=True)
     parser.add_argument("--ref", required=True)
     parser.add_argument("--commit", required=True)
-    parser.add_argument("--output", type=Path)
     parser.add_argument(
         "--send-webhook-env",
         help="Nom de la variable contenant le webhook ; sans cette option, aucun envoi.",
@@ -72,14 +70,9 @@ def main() -> int:
     payload = build_payload(args)
     output = json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
-    # Sans --output, le JSON est seulement affiché dans le terminal. Cela permet
-    # de tester le script sans contacter un service externe.
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(output, encoding="utf-8")
-        print(f"Notification générée : {args.output}")
-    else:
-        print(output, end="")
+    # Le résultat est écrit sur stdout : le job GitLab peut ainsi le journaliser
+    # sans permettre à un argument CLI de choisir un fichier du système.
+    print(output, end="")
 
     # L'envoi reste facultatif tant que le canal n'a pas été choisi (ARB-07).
     if args.send_webhook_env:

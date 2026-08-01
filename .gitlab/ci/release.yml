@@ -142,7 +142,6 @@ release:manifest:
       --pipeline-url "$CI_PIPELINE_URL"
       --frontend-image "$FRONTEND_IMAGE_DIGEST"
       --backend-image "$BACKEND_IMAGE_DIGEST"
-      --output .ci/release/release-manifest.json
   artifacts:
     expire_in: 30 days
     paths:

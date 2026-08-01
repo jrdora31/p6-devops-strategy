@@ -19,6 +19,7 @@ def run_script(
     script: Path,
     *arguments: str,
     environment: dict[str, str] | None = None,
+    working_directory: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Exécute un script comme le ferait un job GitLab et capture son résultat."""
     return subprocess.run(
@@ -27,10 +28,11 @@ def run_script(
         capture_output=True,
         text=True,
         env=environment,
+        cwd=working_directory,
     )
 
 
-def manifest_arguments(output: Path, version: str = "v1.2.3") -> list[str]:
+def manifest_arguments(version: str = "v1.2.3") -> list[str]:
     """Construit un jeu d'arguments valide réutilisé dans plusieurs tests."""
     return [
         "--version",
@@ -45,8 +47,6 @@ def manifest_arguments(output: Path, version: str = "v1.2.3") -> list[str]:
         FRONTEND_IMAGE,
         "--backend-image",
         BACKEND_IMAGE,
-        "--output",
-        str(output),
     ]
 
 
@@ -67,9 +67,13 @@ def notification_arguments() -> list[str]:
 
 
 def test_release_manifest_is_written_and_traceable(tmp_path: Path) -> None:
-    output = tmp_path / "release-manifest.json"
+    output = tmp_path / ".ci" / "release" / "release-manifest.json"
 
-    result = run_script(RELEASE_SCRIPT, *manifest_arguments(output))
+    result = run_script(
+        RELEASE_SCRIPT,
+        *manifest_arguments(),
+        working_directory=tmp_path,
+    )
 
     assert result.returncode == 0, result.stderr
     manifest = json.loads(output.read_text(encoding="utf-8"))
@@ -80,11 +84,12 @@ def test_release_manifest_is_written_and_traceable(tmp_path: Path) -> None:
 
 
 def test_release_manifest_rejects_invalid_semver(tmp_path: Path) -> None:
-    output = tmp_path / "release-manifest.json"
+    output = tmp_path / ".ci" / "release" / "release-manifest.json"
 
     result = run_script(
         RELEASE_SCRIPT,
-        *manifest_arguments(output, version="release-finale"),
+        *manifest_arguments(version="release-finale"),
+        working_directory=tmp_path,
     )
 
     assert result.returncode != 0
