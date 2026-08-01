@@ -4,6 +4,7 @@
 
 import argparse
 import json
+import os
 import re
 from pathlib import Path
 
@@ -43,6 +44,17 @@ def validate(args: argparse.Namespace) -> None:
             raise ValueError(f"Référence d'image sans digest valide : {image}")
 
 
+def safe_path(path: Path) -> str:
+    """Garantit que le chemin canonique reste dans le répertoire de travail."""
+    resolved = os.path.realpath(path)
+    base_directory = os.path.realpath(os.getcwd())
+    if resolved != base_directory and not resolved.startswith(
+        base_directory + os.sep
+    ):
+        raise ValueError(f"Chemin hors du répertoire autorisé : {path}")
+    return resolved
+
+
 def main() -> int:
     args = parse_args()
     try:
@@ -65,12 +77,15 @@ def main() -> int:
         },
     }
 
-    # Crée uniquement le dossier de sortie demandé, puis écrit un JSON lisible.
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    # Le chemin est fixe, puis canonicalisé et contrôlé avant tout accès disque.
+    try:
+        output_path = safe_path(OUTPUT_PATH)
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as output_file:
+        output_file.write(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     print(f"Manifeste généré : {OUTPUT_PATH}")
     return 0
 
