@@ -19,6 +19,7 @@ def run_script(
     script: Path,
     *arguments: str,
     environment: dict[str, str] | None = None,
+    working_directory: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Exécute un script comme le ferait un job GitLab et capture son résultat."""
     return subprocess.run(
@@ -27,6 +28,7 @@ def run_script(
         capture_output=True,
         text=True,
         env=environment,
+        cwd=working_directory,
     )
 
 
@@ -69,7 +71,11 @@ def notification_arguments() -> list[str]:
 def test_release_manifest_is_written_and_traceable(tmp_path: Path) -> None:
     output = tmp_path / "release-manifest.json"
 
-    result = run_script(RELEASE_SCRIPT, *manifest_arguments(output))
+    result = run_script(
+        RELEASE_SCRIPT,
+        *manifest_arguments(output),
+        working_directory=tmp_path,
+    )
 
     assert result.returncode == 0, result.stderr
     manifest = json.loads(output.read_text(encoding="utf-8"))
@@ -85,10 +91,29 @@ def test_release_manifest_rejects_invalid_semver(tmp_path: Path) -> None:
     result = run_script(
         RELEASE_SCRIPT,
         *manifest_arguments(output, version="release-finale"),
+        working_directory=tmp_path,
     )
 
     assert result.returncode != 0
     assert "SemVer invalide" in result.stderr
+    assert not output.exists()
+
+
+def test_release_manifest_rejects_output_outside_working_directory(
+    tmp_path: Path,
+) -> None:
+    working_directory = tmp_path / "work"
+    working_directory.mkdir()
+    output = tmp_path / "outside-release-manifest.json"
+
+    result = run_script(
+        RELEASE_SCRIPT,
+        *manifest_arguments(output),
+        working_directory=working_directory,
+    )
+
+    assert result.returncode != 0
+    assert "répertoire de travail" in result.stderr
     assert not output.exists()
 
 
@@ -99,6 +124,26 @@ def test_notification_is_only_printed_by_default() -> None:
     payload = json.loads(result.stdout)
     assert payload["status"] == "success"
     assert payload["pipeline"]["id"] == "12345"
+
+
+def test_notification_rejects_output_outside_working_directory(
+    tmp_path: Path,
+) -> None:
+    working_directory = tmp_path / "work"
+    working_directory.mkdir()
+    output = tmp_path / "outside-notification.json"
+
+    result = run_script(
+        NOTIFY_SCRIPT,
+        *notification_arguments(),
+        "--output",
+        str(output),
+        working_directory=working_directory,
+    )
+
+    assert result.returncode != 0
+    assert "répertoire de travail" in result.stderr
+    assert not output.exists()
 
 
 def test_notification_rejects_missing_webhook_variable() -> None:

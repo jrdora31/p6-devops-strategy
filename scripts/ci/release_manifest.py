@@ -43,10 +43,20 @@ def validate(args: argparse.Namespace) -> None:
             raise ValueError(f"Référence d'image sans digest valide : {image}")
 
 
+def resolve_output_path(output: Path) -> Path:
+    """Refuse d'écrire en dehors du répertoire depuis lequel le script est lancé."""
+    working_directory = Path.cwd().resolve()
+    resolved_output = output.resolve()
+    if not resolved_output.is_relative_to(working_directory):
+        raise ValueError("Le fichier de sortie doit rester dans le répertoire de travail")
+    return resolved_output
+
+
 def main() -> int:
     args = parse_args()
     try:
         validate(args)
+        output_path = resolve_output_path(args.output)
     except ValueError as error:
         raise SystemExit(str(error)) from error
 
@@ -66,12 +76,12 @@ def main() -> int:
     }
 
     # Crée uniquement le dossier de sortie demandé, puis écrit un JSON lisible.
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    print(f"Manifeste généré : {args.output}")
+    print(f"Manifeste généré : {output_path}")
     return 0
 
 

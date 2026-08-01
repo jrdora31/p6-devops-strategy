@@ -47,6 +47,15 @@ def build_payload(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def resolve_output_path(output: Path) -> Path:
+    """Refuse d'écrire en dehors du répertoire depuis lequel le script est lancé."""
+    working_directory = Path.cwd().resolve()
+    resolved_output = output.resolve()
+    if not resolved_output.is_relative_to(working_directory):
+        raise ValueError("Le fichier de sortie doit rester dans le répertoire de travail")
+    return resolved_output
+
+
 def send_webhook(payload: dict[str, Any], variable_name: str) -> None:
     """Envoie le message sans afficher l'adresse secrète du webhook."""
     # Seul le nom de la variable est passé au script. Son contenu reste dans
@@ -72,12 +81,17 @@ def main() -> int:
     payload = build_payload(args)
     output = json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
+    try:
+        output_path = resolve_output_path(args.output) if args.output else None
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+
     # Sans --output, le JSON est seulement affiché dans le terminal. Cela permet
     # de tester le script sans contacter un service externe.
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(output, encoding="utf-8")
-        print(f"Notification générée : {args.output}")
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(output, encoding="utf-8")
+        print(f"Notification générée : {output_path}")
     else:
         print(output, end="")
 
