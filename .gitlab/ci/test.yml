@@ -1,16 +1,22 @@
+# Lance Karma/Jasmine dans un navigateur Chrome sans interface graphique.
 test:frontend:
   extends: .frontend-node
+  # Cette image ajoute les navigateurs absents de l'image Node générique.
   image: cypress/browsers:node-20.10.0-chrome-121.0.6167.85-1-ff-118.0.2-edge-118.0.2088.46-1
   stage: test
   script:
+    # `CHROME_BIN` indique à Karma le chemin exact du navigateur dans le conteneur.
     - CHROME_BIN=/opt/google/chrome/chrome bash scripts/ci/test.sh --component frontend
+  # GitLab extrait le pourcentage depuis les logs et l'affiche dans l'interface.
   coverage: '/Statements\s*:\s*([\d.]+)%/'
   artifacts:
+    # `always` conserve les rapports même si un test échoue, ce qui aide au diagnostic.
     when: always
     expire_in: 7 days
     paths:
       - front/coverage/
 
+# Exécute les tests JUnit et prépare les données de couverture/analyse Java.
 test:backend:
   extends: .backend-java
   stage: test
@@ -20,8 +26,10 @@ test:backend:
     when: always
     expire_in: 7 days
     reports:
+      # Le rapport JUnit alimente directement l'onglet Tests de GitLab.
       junit: back/build/test-results/test/*.xml
     paths:
+      # Les chemins suivants sont aussi consommés par SonarQube ou consultables.
       - back/build/reports/tests/test/
       - back/build/reports/jacoco/test/jacocoTestReport.xml
       - back/build/reports/jacoco/test/html/
@@ -29,16 +37,19 @@ test:backend:
       - back/build/classes/java/test/
       - back/build/sonar-libraries/
 
+# Vérifie rapidement les interfaces et garde-fous des scripts Bash.
 test:scripts:bash:
   image: node:20.19.5-bookworm-slim
   stage: test
   script:
     - bash scripts/ci/tests/test_scripts.sh
 
+# Exécute pytest dans un environnement Python isolé du code applicatif.
 test:scripts:python:
   image: python:3.12.11-slim
   stage: test
   before_script:
+    # Seules les dépendances de test déclarées sont installées, sans cache persistant.
     - python -m pip install --disable-pip-version-check --no-cache-dir -r scripts/ci/requirements-test.txt
   script:
     - mkdir -p .ci/reports
@@ -47,6 +58,7 @@ test:scripts:python:
     when: always
     expire_in: 7 days
     reports:
+      # pytest produit un XML compris nativement par GitLab.
       junit: .ci/reports/scripts-python.xml
     paths:
       - .ci/reports/scripts-python.xml

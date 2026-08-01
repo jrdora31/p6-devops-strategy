@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
-"""Génère la fiche JSON qui relie une release à ses éléments techniques."""
+"""Génère la fiche JSON qui relie une release à ses éléments techniques.
+
+Le manifeste apporte une traçabilité bidirectionnelle : à partir d'une version,
+on retrouve le commit, le pipeline et les deux images immuables qui la composent.
+Le script valide toutes les identités avant la première écriture sur disque.
+"""
 
 import argparse
 import json
@@ -10,17 +15,22 @@ from pathlib import Path
 
 # Ces expressions refusent les versions, commits et images qui ne respectent
 # pas les formats attendus avant d'écrire le manifeste.
+# `re.compile` prépare les regex une seule fois au chargement du module.
 SEMVER_PATTERN = re.compile(
+    # `v` est facultatif ; chaque entier interdit les zéros initiaux inutiles ;
+    # prérelease (`-rc.1`) et métadonnées (`+build.4`) restent facultatives.
     r"^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
     r"(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$"
 )
 COMMIT_PATTERN = re.compile(r"^[0-9a-f]{7,40}$")
+# Une image déployable doit inclure son registre/nom puis un digest SHA-256 complet.
 DIGEST_PATTERN = re.compile(r"^.+@sha256:[0-9a-f]{64}$")
+# Le chemin fixe évite qu'un argument utilisateur choisisse une destination sensible.
 OUTPUT_PATH = Path(".ci/release/release-manifest.json")
 
 
 def parse_args() -> argparse.Namespace:
-    """Déclare les informations obligatoires reçues depuis la ligne de commande."""
+    """Déclarer les informations obligatoires reçues en ligne de commande."""
     parser = argparse.ArgumentParser(
         description="Génère le manifeste JSON traçant une release MicroCRM."
     )
@@ -34,20 +44,28 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate(args: argparse.Namespace) -> None:
-    """Vérifie les valeurs qui doivent identifier une release sans ambiguïté."""
+    """Vérifier les identifiants avant toute création de dossier ou de fichier."""
     if not SEMVER_PATTERN.fullmatch(args.version):
         raise ValueError(f"Version SemVer invalide : {args.version}")
     if not COMMIT_PATTERN.fullmatch(args.commit):
         raise ValueError("Commit SHA invalide")
+    # Une seule boucle applique exactement la même règle aux deux composants.
     for image in (args.frontend_image, args.backend_image):
         if not DIGEST_PATTERN.fullmatch(image):
             raise ValueError(f"Référence d'image sans digest valide : {image}")
 
 
 def safe_path(path: Path) -> str:
-    """Garantit que le chemin canonique reste dans le répertoire de travail."""
+    """Garantir que le chemin canonique reste dans le répertoire de travail.
+
+    `realpath` résout les segments `..` et les liens symboliques. Une simple
+    comparaison textuelle de chemins ne suffirait donc pas contre une sortie du
+    workspace par lien symbolique.
+    """
     resolved = os.path.realpath(path)
     base_directory = os.path.realpath(os.getcwd())
+    # Le séparateur final est important : `/work/project-bis` ne doit pas être
+    # accepté simplement parce qu'il commence par la chaîne `/work/project`.
     if resolved != base_directory and not resolved.startswith(
         base_directory + os.sep
     ):
@@ -56,6 +74,7 @@ def safe_path(path: Path) -> str:
 
 
 def main() -> int:
+    """Valider les entrées, construire le manifeste puis l'écrire sûrement."""
     args = parse_args()
     try:
         validate(args)
@@ -64,6 +83,7 @@ def main() -> int:
 
     # Ce document permet de retrouver le code, le pipeline et les deux images
     # correspondant exactement à une version donnée.
+    # Un dictionnaire Python reflète directement les objets imbriqués du JSON final.
     manifest = {
         "version": args.version,
         "commit": args.commit,
@@ -83,7 +103,11 @@ def main() -> int:
     except ValueError as error:
         raise SystemExit(str(error)) from error
 
+    # `parents=True` crée toute l'arborescence `.ci/release`; `exist_ok=True`
+    # rend la commande réexécutable si le dossier existe déjà.
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    # Le context manager ferme toujours le fichier. UTF-8 rend le format explicite
+    # et le saut de ligne final facilite les outils Unix et les diffs Git.
     with open(output_path, "w", encoding="utf-8") as output_file:
         output_file.write(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     print(f"Manifeste généré : {OUTPUT_PATH}")
@@ -91,4 +115,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # Le fichier reste importable sans effet de bord ; l'exécution CLI propage son code retour.
     raise SystemExit(main())
