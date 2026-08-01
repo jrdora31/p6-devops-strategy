@@ -4,6 +4,7 @@
 
 import argparse
 import json
+import os
 import re
 from pathlib import Path
 
@@ -45,11 +46,14 @@ def validate(args: argparse.Namespace) -> None:
 
 def resolve_output_path(output: Path) -> Path:
     """Refuse d'écrire en dehors du répertoire depuis lequel le script est lancé."""
-    working_directory = Path.cwd().resolve()
-    resolved_output = output.resolve()
-    if not resolved_output.is_relative_to(working_directory):
+    working_directory = os.path.realpath(os.getcwd())
+    resolved_output = os.path.realpath(output)
+    if (
+        resolved_output != working_directory
+        and not resolved_output.startswith(working_directory + os.sep)
+    ):
         raise ValueError("Le fichier de sortie doit rester dans le répertoire de travail")
-    return resolved_output
+    return Path(resolved_output)
 
 
 def main() -> int:
