@@ -53,3 +53,8 @@ La base actuelle étant éphémère, aucune preuve de backup réelle ne peut enc
 | Publication sur `main` réussie | [Pipeline #2719417750](https://gitlab.com/project_6_group/microcrm/-/pipelines/2719417750) |
 | Images publiées | Frontend et backend identifiés par le commit `c50f38c28a8e56762703496fca2b1aa858b903c2` |
 | Digests conservés | Artifact `.ci/release/images.env` du job `release:images` |
+| Pipeline complète avant clôture | [Pipeline de MR #2723633630](https://gitlab.com/project_6_group/microcrm/-/pipelines/2723633630) |
+| Validation post-merge sur `dev` | [Pipeline #2723639714](https://gitlab.com/project_6_group/microcrm/-/pipelines/2723639714) |
+
+La référence finale sera remplacée par la pipeline `main`, ses digests et le
+manifeste du premier tag SemVer après validation de la partie 1.
