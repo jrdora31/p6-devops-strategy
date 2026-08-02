@@ -14,7 +14,7 @@ Une release doit permettre de relier sans ambiguïté le code, le pipeline et le
 
 Le pipeline publie sur `main` et sur les tags SemVer. Les images sont identifiées par le commit SHA et le job `release:images` produit `.ci/release/images.env`.
 
-Sur un tag SemVer, `release:manifest` doit ensuite appeler `release_manifest.py` et conserver `.ci/release/release-manifest.json`. L’exécution distante de ce chemin devra être prouvée avec le premier tag de release.
+Sur un tag SemVer, `release:manifest` appelle `release_manifest.py` et conserve `.ci/release/release-manifest.json`. Après validation de ce manifeste, `release:create` crée l'objet visible dans `Deploy > Releases` et le relie à la pipeline. L’exécution distante de ce chemin devra être prouvée avec le premier tag de release.
 
 ## Déclenchement
 
@@ -23,13 +23,13 @@ Sur un tag SemVer, `release:manifest` doit ensuite appeler `release_manifest.py`
 | Merge request | Tests et builds | Non |
 | `dev` | Tests et builds | Non |
 | `main` | Tests et builds | Images identifiées par SHA |
-| Tag SemVer | Tests, builds et manifeste | Images et manifeste de release |
+| Tag SemVer | Tests, builds, scans et manifeste | Images, manifeste et release GitLab |
 
 ## Responsabilités et contrôles
 
 | Opération | Prérequis | Contrôle final | Responsable |
 |---|---|---|---|
-| Release | Pipeline vert et tag SemVer | Images, digests et manifeste présents | Maintainer GitLab |
+| Release | Pipeline vert et tag SemVer | Images, digests, manifeste et objet GitLab Release présents | Maintainer GitLab |
 | Rollback | Manifeste d’une release précédente validée | Smoke tests après redéploiement | Maintainer du déploiement |
 | Backup | Stockage persistant disponible | Restore exécuté sur une cible contrôlée | Maintainer de l’infrastructure |
 
