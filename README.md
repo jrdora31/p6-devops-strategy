@@ -139,6 +139,8 @@ shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
 | `quality:trivy:repository` | Vulnérabilités des dépendances et secrets | Rapports Trivy JSON et texte |
 | `release:scan:image:frontend` | Vulnérabilités de l’image frontend avant publication | Rapports Trivy JSON et texte |
 | `release:scan:image:backend` | Vulnérabilités de l’image backend avant publication | Rapports Trivy JSON et texte |
+| `release:manifest` | Traçabilité de la version, du commit, de la pipeline et des images | Manifeste JSON de release |
+| `release:create` | Publication d’un tag SemVer dans GitLab Releases | Release GitLab liée à sa pipeline |
 
 Avec SonarQube Cloud Free, `quality:sonarqube` s’exécute sur les merge requests
 et sur `main`, mais pas sur les push directs vers `dev`.

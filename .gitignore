@@ -1,0 +1,5 @@
+# Fichiers générés par Python et pytest : ils doivent rester locaux.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+

@@ -172,3 +172,29 @@ release:manifest:
   rules:
     # Un manifeste de release n'a de sens que pour un tag SemVer.
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+
+# Crée l'objet visible dans GitLab > Deploy > Releases après validation du
+# manifeste. Le tag reste créé volontairement par le maintainer : ce job
+# automatise la publication de la release et conserve le lien vers sa pipeline.
+release:create:
+  image: registry.gitlab.com/gitlab-org/cli:v1.109.0
+  stage: release
+  needs:
+    - job: release:manifest
+      artifacts: true
+  script:
+    # Empêche la création d'une release si la preuve reliant version, commit,
+    # pipeline et digests n'a pas été produite correctement.
+    - test -s .ci/release/release-manifest.json
+    - echo "Création de la release GitLab $CI_COMMIT_TAG"
+  release:
+    tag_name: '$CI_COMMIT_TAG'
+    name: 'MicroCRM $CI_COMMIT_TAG'
+    description: 'Release automatisée de MicroCRM. Le pipeline $CI_PIPELINE_ID conserve le manifeste et les digests des images.'
+    assets:
+      links:
+        - name: 'Pipeline de release'
+          url: '$CI_PIPELINE_URL'
+          link_type: other
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
