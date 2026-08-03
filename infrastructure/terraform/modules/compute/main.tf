@@ -1,3 +1,5 @@
+# Modification documentaire temporaire : force la validation du plan restauré
+# dans la branche de preuve N.6. Cette branche ne doit pas être fusionnée.
 data "aws_ami" "ubuntu" {
   count = var.ami_id == null ? 1 : 0
 
@@ -10,10 +12,8 @@ data "aws_ami" "ubuntu" {
   }
 
   filter {
-    name = "architecture"
-    # Valeur volontairement impossible pour démontrer que la CI bloque un plan
-    # Terraform invalide. Cette branche de test ne doit jamais être fusionnée.
-    values = ["controlled-failure"]
+    name   = "architecture"
+    values = ["x86_64"]
   }
 
   filter {
