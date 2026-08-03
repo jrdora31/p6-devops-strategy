@@ -110,15 +110,26 @@ wait_for_healthy() {
   die "Timeout en attendant le healthcheck de $wait_container"
 }
 
+assert_non_root() {
+  # `id -u` renvoie 0 pour root. Le contrôle est exécuté dans le conteneur réel
+  # afin de valider l'utilisateur effectif, pas seulement la directive Dockerfile.
+  identity_container="$1"
+  identity_uid="$(docker exec "$identity_container" id -u)"
+  [ "$identity_uid" -ne 0 ] || die "$identity_container s'exécute avec l'utilisateur root"
+  log_info "$identity_container s'exécute avec l'UID $identity_uid"
+}
+
 # Le réseau privé fournit une résolution DNS par nom/alias sans publier de port hôte.
 docker network create "$network" >/dev/null
 # Le backend est lancé en premier. L'alias `backend` correspond à la destination
 # déclarée dans le Caddyfile du frontend.
 docker run --detach --name "$backend_container" --network "$network" --network-alias backend "$backend_image" >/dev/null
 wait_for_healthy "$backend_container"
+assert_non_root "$backend_container"
 
 docker run --detach --name "$frontend_container" --network "$network" "$frontend_image" >/dev/null
 wait_for_healthy "$frontend_container"
+assert_non_root "$frontend_container"
 
 # Cette requête traverse Caddy puis atteint Spring. Elle valide donc à la fois
 # le démarrage des images, leur réseau et le routage frontend vers backend.

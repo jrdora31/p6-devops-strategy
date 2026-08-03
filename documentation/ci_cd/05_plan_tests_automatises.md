@@ -13,7 +13,7 @@
 | Scripts Python | Tests fonctionnels | Manifeste SemVer, notification locale, erreurs de webhook et absence de fuite | MR, `dev`, `main` et tags | 5 tests réussissent | Rapport JUnit pytest |
 | Scripts Bash | Analyse statique | Erreurs et pratiques dangereuses détectées par ShellCheck | MR, `dev`, `main` et tags | Aucun diagnostic ShellCheck | Log du job `quality:shellcheck` |
 | Application full-stack | Analyse statique SonarQube | Bugs, vulnérabilités, security hotspots, code smells, duplication et couverture | À chaque merge request et sur `main` | Quality gate réussi | Dashboard SonarQube et job `quality:sonarqube` |
-| Images frontend et backend | Smoke test full-stack | Healthchecks, réseau Docker, appel API, création et recherche d’une personne via Caddy vers Spring | MR, `dev`, `main`, tags et routine planifiée | Deux conteneurs `healthy` et parcours create/read réussi | Log du job `verify:images` |
+| Images frontend et backend | Smoke test full-stack | Healthchecks, utilisateurs non-root, réseau Docker, appel API, création et recherche d’une personne via Caddy vers Spring | MR, `dev`, `main`, tags et routine planifiée | Deux conteneurs `healthy`, UID différents de `0` et parcours create/read réussi | Log du job `verify:images` |
 
 ## Règles bloquantes
 

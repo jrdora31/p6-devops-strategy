@@ -39,8 +39,8 @@ build:image:frontend:
       # Télécharge automatiquement `front/dist/...` depuis le job précédent.
       artifacts: true
   script:
-    # `--pull` vérifie l'image de base ; le fichier Docker spécialisé ne contient
-    # que le runtime frontend, contrairement au Dockerfile historique à la racine.
+    # `--pull` vérifie l'image de base ; le Dockerfile spécialisé contient
+    # uniquement le runtime frontend déjà compilé.
     - docker build --pull --file misc/docker/frontend.Dockerfile --tag "$FRONTEND_IMAGE" .
     - mkdir -p .ci/images
     # Sauvegarde l'image en archive pour la transmettre sans registre entre stages.
