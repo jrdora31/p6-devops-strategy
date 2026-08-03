@@ -3,3 +3,19 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
+# Fichiers de travail Terraform. Le lockfile reste versionné afin de verrouiller
+# les providers réellement validés par la CI.
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Cache local de l'inventaire et reprises éventuelles d'Ansible.
+ansible/.cache/
+*.retry
+

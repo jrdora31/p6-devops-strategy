@@ -29,6 +29,7 @@ les secrets utilisés par la CI et conserver une preuve de chaque contrôle.
 | Secrets | Trivy — `quality:trivy:repository` | Chaque pipeline et routine planifiée | Aucun secret confirmé | Artifacts JSON et texte de `#2723610499` | Actif |
 | Images | Trivy — `release:scan:image:frontend` et `release:scan:image:backend` | MR, `main`, tags et routine planifiée | Aucun secret et aucune vulnérabilité `CRITICAL` corrigible ; les `HIGH` restent visibles | Artifacts JSON et texte de `#2723610499` | Actif |
 | Kubernetes/Helm | Helm et Trivy — `test:helm`, `quality:trivy:kubernetes` | Chaque pipeline | Chart valide et aucune mauvaise configuration `HIGH`/`CRITICAL` | Lint/rendu locaux réussis, 9 templates Trivy propres ; artifacts GitLab à obtenir | Local actif ; CI à prouver |
+| Infrastructure AWS | Terraform et Trivy — `test:terraform`, `quality:trivy:iac` | Chaque pipeline | Aucune mauvaise configuration `CRITICAL` sans décision documentée | Rapport IaC `#2726980116` : sorties Internet trop larges détectées puis limitées à `80/443` ; exception `AWS-0104` expirant le 1er septembre 2026 | Correction à valider en CI |
 
 SonarJava reçoit les classes compilées, les classes de test, les dépendances
 Gradle et les rapports JaCoCo. La pipeline `#2723633630` a validé le quality
