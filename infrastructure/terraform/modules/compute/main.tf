@@ -11,7 +11,9 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "architecture"
-    values = ["x86_64"]
+    # Valeur volontairement impossible pour démontrer que la CI bloque un plan
+    # Terraform invalide. Cette branche de test ne doit jamais être fusionnée.
+    values = ["controlled-failure"]
   }
 
   filter {
