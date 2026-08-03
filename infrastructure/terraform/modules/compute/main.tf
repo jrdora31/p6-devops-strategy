@@ -1,5 +1,3 @@
-# Modification documentaire temporaire : force la validation du plan restauré
-# dans la branche de preuve N.6. Cette branche ne doit pas être fusionnée.
 data "aws_ami" "ubuntu" {
   count = var.ami_id == null ? 1 : 0
 
