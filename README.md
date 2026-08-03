@@ -160,13 +160,17 @@ shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
 | `test:backend` | Tests JUnit du contexte, du repository et du CRUD HTTP | Rapport JUnit, rapport HTML et JaCoCo XML |
 | `test:scripts:bash` | Commandes Bash, erreurs et dry-run | Log du job |
 | `test:scripts:python` | Manifeste et notification | Rapport JUnit pytest |
+| `test:helm` | Structure, values et rendu du chart Helm | Log du job |
 | `quality:shellcheck` | Analyse statique des scripts Bash | Log du job |
 | `quality:sonarqube` | Qualité, sécurité et couverture du code | Dashboard SonarQube et quality gate |
 | `quality:trivy:repository` | Vulnérabilités des dépendances et secrets | Rapports Trivy JSON et texte |
+| `quality:trivy:kubernetes` | Mauvaises configurations Kubernetes/Helm | Rapports Trivy JSON et texte |
 | `release:scan:image:frontend` | Vulnérabilités de l’image frontend avant publication | Rapports Trivy JSON et texte |
 | `release:scan:image:backend` | Vulnérabilités de l’image backend avant publication | Rapports Trivy JSON et texte |
 | `release:manifest` | Traçabilité de la version, du commit, de la pipeline et des images | Manifeste JSON de release |
 | `release:create` | Publication d’un tag SemVer dans GitLab Releases | Release GitLab liée à sa pipeline |
+| `release:helm:package` | Création de l’archive du chart | Package Helm conservé comme artifact |
+| `deploy:helm:aws` | Deployment manuel et atomique sur K3s/AWS | Release Helm et environnement GitLab |
 
 Avec SonarQube Cloud Free, `quality:sonarqube` s’exécute sur les merge requests
 et sur `main`, mais pas sur les push directs vers `dev`.
@@ -208,3 +212,11 @@ sh scripts/ci/smoke.sh \
 Le smoke test démarre PostgreSQL avec un volume temporaire, crée une donnée,
 recrée la base et le backend, puis confirme que cette donnée reste accessible.
 La CI utilise la même image PostgreSQL épinglée par digest.
+
+### Orchestration Kubernetes
+
+Le chart [`helm/microcrm`](helm/microcrm/README.md) décrit le frontend, le
+backend et PostgreSQL. Les fichiers de values séparent les paramètres Minikube
+et K3s, tandis que les credentials restent dans un Secret Kubernetes externe au
+repository. Il a été validé sur un profil Minikube isolé ; le deployment AWS
+reste manuel et protégé tant que l'infrastructure K3s n'est pas disponible.
