@@ -1,0 +1,9 @@
+database:
+  persistence:
+    size: 2Gi
+    storageClass: local-path
+
+ingress:
+  enabled: true
+  className: traefik
+  host: microcrm.example.invalid

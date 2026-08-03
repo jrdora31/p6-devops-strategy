@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["frontend", "backend", "database"],
+  "properties": {
+    "frontend": {
+      "type": "object",
+      "required": ["replicaCount", "image", "service", "resources"],
+      "properties": {
+        "replicaCount": { "type": "integer", "minimum": 1 },
+        "image": { "$ref": "#/definitions/image" }
+      }
+    },
+    "backend": {
+      "type": "object",
+      "required": ["replicaCount", "image", "service", "resources"],
+      "properties": {
+        "replicaCount": { "type": "integer", "minimum": 1 },
+        "image": { "$ref": "#/definitions/image" }
+      }
+    },
+    "database": {
+      "type": "object",
+      "required": ["image", "name", "existingSecret", "usernameKey", "passwordKey", "persistence"],
+      "properties": {
+        "image": { "$ref": "#/definitions/image" },
+        "name": { "type": "string", "minLength": 1 },
+        "existingSecret": { "type": "string", "minLength": 1 },
+        "usernameKey": { "type": "string", "minLength": 1 },
+        "passwordKey": { "type": "string", "minLength": 1 },
+        "persistence": {
+          "type": "object",
+          "required": ["enabled", "size"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "size": { "type": "string", "pattern": "^[1-9][0-9]*(Mi|Gi)$" },
+            "storageClass": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag", "digest", "pullPolicy"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
+        "digest": { "type": "string" },
+        "pullPolicy": { "enum": ["Always", "IfNotPresent", "Never"] }
+      }
+    }
+  }
+}

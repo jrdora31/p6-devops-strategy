@@ -16,6 +16,10 @@ COPY --chown=microcrm:microcrm front/dist/microcrm/browser/ /app/front/
 # le frontend et reverse proxy `/api` vers le conteneur nommé `backend`.
 COPY --chown=microcrm:microcrm misc/docker/Caddyfile /etc/caddy/Caddyfile
 
+# Docker conserve le nom de service historique. Kubernetes surcharge cette
+# valeur avec le nom complet du Service créé par la release Helm.
+ENV BACKEND_ADDRESS=backend:8080
+
 # Dossier de travail par défaut pour les commandes lancées dans le conteneur.
 WORKDIR /app
 

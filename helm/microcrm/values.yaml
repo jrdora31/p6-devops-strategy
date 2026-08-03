@@ -1,0 +1,67 @@
+nameOverride: ""
+fullnameOverride: ""
+
+imagePullSecrets: []
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: registry.gitlab.com/project_6_group/microcrm/frontend
+    tag: replace-me
+    digest: ""
+    pullPolicy: IfNotPresent
+  service:
+    port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 32Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+backend:
+  replicaCount: 1
+  image:
+    repository: registry.gitlab.com/project_6_group/microcrm/backend
+    tag: replace-me
+    digest: ""
+    pullPolicy: IfNotPresent
+  service:
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+database:
+  image:
+    repository: postgres
+    tag: 17.10-alpine3.23
+    digest: sha256:8189a1f6e40904781fc9e2612687877791d21679866db58b1de996b31fc312e4
+    pullPolicy: IfNotPresent
+  name: microcrm
+  existingSecret: microcrm-database
+  usernameKey: username
+  passwordKey: password
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+ingress:
+  enabled: false
+  className: ""
+  host: microcrm.local
+  annotations: {}
+  tls: []
