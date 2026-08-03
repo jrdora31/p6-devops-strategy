@@ -62,3 +62,17 @@ test:scripts:python:
       junit: .ci/reports/scripts-python.xml
     paths:
       - .ci/reports/scripts-python.xml
+
+# Valide le chart avant tout accès à un cluster Kubernetes.
+test:helm:
+  image:
+    name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
+    entrypoint: [""]
+  stage: test
+  script:
+    # `lint` vérifie la structure du chart et le schéma des deux jeux de values.
+    - helm lint helm/microcrm --values helm/microcrm/values-minikube.yaml
+    - helm lint helm/microcrm --values helm/microcrm/values-k3s.yaml
+    # `template` prouve que les ressources locales et AWS peuvent être générées.
+    - helm template microcrm helm/microcrm --namespace microcrm --values helm/microcrm/values-minikube.yaml > /dev/null
+    - helm template microcrm helm/microcrm --namespace microcrm --values helm/microcrm/values-k3s.yaml > /dev/null

@@ -1,0 +1,50 @@
+# Déploie manuellement les images publiées avec le chart testé plus tôt.
+# Le job reste inactif tant que l'infrastructure K3s et ses variables protégées
+# ne sont pas disponibles dans GitLab.
+deploy:helm:aws:
+  image:
+    name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
+    entrypoint: [""]
+  stage: deploy
+  needs:
+    - job: release:images
+      artifacts: true
+    - job: release:helm:package
+      artifacts: true
+  resource_group: aws-poc
+  environment:
+    name: aws-poc
+  script:
+    # `KUBE_CONFIG` doit être une variable GitLab de type File. Le job ne crée
+    # ni credential de registry ni Secret PostgreSQL dans le repository.
+    - 'test -n "$KUBE_CONFIG"'
+    - 'test -n "$KUBERNETES_REGISTRY_SECRET"'
+    - 'test -n "$KUBERNETES_DATABASE_SECRET"'
+    - export KUBECONFIG="$KUBE_CONFIG"
+    - FRONTEND_REPOSITORY="${FRONTEND_IMAGE_DIGEST%@*}"
+    - FRONTEND_DIGEST="${FRONTEND_IMAGE_DIGEST#*@}"
+    - BACKEND_REPOSITORY="${BACKEND_IMAGE_DIGEST%@*}"
+    - BACKEND_DIGEST="${BACKEND_IMAGE_DIGEST#*@}"
+    - >-
+      helm upgrade --install microcrm .ci/packages/microcrm-*.tgz
+      --namespace microcrm
+      --create-namespace
+      --values helm/microcrm/values-k3s.yaml
+      --set-string "frontend.image.repository=$FRONTEND_REPOSITORY"
+      --set-string "frontend.image.digest=$FRONTEND_DIGEST"
+      --set-string "backend.image.repository=$BACKEND_REPOSITORY"
+      --set-string "backend.image.digest=$BACKEND_DIGEST"
+      --set-string "imagePullSecrets[0].name=$KUBERNETES_REGISTRY_SECRET"
+      --set-string "database.existingSecret=$KUBERNETES_DATABASE_SECRET"
+      --atomic
+      --wait
+      --timeout 5m
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+  # Le déploiement reste optionnel tant que l'environnement AWS n'est pas
+  # provisionné. L'exécution manuelle échoue néanmoins si ses prérequis sont
+  # absents ou si Helm ne parvient pas à stabiliser la release.
+  allow_failure: true
