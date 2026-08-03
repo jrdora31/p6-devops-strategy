@@ -1,0 +1,98 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-initial-schema
+      author: microcrm
+      changes:
+        - createSequence:
+            sequenceName: person_seq
+            startValue: 1
+            incrementBy: 50
+        - createSequence:
+            sequenceName: organization_seq
+            startValue: 1
+            incrementBy: 50
+        - createTable:
+            tableName: person
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: VARCHAR(255)
+              - column:
+                  name: last_name
+                  type: VARCHAR(255)
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+              - column:
+                  name: phone
+                  type: VARCHAR(255)
+              - column:
+                  name: bio
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - createTable:
+            tableName: organization
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+        - createTable:
+            tableName: organization_persons
+            columns:
+              - column:
+                  name: organizations_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: persons_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addPrimaryKey:
+            tableName: organization_persons
+            columnNames: organizations_id, persons_id
+            constraintName: pk_organization_persons
+        - addForeignKeyConstraint:
+            baseTableName: organization_persons
+            baseColumnNames: organizations_id
+            referencedTableName: organization
+            referencedColumnNames: id
+            constraintName: fk_organization_persons_organization
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: organization_persons
+            baseColumnNames: persons_id
+            referencedTableName: person
+            referencedColumnNames: id
+            constraintName: fk_organization_persons_person
+            onDelete: CASCADE
+        - createIndex:
+            tableName: person
+            indexName: idx_person_email
+            columns:
+              - column:
+                  name: email

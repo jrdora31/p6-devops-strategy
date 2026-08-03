@@ -25,3 +25,4 @@ verify:images:
       sh scripts/ci/smoke.sh
       --frontend-image "$FRONTEND_IMAGE"
       --backend-image "$BACKEND_IMAGE"
+      --database-image "$POSTGRES_IMAGE"

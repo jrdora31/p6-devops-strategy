@@ -477,7 +477,7 @@ Les solutions proposées ci-dessous résultent de l’audit et de la veille. Leu
 
 - **Description :** versionner les évolutions du schéma si PostgreSQL est retenu.
 - **Raisonnement :** une base persistante doit évoluer de manière reproductible avec l’application.
-- **Implémentation :** utiliser des migrations SQL Flyway suivies dans le repository et exécutées dans un ordre contrôlé.
+- **Implémentation :** utiliser un changelog Liquibase versionné dans le repository et exécuté au démarrage. Le format YAML retenu décrit un même schéma pour HSQLDB pendant les tests et PostgreSQL dans l’environnement déployé.
 - **Impacts :** appliquer le même schéma dans chaque environnement et conserver son historique.
 
 #### 4.2.13 Définir une stratégie de deployment et de rollback
