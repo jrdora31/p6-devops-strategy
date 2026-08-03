@@ -42,7 +42,7 @@ bash scripts/ci/backup.sh --source /data --output /backup/microcrm.tar --dry-run
 - `dependencies.sh` vérifie ici les fichiers qui verrouillent les dépendances.
 - `test.sh` exécute ici les tests du backend.
 - `build.sh` construit ici le frontend.
-- `smoke.sh` lance les deux images, attend leurs healthchecks et appelle l’API via le frontend.
+- `smoke.sh` lance les deux images, attend leurs healthchecks, vérifie que leurs processus ne tournent pas avec l’UID `0`, puis appelle l’API via le frontend.
 - `backup.sh` simule la future commande de backup sans créer de fichier.
 
 `--component` indique la partie concernée : `frontend`, `backend` ou `all`.
