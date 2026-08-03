@@ -22,6 +22,63 @@ test:terraform:
     - terraform -chdir=infrastructure/terraform init -backend=false
     - terraform -chdir=infrastructure/terraform validate
 
+# Produit un plan réel avec des credentials AWS temporaires obtenus par OIDC.
+# Le job ne possède aucun droit d'écriture et ne lance jamais terraform apply.
+quality:terraform:plan:
+  image:
+    name: hashicorp/terraform:1.15.8
+    entrypoint: [""]
+  stage: quality
+  needs:
+    - test:terraform
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: https://gitlab.com
+  variables:
+    TF_IN_AUTOMATION: "true"
+    TF_INPUT: "false"
+    TF_PLUGIN_CACHE_DIR: "$CI_PROJECT_DIR/.cache/terraform/providers"
+    TF_HTTP_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/microcrm-poc"
+    TF_HTTP_LOCK_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/microcrm-poc/lock"
+    TF_HTTP_UNLOCK_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/microcrm-poc/lock"
+    TF_HTTP_LOCK_METHOD: "POST"
+    TF_HTTP_UNLOCK_METHOD: "DELETE"
+    TF_HTTP_USERNAME: "gitlab-ci-token"
+    TF_HTTP_PASSWORD: "$CI_JOB_TOKEN"
+    AWS_ROLE_ARN: "$AWS_PLAN_ROLE_ARN"
+    AWS_WEB_IDENTITY_TOKEN_FILE: "$CI_PROJECT_DIR/.aws/gitlab-oidc-token"
+  cache:
+    key:
+      files:
+        - infrastructure/terraform/.terraform.lock.hcl
+      prefix: terraform
+    paths:
+      - .cache/terraform/providers/
+  before_script:
+    - mkdir -p "$TF_PLUGIN_CACHE_DIR" "$CI_PROJECT_DIR/.aws" "$CI_PROJECT_DIR/.ci/reports/terraform"
+    - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+    - chmod 600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
+  script:
+    - terraform -chdir=infrastructure/terraform init -reconfigure
+    - terraform -chdir=infrastructure/terraform plan -no-color -out="$CI_PROJECT_DIR/.terraform-plan"
+    - terraform -chdir=infrastructure/terraform show -no-color "$CI_PROJECT_DIR/.terraform-plan" > "$CI_PROJECT_DIR/.ci/reports/terraform/plan.txt"
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - .ci/reports/terraform/plan.txt
+  rules:
+    - if: '$AWS_PLAN_ROLE_ARN == null || $AWS_PLAN_ROLE_ARN == ""'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - infrastructure/terraform/**/*
+        - .gitlab/ci/iac.yml
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - infrastructure/terraform/**/*
+        - .gitlab/ci/iac.yml
+
 # Vérifie la syntaxe, l'idempotence déclarative et les conventions Ansible.
 test:ansible:
   image: python:3.12.11-slim-bookworm

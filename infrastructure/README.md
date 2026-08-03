@@ -27,9 +27,18 @@ Ces commandes vérifient les fichiers mais ne créent aucune ressource.
 
 ## Exécution future
 
-Avant un `plan` réel, GitLab devra fournir des credentials AWS temporaires et
-les variables `TF_HTTP_*` du state distant. Après `apply`, l'output
-`ansible_transfer_bucket` alimentera `ANSIBLE_AWS_SSM_BUCKET_NAME`.
+Le job `quality:terraform:plan` obtient des credentials AWS temporaires avec le
+token OIDC émis par GitLab. La variable GitLab `AWS_PLAN_ROLE_ARN` contient
+l'ARN du rôle AWS de lecture utilisé pour le plan ; cet ARN n'est pas un secret
+et doit être disponible dans les pipelines de merge request.
+
+Le state distant utilise le backend HTTP GitLab `microcrm-poc`. Ses adresses et
+son authentification sont construites dans le job à partir de
+`CI_API_V4_URL`, `CI_PROJECT_ID` et `CI_JOB_TOKEN` ; aucun credential durable
+n'est enregistré dans le repository.
+
+Après `apply`, l'output `ansible_transfer_bucket` alimentera
+`ANSIBLE_AWS_SSM_BUCKET_NAME`.
 
 Les commandes `apply` et `destroy` resteront manuelles et protégées. Aucun
 `apply` ne doit être lancé avant vérification du coût et autorisation explicite.
