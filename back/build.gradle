@@ -20,9 +20,11 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+	implementation 'org.liquibase:liquibase-core'
 	implementation 'ro.polak:spring-boot-data-fixtures:0.2.0'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	runtimeOnly 'org.hsqldb:hsqldb'
+	runtimeOnly 'org.postgresql:postgresql'
+	testRuntimeOnly 'org.hsqldb:hsqldb'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

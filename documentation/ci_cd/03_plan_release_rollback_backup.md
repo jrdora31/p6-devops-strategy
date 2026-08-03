@@ -43,7 +43,14 @@ En partie 1, le pipeline conserve les identifiants nécessaires. Le rollback ré
 
 Le backup concerne les données persistantes, pas les images déjà conservées dans la registry.
 
-La base actuelle étant éphémère, aucune preuve de backup réelle ne peut encore être produite. `backup.sh --dry-run` vérifie uniquement les paramètres et les garde-fous. La création du backup et le restore seront définis et testés avec le stockage persistant retenu en partie 2.
+PostgreSQL est désormais la base de l’environnement déployé. Le smoke test
+recrée le conteneur de base et le backend avec un même volume, puis confirme que
+la donnée créée reste accessible. Cette preuve valide la persistance, mais ne
+remplace pas un backup : `pg_dump`, le stockage AWS, la rétention et un restore
+sur une cible contrôlée seront définis et exécutés en `Q`.
+
+`backup.sh --dry-run` conserve pour l’instant ses garde-fous sans prétendre
+produire un backup PostgreSQL exploitable.
 
 ## Preuves actuelles
 

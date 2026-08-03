@@ -29,6 +29,7 @@ Une intégration basique avec Gitlab CI est définie via le fichier [`.gitlab-ci
 ##### Dépendances
 
 - [OpenJDK >= 17](https://openjdk.org/)
+- PostgreSQL 17, lancé localement ou dans un conteneur
 
 ##### Procédure
 
@@ -48,9 +49,34 @@ Une intégration basique avec Gitlab CI est définie via le fichier [`.gitlab-ci
    gradlew.bat build
    ```
 
-3. Démarrer le service:
+3. Démarrer PostgreSQL, puis fournir la connexion au backend. Exemple local avec Docker :
 
    ```shell
+   docker volume create microcrm-postgres
+   docker run --detach --name microcrm-postgres \
+     --publish 5432:5432 \
+     --env POSTGRES_DB=microcrm \
+     --env POSTGRES_USER=microcrm \
+     --env POSTGRES_PASSWORD=microcrm-local \
+     --volume microcrm-postgres:/var/lib/postgresql/data \
+     postgres:17.10-alpine3.23
+   ```
+
+4. Démarrer le service sous Linux :
+
+   ```shell
+   SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/microcrm \
+   SPRING_DATASOURCE_USERNAME=microcrm \
+   SPRING_DATASOURCE_PASSWORD=microcrm-local \
+   java -jar build/libs/microcrm-0.0.1-SNAPSHOT.jar
+   ```
+
+   Sous PowerShell :
+
+   ```powershell
+   $env:SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5432/microcrm'
+   $env:SPRING_DATASOURCE_USERNAME='microcrm'
+   $env:SPRING_DATASOURCE_PASSWORD='microcrm-local'
    java -jar build/libs/microcrm-0.0.1-SNAPSHOT.jar
    ```
 
@@ -175,5 +201,10 @@ vérifie le routage Caddy puis exécute un parcours de création et de lecture :
 ```shell
 sh scripts/ci/smoke.sh \
   --frontend-image microcrm-frontend:local \
-  --backend-image microcrm-backend:local
+  --backend-image microcrm-backend:local \
+  --database-image postgres:17.10-alpine3.23
 ```
+
+Le smoke test démarre PostgreSQL avec un volume temporaire, crée une donnée,
+recrée la base et le backend, puis confirme que cette donnée reste accessible.
+La CI utilise la même image PostgreSQL épinglée par digest.

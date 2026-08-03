@@ -26,15 +26,17 @@ require_command() {
 usage() {
   # Le délimiteur quoté conserve le texte d'aide sans expansion de variables.
   cat <<'EOF'
-Usage: smoke.sh --frontend-image IMAGE --backend-image IMAGE
+Usage: smoke.sh --frontend-image IMAGE --backend-image IMAGE --database-image IMAGE
 
-Lance les images sur un réseau temporaire et vérifie le frontend ainsi que
-l'accès à l'API via /api.
+Lance PostgreSQL et les images applicatives sur un réseau temporaire, vérifie
+l'accès à l'API via /api, puis recrée la base et le backend pour confirmer que
+les données survivent grâce au volume Docker.
 EOF
 }
 
 frontend_image=""
 backend_image=""
+database_image=""
 
 # Analyse manuelle des options compatible avec `/bin/sh`.
 while [ "$#" -gt 0 ]; do
@@ -49,6 +51,11 @@ while [ "$#" -gt 0 ]; do
       backend_image="$2"
       shift 2
       ;;
+    --database-image)
+      [ "$#" -ge 2 ] || die "Valeur manquante après --database-image"
+      database_image="$2"
+      shift 2
+      ;;
     --help | -h)
       usage
       exit 0
@@ -61,6 +68,7 @@ done
 
 [ -n "$frontend_image" ] || die "L'image frontend est obligatoire"
 [ -n "$backend_image" ] || die "L'image backend est obligatoire"
+[ -n "$database_image" ] || die "L'image PostgreSQL est obligatoire"
 require_command docker
 
 # Les noms contiennent le PID afin que deux pipelines concurrents ne partagent
@@ -71,13 +79,52 @@ suffix="${CI_PIPELINE_ID:-local}-$$"
 network="microcrm-smoke-${suffix}"
 frontend_container="microcrm-frontend-${suffix}"
 backend_container="microcrm-backend-${suffix}"
+database_container="microcrm-database-${suffix}"
+database_volume="microcrm-database-${suffix}"
+# Mot de passe éphémère propre à l'exécution. Il n'est ni versionné ni affiché.
+database_password="smoke-${suffix}"
 
 cleanup() {
   # `--force` arrête puis supprime les conteneurs s'ils existent encore. Les
   # erreurs sont ignorées parce que le nettoyage doit aussi fonctionner après
   # un échec survenu avant leur création.
-  docker rm --force "$frontend_container" "$backend_container" >/dev/null 2>&1 || true
+  docker rm --force "$frontend_container" "$backend_container" "$database_container" >/dev/null 2>&1 || true
+  docker volume rm "$database_volume" >/dev/null 2>&1 || true
   docker network rm "$network" >/dev/null 2>&1 || true
+}
+
+start_database() {
+  # Le volume nommé permet de recréer le conteneur PostgreSQL sans perdre les
+  # fichiers de données. Le healthcheck utilise l'outil fourni par PostgreSQL.
+  docker run --detach \
+    --name "$database_container" \
+    --network "$network" \
+    --network-alias database \
+    --env POSTGRES_DB=microcrm \
+    --env POSTGRES_USER=microcrm \
+    --env POSTGRES_PASSWORD="$database_password" \
+    --volume "$database_volume:/var/lib/postgresql/data" \
+    --health-cmd='pg_isready --username=microcrm --dbname=microcrm' \
+    --health-interval=2s \
+    --health-timeout=3s \
+    --health-retries=30 \
+    "$database_image" >/dev/null
+  wait_for_healthy "$database_container"
+}
+
+start_backend() {
+  # Spring reçoit toute sa configuration par variables d'environnement. Le nom
+  # DNS `database` vient de l'alias Docker et remplace toute adresse IP en dur.
+  docker run --detach \
+    --name "$backend_container" \
+    --network "$network" \
+    --network-alias backend \
+    --env SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/microcrm \
+    --env SPRING_DATASOURCE_USERNAME=microcrm \
+    --env SPRING_DATASOURCE_PASSWORD="$database_password" \
+    "$backend_image" >/dev/null
+  wait_for_healthy "$backend_container"
+  assert_non_root "$backend_container"
 }
 # Le trap appelle toujours `cleanup` à la sortie : succès, erreur ou `exit`.
 trap cleanup EXIT
@@ -121,11 +168,9 @@ assert_non_root() {
 
 # Le réseau privé fournit une résolution DNS par nom/alias sans publier de port hôte.
 docker network create "$network" >/dev/null
-# Le backend est lancé en premier. L'alias `backend` correspond à la destination
-# déclarée dans le Caddyfile du frontend.
-docker run --detach --name "$backend_container" --network "$network" --network-alias backend "$backend_image" >/dev/null
-wait_for_healthy "$backend_container"
-assert_non_root "$backend_container"
+docker volume create "$database_volume" >/dev/null
+start_database
+start_backend
 
 docker run --detach --name "$frontend_container" --network "$network" "$frontend_image" >/dev/null
 wait_for_healthy "$frontend_container"
@@ -136,7 +181,7 @@ assert_non_root "$frontend_container"
 docker exec "$frontend_container" wget --quiet --output-document=- http://127.0.0.1/api/persons >/dev/null
 
 # Le parcours fonctionnel reste volontairement court : création d'une personne
-# dans la base éphémère du test, puis recherche de cette même personne par email.
+# dans PostgreSQL, puis recherche de cette même personne par email.
 # L'identifiant unique évite qu'un précédent parcours crée la même adresse.
 email="smoke-${suffix}@example.net"
 # Les guillemets JSON sont échappés ; seule l'adresse calculée est interpolée.
@@ -156,4 +201,16 @@ docker exec "$frontend_container" wget \
   "http://127.0.0.1/api/persons/search/findByEmail?email=${email}" \
   | grep -q "$email"
 
-log_info "Smoke test full-stack et parcours create/read réussis"
+# Recrée les deux composants qui portent et utilisent les données. Le volume est
+# volontairement conservé : la même personne doit rester accessible ensuite.
+docker rm --force "$backend_container" "$database_container" >/dev/null
+start_database
+start_backend
+
+docker exec "$frontend_container" wget \
+  --quiet \
+  --output-document=- \
+  "http://127.0.0.1/api/persons/search/findByEmail?email=${email}" \
+  | grep -q "$email"
+
+log_info "Smoke test full-stack, redémarrage et persistance PostgreSQL réussis"
