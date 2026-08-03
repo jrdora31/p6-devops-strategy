@@ -1,7 +1,7 @@
 ---
 - name: Créer le dossier de configuration K3s
   ansible.builtin.file:
-    path: "{{ k3s_config_path | dirname }}"
+    path: "{{ k3s_server_config_path | dirname }}"
     state: directory
     owner: root
     group: root
@@ -10,7 +10,7 @@
 - name: Déployer la configuration K3s
   ansible.builtin.template:
     src: config.yaml.j2
-    dest: "{{ k3s_config_path }}"
+    dest: "{{ k3s_server_config_path }}"
     owner: root
     group: root
     mode: "0600"
@@ -19,26 +19,26 @@
 - name: Lire la version K3s installée
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s --version
-  register: k3s_installed_version
+  register: k3s_server_installed_version
   changed_when: false
   failed_when: false
 
 - name: Télécharger le script d'installation officiel K3s
   ansible.builtin.get_url:
-    url: "{{ k3s_install_script_url }}"
+    url: "{{ k3s_server_install_script_url }}"
     dest: /usr/local/src/k3s-install.sh
     owner: root
     group: root
     mode: "0755"
-  when: k3s_version not in k3s_installed_version.stdout
+  when: k3s_server_version not in k3s_server_installed_version.stdout
 
 - name: Installer la version K3s attendue
   ansible.builtin.command:
     cmd: /usr/local/src/k3s-install.sh
   environment:
-    INSTALL_K3S_VERSION: "{{ k3s_version }}"
-    INSTALL_K3S_EXEC: "server --config {{ k3s_config_path }}"
-  when: k3s_version not in k3s_installed_version.stdout
+    INSTALL_K3S_VERSION: "{{ k3s_server_version }}"
+    INSTALL_K3S_EXEC: "server --config {{ k3s_server_config_path }}"
+  when: k3s_server_version not in k3s_server_installed_version.stdout
   changed_when: true
 
 - name: Appliquer les handlers avant les contrôles de santé
@@ -59,8 +59,8 @@
 - name: Vérifier que le nœud Kubernetes est prêt
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s kubectl get node --output=name
-  register: k3s_node_check
+  register: k3s_server_node_check
   changed_when: false
   retries: 12
   delay: 5
-  until: k3s_node_check.rc == 0
+  until: k3s_server_node_check.rc == 0
