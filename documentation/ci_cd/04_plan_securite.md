@@ -44,7 +44,7 @@ Aucune valeur de secret ne doit apparaître dans le repository ou dans les logs.
 | Identifiants temporaires de registry GitLab | Publier les images | Variables fournies au job GitLab | Push sur la registry du projet | Invalider le job/token et contrôler les images publiées |
 | Token SonarQube | Envoyer les analyses | Variable GitLab masquée, non protégée pour être disponible dans les merge requests du repository | Analyse du seul projet MicroCRM | Révoquer puis générer un nouveau token |
 | Webhook de notification | Envoyer le statut du pipeline | Variable GitLab masquée | Publication sur le seul canal retenu | Révoquer le webhook et contrôler les messages envoyés |
-| Identité AWS | Provisionner et déployer | Identité temporaire fédérée depuis GitLab | Rôle limité aux ressources MicroCRM | Révoquer la session, auditer CloudTrail et réduire la policy |
+| Identité AWS | Planifier, provisionner et déployer | Identité temporaire fédérée depuis GitLab | Rôle de plan en lecture seule séparé du rôle d'apply ; confiance limitée au projet et aux branches autorisées | Révoquer la session, auditer CloudTrail et réduire la policy |
 
 ## État des variables GitLab
 

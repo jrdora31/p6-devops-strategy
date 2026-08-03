@@ -62,9 +62,12 @@ L'instance reçoit une IPv4 publique dynamique. Elle peut changer après un arr�
 ## State, identités et variables
 
 - le state Terraform porte le nom `microcrm-poc` dans GitLab et n'est jamais versionné dans Git ;
-- les futurs jobs AWS obtiendront des credentials temporaires par OIDC et AWS STS ;
-- l'Identity Provider et le rôle AWS doivent encore être créés lors du bootstrap
-  de `N.7`, avec une confiance limitée au projet MicroCRM et aux refs autorisées ;
+- les jobs AWS obtiennent des credentials temporaires par OIDC et AWS STS ;
+- l'Identity Provider GitLab et le rôle de plan en lecture seule sont configurés ;
+- un rôle séparé réalisera les `apply` et `destroy` manuels, avec une confiance
+  limitée au projet MicroCRM et aux branches `dev` et `main` ;
+- la policy d'écriture versionnée limite IAM et S3 au préfixe `microcrm-poc` et
+  les actions EC2 au cycle de vie nécessaire au POC ;
 - l'EC2 utilise un instance profile pour Systems Manager ;
 - les plans Terraform sont réservés aux membres autorisés et ne doivent contenir aucun secret ;
 - les credentials PostgreSQL, registry et GitLab Agent restent dans des variables protégées ou des Secrets Kubernetes.

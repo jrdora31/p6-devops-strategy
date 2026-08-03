@@ -24,13 +24,10 @@ test:terraform:
 
 # Produit un plan réel avec des credentials AWS temporaires obtenus par OIDC.
 # Le job ne possède aucun droit d'écriture et ne lance jamais terraform apply.
-quality:terraform:plan:
+.terraform:aws-oidc:
   image:
     name: hashicorp/terraform:1.15.8
     entrypoint: [""]
-  stage: quality
-  needs:
-    - test:terraform
   id_tokens:
     GITLAB_OIDC_TOKEN:
       aud: https://gitlab.com
@@ -45,7 +42,6 @@ quality:terraform:plan:
     TF_HTTP_UNLOCK_METHOD: "DELETE"
     TF_HTTP_USERNAME: "gitlab-ci-token"
     TF_HTTP_PASSWORD: "$CI_JOB_TOKEN"
-    AWS_ROLE_ARN: "$AWS_PLAN_ROLE_ARN"
     AWS_WEB_IDENTITY_TOKEN_FILE: "$CI_PROJECT_DIR/.aws/gitlab-oidc-token"
   cache:
     key:
@@ -58,14 +54,27 @@ quality:terraform:plan:
     - mkdir -p "$TF_PLUGIN_CACHE_DIR" "$CI_PROJECT_DIR/.aws" "$CI_PROJECT_DIR/.ci/reports/terraform"
     - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - chmod 600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
+
+# Produit un plan réel avec des credentials AWS temporaires obtenus par OIDC.
+# Le job ne possède aucun droit d'écriture et ne lance jamais terraform apply.
+quality:terraform:plan:
+  extends: .terraform:aws-oidc
+  stage: quality
+  needs:
+    - test:terraform
+  variables:
+    AWS_ROLE_ARN: "$AWS_PLAN_ROLE_ARN"
   script:
     - terraform -chdir=infrastructure/terraform init -reconfigure
     - terraform -chdir=infrastructure/terraform plan -no-color -out="$CI_PROJECT_DIR/.terraform-plan"
     - terraform -chdir=infrastructure/terraform show -no-color "$CI_PROJECT_DIR/.terraform-plan" > "$CI_PROJECT_DIR/.ci/reports/terraform/plan.txt"
   artifacts:
     when: always
-    expire_in: 30 days
+    # Le plan binaire est conservé brièvement : il peut contenir des valeurs
+    # sensibles, mais garantit que le job apply exécute exactement ce plan.
+    expire_in: 1 day
     paths:
+      - .terraform-plan
       - .ci/reports/terraform/plan.txt
   rules:
     - if: '$AWS_PLAN_ROLE_ARN == null || $AWS_PLAN_ROLE_ARN == ""'
@@ -78,6 +87,146 @@ quality:terraform:plan:
       changes:
         - infrastructure/terraform/**/*
         - .gitlab/ci/iac.yml
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - infrastructure/terraform/**/*
+        - .gitlab/ci/iac.yml
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+
+# Applique exclusivement le plan binaire contrôlé et archivé par le job de
+# qualité. Le rôle AWS d'écriture est distinct du rôle de lecture du plan.
+deploy:terraform:apply:
+  extends: .terraform:aws-oidc
+  stage: deploy
+  needs:
+    - job: quality:terraform:plan
+      artifacts: true
+  variables:
+    AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
+  resource_group: aws-poc
+  environment:
+    name: aws-poc-infrastructure
+    on_stop: deploy:terraform:destroy
+  script:
+    - test -f "$CI_PROJECT_DIR/.terraform-plan"
+    - terraform -chdir=infrastructure/terraform init -reconfigure
+    - terraform -chdir=infrastructure/terraform apply -auto-approve "$CI_PROJECT_DIR/.terraform-plan"
+    - terraform -chdir=infrastructure/terraform output -json > "$CI_PROJECT_DIR/.ci/reports/terraform/outputs.json"
+    - printf 'AWS_REGION=%s\n' "$(terraform -chdir=infrastructure/terraform output -raw aws_region)" > "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
+    - printf 'ANSIBLE_AWS_SSM_BUCKET_NAME=%s\n' "$(terraform -chdir=infrastructure/terraform output -raw ansible_transfer_bucket)" >> "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - .ci/reports/terraform/outputs.json
+    reports:
+      dotenv: .ci/reports/terraform/ansible.env
+  rules:
+    - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+      when: manual
+  allow_failure: false
+
+# Le destroy est une action séparée, manuelle et sérialisée. Une confirmation
+# explicite saisie au lancement évite une suppression déclenchée par erreur.
+deploy:terraform:destroy:
+  extends: .terraform:aws-oidc
+  stage: deploy
+  variables:
+    AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
+  resource_group: aws-poc
+  environment:
+    name: aws-poc-infrastructure
+    action: stop
+  script:
+    - test "$TF_DESTROY_CONFIRM" = "destroy-microcrm-poc"
+    - terraform -chdir=infrastructure/terraform init -reconfigure
+    - terraform -chdir=infrastructure/terraform plan -destroy -no-color -out="$CI_PROJECT_DIR/.terraform-destroy-plan"
+    - terraform -chdir=infrastructure/terraform show -no-color "$CI_PROJECT_DIR/.terraform-destroy-plan" > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-plan.txt"
+    - terraform -chdir=infrastructure/terraform apply -auto-approve "$CI_PROJECT_DIR/.terraform-destroy-plan"
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - .ci/reports/terraform/destroy-plan.txt
+  rules:
+    - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+      when: manual
+  allow_failure: false
+
+# Les jobs runtime Ansible utilisent les outputs Terraform transmis par le
+# rapport dotenv et le même rôle AWS temporaire que le provisionnement.
+.ansible:aws-oidc:
+  image: python:3.12.11-slim-bookworm
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: https://gitlab.com
+  variables:
+    ANSIBLE_CONFIG: "$CI_PROJECT_DIR/ansible/ansible.cfg"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
+    AWS_WEB_IDENTITY_TOKEN_FILE: "$CI_PROJECT_DIR/.aws/gitlab-oidc-token"
+    SESSION_MANAGER_PLUGIN_VERSION: "1.2.835.0"
+  cache:
+    key:
+      files:
+        - ansible/requirements-ci.txt
+        - ansible/requirements.yml
+      prefix: ansible
+    paths:
+      - .cache/pip/
+  before_script:
+    - mkdir -p "$CI_PROJECT_DIR/.aws"
+    - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+    - chmod 600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
+    - apt-get update && apt-get install --yes --no-install-recommends curl
+    - curl --fail --silent --show-error "https://s3.amazonaws.com/session-manager-downloads/plugin/${SESSION_MANAGER_PLUGIN_VERSION}/ubuntu_64bit/session-manager-plugin.deb" --output /tmp/session-manager-plugin.deb
+    - dpkg --install /tmp/session-manager-plugin.deb
+    - session-manager-plugin --version
+    - rm -f /tmp/session-manager-plugin.deb && rm -rf /var/lib/apt/lists/*
+    - python -m pip install --requirement ansible/requirements-ci.txt
+    - ansible-galaxy collection install --requirements-file ansible/requirements.yml
+
+# Le check mode s'exécute automatiquement après un apply Terraform demandé
+# manuellement. Il prouve la connexion SSM avant toute configuration réelle.
+deploy:ansible:check:
+  extends: .ansible:aws-oidc
+  stage: deploy
+  needs:
+    - job: deploy:terraform:apply
+      artifacts: true
+  resource_group: aws-poc
+  script:
+    - ansible-inventory --graph
+    - ansible-playbook --check --diff ansible/playbooks/site.yml
+  rules:
+    - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+  allow_failure: false
+
+# La configuration réelle reste une seconde décision manuelle, disponible
+# uniquement si Terraform et le check mode Ansible ont réussi.
+deploy:ansible:apply:
+  extends: .ansible:aws-oidc
+  stage: deploy
+  needs:
+    - job: deploy:terraform:apply
+      artifacts: true
+    - job: deploy:ansible:check
+  resource_group: aws-poc
+  environment:
+    name: aws-poc-infrastructure
+  script:
+    - ansible-playbook --diff ansible/playbooks/site.yml
+  rules:
+    - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+      when: manual
+  allow_failure: false
 
 # Vérifie la syntaxe, l'idempotence déclarative et les conventions Ansible.
 test:ansible:
