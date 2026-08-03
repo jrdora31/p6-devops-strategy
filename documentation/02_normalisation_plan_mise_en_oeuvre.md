@@ -240,9 +240,9 @@ Chaque ajout est validé séparément. Un stage n’est ajouté que lorsque ses 
 
 #### 3.2.6 Déployer avec Kubernetes et Helm
 
-- **Description :** déployer les images avec un chart Helm, une configuration externalisée et des healthchecks.
+- **Description :** valider le chart sur Minikube, puis déployer les mêmes templates sur K3s/AWS avec des values adaptées. Le chart utilise des Services internes, un Ingress, des Secrets externes, un volume PostgreSQL, des probes et des limites de ressources.
 - **Responsable :** ingénieur DevOps chargé de MicroCRM.
-- **Livrables :** chart Helm, manifests générés et deployment AWS vérifié.
+- **Livrables :** chart Helm, manifests générés, rapports `helm lint`/Trivy et deployment AWS vérifié.
 
 #### 3.2.7 Vérifier l’exploitation
 

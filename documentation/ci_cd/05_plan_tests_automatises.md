@@ -14,6 +14,8 @@
 | Scripts Bash | Analyse statique | Erreurs et pratiques dangereuses détectées par ShellCheck | MR, `dev`, `main` et tags | Aucun diagnostic ShellCheck | Log du job `quality:shellcheck` |
 | Application full-stack | Analyse statique SonarQube | Bugs, vulnérabilités, security hotspots, code smells, duplication et couverture | À chaque merge request et sur `main` | Quality gate réussi | Dashboard SonarQube et job `quality:sonarqube` |
 | Images frontend, backend et PostgreSQL | Smoke test full-stack et persistance | Healthchecks, utilisateurs applicatifs non-root, réseau Docker, appel API, création d’une personne, recréation de PostgreSQL et du backend puis nouvelle lecture | MR, `dev`, `main`, tags et routine planifiée | Trois conteneurs `healthy`, UID applicatifs différents de `0` et donnée encore accessible après redémarrage | Log du job `verify:images` |
+| Chart Helm | Validation statique | Structure du chart, schéma des values et rendu des manifests Minikube | Chaque pipeline | `helm lint` et `helm template` réussissent ; une valeur invalide est refusée | Log du job `test:helm` |
+| Ressources Kubernetes | Analyse de configuration | Contextes de sécurité, capabilities, volumes et configuration des workloads | Chaque pipeline | Aucune mauvaise configuration Trivy `HIGH` ou `CRITICAL` | Artifacts du job `quality:trivy:kubernetes` |
 
 ## Règles bloquantes
 

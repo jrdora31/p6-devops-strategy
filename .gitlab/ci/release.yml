@@ -198,3 +198,29 @@ release:create:
           link_type: other
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+
+# Produit une archive Helm versionnée, réutilisable par le job de deployment.
+release:helm:package:
+  image:
+    name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
+    entrypoint: [""]
+  stage: release
+  script:
+    - mkdir -p .ci/packages
+    - >-
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        CHART_VERSION="${CI_COMMIT_TAG#v}";
+      else
+        CHART_VERSION="0.1.0-${CI_COMMIT_SHORT_SHA}";
+      fi;
+      helm package helm/microcrm
+      --destination .ci/packages
+      --version "$CHART_VERSION"
+      --app-version "$CI_COMMIT_SHA"
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - .ci/packages/microcrm-*.tgz
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
