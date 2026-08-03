@@ -51,7 +51,11 @@ Une même ressource n'est gérée que par un seul outil. Terraform fournit les t
 - `80/443` : entrée HTTP(S) de l'application via Traefik ;
 - `22` : fermé ; l'administration passe par Systems Manager ;
 - `6443` : fermé sur Internet ; GitLab communique avec Kubernetes au moyen de son agent ;
-- sorties Internet : nécessaires aux images, paquets et connexions GitLab/SSM.
+- sorties Internet : limitées à HTTP `80` pour les dépôts Ubuntu, HTTPS `443`
+  pour SSM, registries et GitLab, et NTP `123` vers Amazon Time Sync ;
+- exception Trivy `AWS-0104` ciblée sur les sorties HTTP/HTTPS, valable jusqu'au
+  1er septembre 2026 ; une cible privée utiliserait des VPC endpoints et un
+  contrôle d'egress plus strict.
 
 L'instance reçoit une IPv4 publique dynamique. Elle peut changer après un arrêt, sans modifier le code ni l'inventaire Ansible.
 

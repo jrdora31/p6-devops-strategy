@@ -78,9 +78,35 @@ resource "aws_vpc_security_group_ingress_rule" "https" {
   ip_protocol       = "tcp"
 }
 
-resource "aws_vpc_security_group_egress_rule" "all_ipv4" {
+# Le POC sans NAT Gateway ni VPC endpoints doit joindre les dépôts Ubuntu,
+# registries, GitLab et AWS SSM. Le risque d'une destination Internet non
+# restreinte est accepté temporairement, mais limité à HTTP/HTTPS et réévalué
+# après le projet.
+#trivy:ignore:AWS-0104:exp:2026-09-01
+resource "aws_vpc_security_group_egress_rule" "http" {
   security_group_id = aws_security_group.k3s.id
-  description       = "Required for packages, images, SSM and GitLab Agent"
+  description       = "HTTP for Ubuntu package repositories"
   cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+}
+
+#trivy:ignore:AWS-0104:exp:2026-09-01
+resource "aws_vpc_security_group_egress_rule" "https" {
+  security_group_id = aws_security_group.k3s.id
+  description       = "HTTPS for SSM, registries and GitLab Agent"
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+}
+
+resource "aws_vpc_security_group_egress_rule" "amazon_time_sync" {
+  security_group_id = aws_security_group.k3s.id
+  description       = "NTP to Amazon Time Sync Service"
+  cidr_ipv4         = "169.254.169.123/32"
+  from_port         = 123
+  to_port           = 123
+  ip_protocol       = "udp"
 }
