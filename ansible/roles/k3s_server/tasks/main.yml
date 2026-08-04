@@ -70,10 +70,9 @@
     (k3s_server_installed_version.stdout | default(''))
 
 - name: Stabiliser K3s avant de configurer le GitLab Agent
-  when: >-
-    not ansible_check_mode or
-    k3s_server_version in
-    (k3s_server_installed_version.stdout | default(''))
+  when: not ansible_check_mode
+  tags:
+    - k3s_runtime_readiness
   block:
     - name: Attendre que l'API Kubernetes soit réellement prête
       block:
