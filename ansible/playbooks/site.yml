@@ -26,6 +26,7 @@
         fail_msg: >-
           GITLAB_AGENT_TOKEN doit être défini comme variable GitLab protégée
           et masquée avant l'exécution du playbook.
+      when: not ansible_check_mode
 
     - name: Attendre que Systems Manager accepte la connexion
       ansible.builtin.wait_for_connection:
