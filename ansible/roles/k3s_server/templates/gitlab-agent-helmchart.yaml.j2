@@ -1,0 +1,19 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: {{ k3s_server_gitlab_agent_release_name }}
+  namespace: kube-system
+spec:
+  repo: https://charts.gitlab.io
+  chart: gitlab-agent
+  version: {{ k3s_server_gitlab_agent_chart_version | quote }}
+  targetNamespace: {{ k3s_server_gitlab_agent_namespace }}
+  createNamespace: true
+  failurePolicy: abort
+  timeout: 300s
+  valuesContent: |-
+    replicas: 1
+    config:
+      kasAddress: {{ k3s_server_gitlab_agent_kas_address | to_json }}
+      secretName: {{ k3s_server_gitlab_agent_secret_name | to_json }}

@@ -19,6 +19,15 @@
           ANSIBLE_AWS_SSM_BUCKET_NAME doit contenir l'output Terraform
           ansible_transfer_bucket.
 
+    - name: Vérifier le jeton du GitLab Agent
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.env', 'GITLAB_AGENT_TOKEN') | length > 0
+        fail_msg: >-
+          GITLAB_AGENT_TOKEN doit être défini comme variable GitLab protégée
+          et masquée avant l'exécution du playbook.
+      when: not ansible_check_mode
+
     - name: Attendre que Systems Manager accepte la connexion
       ansible.builtin.wait_for_connection:
         timeout: 300

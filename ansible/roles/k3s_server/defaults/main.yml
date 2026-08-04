@@ -5,3 +5,23 @@ k3s_server_version: v1.33.13+k3s1
 k3s_server_install_script_url: https://get.k3s.io
 k3s_server_config_path: /etc/rancher/k3s/config.yaml
 k3s_server_kubeconfig_path: /etc/rancher/k3s/k3s.yaml
+
+# L'ouverture du port 6443 ne signifie pas encore que l'API Kubernetes peut
+# traiter des requêtes. Ces délais bornent l'attente fonctionnelle et une
+# unique tentative de récupération avant de produire un diagnostic explicite.
+k3s_server_api_ready_retries: 18
+k3s_server_api_ready_delay: 10
+k3s_server_node_ready_timeout: 180s
+k3s_server_node_ready_retries: 2
+
+# Le chart et l'image agentk restent figés par cette version. L'installation
+# est confiée au Helm Controller déjà fourni par K3s.
+k3s_server_gitlab_agent_chart_version: "2.29.0"
+k3s_server_gitlab_agent_release_name: microcrm-poc
+k3s_server_gitlab_agent_namespace: gitlab-agent-microcrm-poc
+k3s_server_gitlab_agent_secret_name: microcrm-poc-gitlab-agent-token
+k3s_server_gitlab_agent_kas_address: wss://kas.gitlab.com
+k3s_server_gitlab_agent_manifest_path: >-
+  /var/lib/rancher/k3s/server/manifests/microcrm-poc-gitlab-agent.yaml
+k3s_server_gitlab_agent_token: >-
+  {{ lookup('ansible.builtin.env', 'GITLAB_AGENT_TOKEN') }}
