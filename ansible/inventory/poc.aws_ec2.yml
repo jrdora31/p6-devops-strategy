@@ -18,6 +18,6 @@ compose:
   ansible_host: instance_id
 
 groups:
-  k3s_servers: tags.Ansible == 'k3s-server'
+  k3s_servers: ec2_tags.Ansible == 'k3s-server'
 
 strict: true
