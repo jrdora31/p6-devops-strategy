@@ -74,11 +74,11 @@ variable "http_ingress_cidrs" {
 variable "instance_type" {
   description = "Type EC2 du nœud K3s."
   type        = string
-  default     = "t3.medium"
+  default     = "m7i-flex.large"
 
   validation {
-    condition     = contains(["t3.medium", "t3.large"], var.instance_type)
-    error_message = "Le POC autorise uniquement t3.medium ou t3.large après validation du coût."
+    condition     = contains(["c7i-flex.large", "m7i-flex.large"], var.instance_type)
+    error_message = "Le POC autorise uniquement c7i-flex.large ou m7i-flex.large, types x86_64 Free Tier adaptés à K3s."
   }
 }
 

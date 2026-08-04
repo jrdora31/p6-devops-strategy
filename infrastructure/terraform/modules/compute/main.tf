@@ -20,6 +20,12 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+# Interroge AWS dès le plan afin de refuser un type d'instance incompatible
+# avant l'étape manuelle et coûteuse de création de l'EC2.
+data "aws_ec2_instance_type" "selected" {
+  instance_type = var.instance_type
+}
+
 locals {
   selected_ami_id = coalesce(var.ami_id, try(data.aws_ami.ubuntu[0].id, null))
 }
@@ -82,6 +88,23 @@ resource "aws_instance" "k3s" {
     Name       = "${var.name_prefix}-k3s"
     Ansible    = "k3s-server"
     Kubernetes = "k3s"
+  }
+
+  lifecycle {
+    precondition {
+      condition     = data.aws_ec2_instance_type.selected.free_tier_eligible
+      error_message = "Le type EC2 sélectionné doit être éligible au Free Tier dans la région AWS courante."
+    }
+
+    precondition {
+      condition     = contains(data.aws_ec2_instance_type.selected.supported_architectures, "x86_64")
+      error_message = "Le type EC2 sélectionné doit prendre en charge x86_64 pour l'AMI Ubuntu amd64 du POC."
+    }
+
+    precondition {
+      condition     = data.aws_ec2_instance_type.selected.default_vcpus >= 2 && data.aws_ec2_instance_type.selected.memory_size >= 4096
+      error_message = "Le nœud K3s du POC nécessite au minimum 2 vCPU et 4 Gio de RAM."
+    }
   }
 
   depends_on = [aws_iam_role_policy_attachment.ssm]
