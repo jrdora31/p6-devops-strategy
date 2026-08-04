@@ -13,7 +13,8 @@ Ce chart déploie le frontend, le backend et PostgreSQL dans Kubernetes.
 
 Les Deployments utilisent des rolling updates. Chaque conteneur possède des
 startup, readiness et liveness probes, des ressources minimales et un
-`securityContext`. Les credentials PostgreSQL ne sont pas stockés dans le chart.
+`securityContext`. Les credentials PostgreSQL ne sont pas stockés dans le
+repository ; la CI les transmet au chart depuis des variables GitLab protégées.
 Le chart fournit à Caddy l'adresse du Service backend avec la variable
 `BACKEND_ADDRESS` ; aucune adresse IP ni aucun nom de release n'est intégré à
 l'image.
@@ -126,10 +127,11 @@ Cette commande ne supprime pas automatiquement le namespace ni tous les volumes
 persistants. Leur suppression doit rester une action explicite afin d'éviter une
 perte de données involontaire.
 
-## Secret requis
+## Gestion des Secrets
 
-Le namespace cible doit contenir un Secret nommé `microcrm-database` avec les
-clés `username` et `password`. Il doit être créé hors du repository.
+Pour un déploiement local, le namespace cible doit contenir un Secret nommé
+`microcrm-database` avec les clés `username` et `password`. Il reste créé hors
+du repository :
 
 ```shell
 kubectl --namespace microcrm create secret generic microcrm-database \
@@ -138,6 +140,8 @@ kubectl --namespace microcrm create secret generic microcrm-database \
   --dry-run=client --output=yaml | kubectl apply -f -
 ```
 
-La cible K3s/AWS réutilise le même chart avec `values-k3s.yaml`. Les variables
-GitLab protégées, le registry Secret et le Secret PostgreSQL seront créés lors
-de la mise en place de l'infrastructure.
+Pour K3s/AWS, le job manuel `deploy:helm:aws` utilise le kubeconfig injecté par
+le GitLab Agent. Il génère le Secret Registry depuis le deploy token GitLab
+`gitlab-deploy-token` et le Secret PostgreSQL depuis la variable protégée
+`KUBERNETES_DATABASE_PASSWORD`. Les valeurs sensibles ne sont ni versionnées ni
+conservées comme artifacts du pipeline.

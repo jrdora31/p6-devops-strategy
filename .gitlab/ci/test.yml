@@ -76,3 +76,16 @@ test:helm:
     # `template` prouve que les ressources locales et AWS peuvent être générées.
     - helm template microcrm helm/microcrm --namespace microcrm --values helm/microcrm/values-minikube.yaml > /dev/null
     - helm template microcrm helm/microcrm --namespace microcrm --values helm/microcrm/values-k3s.yaml > /dev/null
+    # Couvre aussi le chemin réellement utilisé par le déploiement AWS, avec
+    # uniquement de fausses valeurs encodées pour les deux Secrets gérés.
+    - >-
+      helm template microcrm helm/microcrm
+      --namespace microcrm
+      --values helm/microcrm/values-k3s.yaml
+      --set registrySecret.enabled=true
+      --set-string registrySecret.server=registry.gitlab.com
+      --set-string registrySecret.usernameBase64=Z2l0bGFi
+      --set-string registrySecret.passwordBase64=dG9rZW4=
+      --set database.managedSecret.enabled=true
+      --set-string database.managedSecret.passwordBase64=dGVzdA==
+      > /dev/null

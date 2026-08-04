@@ -1,8 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["frontend", "backend", "database"],
+  "required": ["frontend", "backend", "database", "registrySecret"],
   "properties": {
+    "registrySecret": {
+      "type": "object",
+      "required": ["enabled", "name", "server", "usernameBase64", "passwordBase64"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "name": { "type": "string", "minLength": 1 },
+        "server": { "type": "string" },
+        "usernameBase64": { "type": "string" },
+        "passwordBase64": { "type": "string" }
+      }
+    },
     "frontend": {
       "type": "object",
       "required": ["replicaCount", "image", "service", "resources"],
@@ -21,13 +32,22 @@
     },
     "database": {
       "type": "object",
-      "required": ["image", "name", "existingSecret", "usernameKey", "passwordKey", "persistence"],
+      "required": ["image", "name", "existingSecret", "usernameKey", "passwordKey", "managedSecret", "persistence"],
       "properties": {
         "image": { "$ref": "#/definitions/image" },
         "name": { "type": "string", "minLength": 1 },
         "existingSecret": { "type": "string", "minLength": 1 },
         "usernameKey": { "type": "string", "minLength": 1 },
         "passwordKey": { "type": "string", "minLength": 1 },
+        "managedSecret": {
+          "type": "object",
+          "required": ["enabled", "username", "passwordBase64"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "username": { "type": "string", "minLength": 1 },
+            "passwordBase64": { "type": "string" }
+          }
+        },
         "persistence": {
           "type": "object",
           "required": ["enabled", "size"],

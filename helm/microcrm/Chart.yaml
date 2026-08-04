@@ -2,6 +2,6 @@ apiVersion: v2
 name: microcrm
 description: Déploiement Helm de MicroCRM avec frontend, backend et PostgreSQL
 type: application
-version: 0.1.0
-appVersion: "0.1.0"
+version: 0.1.1
+appVersion: "0.1.1"
 kubeVersion: ">=1.30.0-0"
