@@ -124,7 +124,7 @@ deploy:terraform:apply:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
-      when: manual
+      when: on_success
   allow_failure: false
 
 # Le destroy est une action séparée, manuelle et sérialisée. Une confirmation
@@ -189,8 +189,8 @@ deploy:terraform:destroy:
     - python -m pip install --requirement ansible/requirements-ci.txt
     - ansible-galaxy collection install --requirements-file ansible/requirements.yml
 
-# Le check mode s'exécute automatiquement après un apply Terraform demandé
-# manuellement. Il prouve la connexion SSM avant toute configuration réelle.
+# Le check mode s'exécute automatiquement après l'apply Terraform. Il prouve
+# la connexion SSM avant toute configuration réelle.
 deploy:ansible:check:
   extends: .ansible:aws-oidc
   stage: deploy
@@ -207,8 +207,8 @@ deploy:ansible:check:
     - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
   allow_failure: false
 
-# La configuration réelle reste une seconde décision manuelle, disponible
-# uniquement si Terraform et le check mode Ansible ont réussi.
+# La configuration réelle s'enchaîne automatiquement uniquement si Terraform
+# et le check mode Ansible ont réussi.
 deploy:ansible:apply:
   extends: .ansible:aws-oidc
   stage: deploy
@@ -225,7 +225,7 @@ deploy:ansible:apply:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
-      when: manual
+      when: on_success
   allow_failure: false
 
 # Vérifie la syntaxe, l'idempotence déclarative et les conventions Ansible.
