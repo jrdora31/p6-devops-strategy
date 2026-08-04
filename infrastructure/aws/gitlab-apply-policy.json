@@ -46,6 +46,7 @@
         "iam:DeleteRole",
         "iam:GetRole",
         "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
         "iam:ListRolePolicies",
         "iam:TagRole",
         "iam:UntagRole",
