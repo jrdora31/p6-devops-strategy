@@ -81,3 +81,53 @@
     not ansible_check_mode or
     k3s_server_version in
     (k3s_server_installed_version.stdout | default(''))
+
+- name: Installer le Secret du GitLab Agent sans l'écrire durablement sur l'hôte
+  when: not ansible_check_mode
+  no_log: true
+  block:
+    - name: Préparer temporairement le namespace et le Secret du GitLab Agent
+      ansible.builtin.template:
+        src: gitlab-agent-secret.yaml.j2
+        dest: /run/microcrm-gitlab-agent-secret.yaml
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Appliquer le namespace et le Secret du GitLab Agent
+      ansible.builtin.command:
+        cmd: >-
+          /usr/local/bin/k3s kubectl apply
+          --filename /run/microcrm-gitlab-agent-secret.yaml
+      register: k3s_server_gitlab_agent_secret_apply
+      changed_when: >-
+        'created' in k3s_server_gitlab_agent_secret_apply.stdout or
+        'configured' in k3s_server_gitlab_agent_secret_apply.stdout
+  always:
+    - name: Retirer le manifeste temporaire contenant le jeton
+      ansible.builtin.file:
+        path: /run/microcrm-gitlab-agent-secret.yaml
+        state: absent
+
+- name: Déclarer le chart GitLab Agent au Helm Controller K3s
+  ansible.builtin.template:
+    src: gitlab-agent-helmchart.yaml.j2
+    dest: "{{ k3s_server_gitlab_agent_manifest_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Attendre que le GitLab Agent soit prêt
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl wait
+      --namespace {{ k3s_server_gitlab_agent_namespace }}
+      --for=condition=Ready pod
+      --selector=app.kubernetes.io/instance={{ k3s_server_gitlab_agent_release_name }}
+      --timeout=60s
+  register: k3s_server_gitlab_agent_ready
+  changed_when: false
+  retries: 6
+  delay: 10
+  until: k3s_server_gitlab_agent_ready.rc == 0
+  when: not ansible_check_mode

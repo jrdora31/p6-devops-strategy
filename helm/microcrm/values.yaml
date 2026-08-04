@@ -3,6 +3,13 @@ fullnameOverride: ""
 
 imagePullSecrets: []
 
+registrySecret:
+  enabled: false
+  name: microcrm-registry
+  server: ""
+  usernameBase64: ""
+  passwordBase64: ""
+
 frontend:
   replicaCount: 1
   image:
@@ -47,6 +54,10 @@ database:
   existingSecret: microcrm-database
   usernameKey: username
   passwordKey: password
+  managedSecret:
+    enabled: false
+    username: microcrm
+    passwordBase64: ""
   persistence:
     enabled: true
     size: 2Gi
