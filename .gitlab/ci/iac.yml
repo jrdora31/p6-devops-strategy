@@ -127,8 +127,8 @@ deploy:terraform:apply:
       when: on_success
   allow_failure: false
 
-# Le destroy est une action séparée, manuelle et sérialisée. Une confirmation
-# explicite saisie au lancement évite une suppression déclenchée par erreur.
+# Le destroy est une action séparée, manuelle et sérialisée. GitLab demande une
+# confirmation native au lancement : aucune variable temporaire n'est requise.
 deploy:terraform:destroy:
   extends: .terraform:aws-oidc
   stage: deploy
@@ -138,8 +138,8 @@ deploy:terraform:destroy:
   environment:
     name: aws-poc-infrastructure
     action: stop
+  manual_confirmation: "Confirmer la destruction complète de l'environnement AWS MicroCRM"
   script:
-    - test "$TF_DESTROY_CONFIRM" = "destroy-microcrm-poc"
     - terraform -chdir=infrastructure/terraform init -reconfigure
     - terraform -chdir=infrastructure/terraform plan -destroy -no-color -out="$CI_PROJECT_DIR/.terraform-destroy-plan"
     - terraform -chdir=infrastructure/terraform show -no-color "$CI_PROJECT_DIR/.terraform-destroy-plan" > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-plan.txt"
@@ -152,7 +152,11 @@ deploy:terraform:destroy:
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+    # Sur main, le job est disponible après chaque pipeline de déploiement.
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+    # `dev` conserve le cycle Web explicitement demandé pour les essais IaC.
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
       when: manual
   allow_failure: false
 
