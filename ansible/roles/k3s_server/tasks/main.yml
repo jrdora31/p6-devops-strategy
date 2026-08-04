@@ -69,25 +69,134 @@
     k3s_server_version in
     (k3s_server_installed_version.stdout | default(''))
 
-- name: Vérifier que le nœud Kubernetes est prêt
-  ansible.builtin.command:
-    argv:
-      - /usr/local/bin/k3s
-      - kubectl
-      - wait
-      - --for=condition=Ready
-      - node
-      - --all
-      - --timeout=30s
-  register: k3s_server_node_check
-  changed_when: false
-  retries: 12
-  delay: 5
-  until: k3s_server_node_check.rc == 0
+- name: Stabiliser K3s avant de configurer le GitLab Agent
   when: >-
     not ansible_check_mode or
     k3s_server_version in
     (k3s_server_installed_version.stdout | default(''))
+  block:
+    - name: Attendre que l'API Kubernetes soit réellement prête
+      block:
+        - name: Interroger le point de contrôle Kubernetes readyz
+          ansible.builtin.command:
+            cmd: /usr/local/bin/k3s kubectl get --raw=/readyz
+          register: k3s_server_api_initial_ready
+          changed_when: false
+          retries: "{{ k3s_server_api_ready_retries }}"
+          delay: "{{ k3s_server_api_ready_delay }}"
+          until: >-
+            k3s_server_api_initial_ready.rc == 0 and
+            'ok' in k3s_server_api_initial_ready.stdout
+      rescue:
+        - name: Redémarrer K3s une seule fois après une API durablement indisponible
+          ansible.builtin.systemd_service:
+            name: k3s
+            state: restarted
+            daemon_reload: true
+
+        - name: Attendre le retour du port Kubernetes après récupération
+          ansible.builtin.wait_for:
+            host: 127.0.0.1
+            port: 6443
+            timeout: 180
+
+        - name: Attendre readyz après la récupération K3s
+          ansible.builtin.command:
+            cmd: /usr/local/bin/k3s kubectl get --raw=/readyz
+          register: k3s_server_api_recovered
+          changed_when: false
+          retries: "{{ k3s_server_api_ready_retries }}"
+          delay: "{{ k3s_server_api_ready_delay }}"
+          until: >-
+            k3s_server_api_recovered.rc == 0 and
+            'ok' in k3s_server_api_recovered.stdout
+
+    - name: Vérifier que le nœud Kubernetes est prêt
+      ansible.builtin.command:
+        argv:
+          - /usr/local/bin/k3s
+          - kubectl
+          - wait
+          - --for=condition=Ready
+          - node
+          - --all
+          - "--timeout={{ k3s_server_node_ready_timeout }}"
+      register: k3s_server_node_check
+      changed_when: false
+      retries: "{{ k3s_server_node_ready_retries }}"
+      delay: 10
+      until: k3s_server_node_check.rc == 0
+  rescue:
+    - name: Relever l'état du service K3s après échec
+      ansible.builtin.command:
+        argv:
+          - systemctl
+          - show
+          - k3s
+          - --property=ActiveState
+          - --property=SubState
+          - --property=Result
+          - --property=NRestarts
+      register: k3s_server_service_diagnostic
+      changed_when: false
+      failed_when: false
+
+    - name: Relever le détail du contrôle readyz après échec
+      ansible.builtin.command:
+        cmd: /usr/local/bin/k3s kubectl get --raw=/readyz?verbose
+      register: k3s_server_readyz_diagnostic
+      changed_when: false
+      failed_when: false
+
+    - name: Relever la mémoire disponible après échec
+      ansible.builtin.command:
+        argv:
+          - free
+          - --mebi
+      register: k3s_server_memory_diagnostic
+      changed_when: false
+      failed_when: false
+
+    - name: Relever l'espace disque disponible après échec
+      ansible.builtin.command:
+        argv:
+          - df
+          - --human-readable
+          - /
+          - /var/lib/rancher/k3s
+      register: k3s_server_disk_diagnostic
+      changed_when: false
+      failed_when: false
+
+    - name: Relever les derniers avertissements K3s après échec
+      ansible.builtin.command:
+        argv:
+          - journalctl
+          - --unit=k3s
+          - --priority=warning
+          - --lines=40
+          - --no-pager
+      register: k3s_server_journal_diagnostic
+      changed_when: false
+      failed_when: false
+
+    - name: Afficher le diagnostic K3s expurgé
+      ansible.builtin.debug:
+        msg:
+          service: "{{ k3s_server_service_diagnostic.stdout_lines | default([]) }}"
+          readyz: >-
+            {{ (k3s_server_readyz_diagnostic.stdout_lines | default([])) +
+               (k3s_server_readyz_diagnostic.stderr_lines | default([])) }}
+          memory: "{{ k3s_server_memory_diagnostic.stdout_lines | default([]) }}"
+          disk: "{{ k3s_server_disk_diagnostic.stdout_lines | default([]) }}"
+          journal_warnings: "{{ k3s_server_journal_diagnostic.stdout_lines | default([]) }}"
+
+    - name: Arrêter le rôle lorsque K3s reste indisponible
+      ansible.builtin.fail:
+        msg: >-
+          K3s n'est pas devenu opérationnel après l'attente initiale et une
+          tentative unique de redémarrage. Consulter le diagnostic précédent ;
+          ne pas poursuivre le déploiement du GitLab Agent.
 
 - name: Garantir le dossier des manifestes auto-déployés K3s
   ansible.builtin.file:
