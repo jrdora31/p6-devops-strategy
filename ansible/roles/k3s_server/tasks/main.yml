@@ -167,14 +167,14 @@
       changed_when: false
       failed_when: false
 
-    - name: Relever les derniers avertissements K3s après échec
+    - name: Relever les derniers journaux K3s après échec
       ansible.builtin.command:
         argv:
           - journalctl
           - --unit=k3s
-          - --priority=warning
-          - --lines=40
+          - --lines=100
           - --no-pager
+          - --output=cat
       register: k3s_server_journal_diagnostic
       changed_when: false
       failed_when: false
@@ -188,7 +188,7 @@
                (k3s_server_readyz_diagnostic.stderr_lines | default([])) }}
           memory: "{{ k3s_server_memory_diagnostic.stdout_lines | default([]) }}"
           disk: "{{ k3s_server_disk_diagnostic.stdout_lines | default([]) }}"
-          journal_warnings: "{{ k3s_server_journal_diagnostic.stdout_lines | default([]) }}"
+          journal: "{{ k3s_server_journal_diagnostic.stdout_lines | default([]) }}"
 
     - name: Arrêter le rôle lorsque K3s reste indisponible
       ansible.builtin.fail:
