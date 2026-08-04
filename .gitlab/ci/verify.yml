@@ -1,11 +1,15 @@
+# Vérification finale : exécute ensemble les deux images réellement construites.
 verify:images:
   extends: .docker-job
   stage: verify
   needs:
+    # Les archives Docker sont obligatoires pour restaurer les images dans ce job.
     - job: build:image:frontend
       artifacts: true
     - job: build:image:backend
       artifacts: true
+    # Les jobs de scan ne sont pas toujours créés par leurs `rules`. `optional`
+    # évite alors une erreur de configuration tout en les attendant s'ils existent.
     - job: release:scan:image:frontend
       artifacts: false
       optional: true
@@ -13,9 +17,12 @@ verify:images:
       artifacts: false
       optional: true
   script:
+    # Chaque job Docker possède un daemon isolé : il faut donc recharger les archives.
     - docker load --input .ci/images/frontend.tar
     - docker load --input .ci/images/backend.tar
+    # Le script crée un réseau temporaire, attend les healthchecks puis teste `/api`.
     - >-
       sh scripts/ci/smoke.sh
       --frontend-image "$FRONTEND_IMAGE"
       --backend-image "$BACKEND_IMAGE"
+      --database-image "$POSTGRES_IMAGE"

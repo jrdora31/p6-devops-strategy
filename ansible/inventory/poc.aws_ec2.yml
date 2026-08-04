@@ -1,0 +1,23 @@
+---
+plugin: amazon.aws.aws_ec2
+
+regions:
+  - "{{ lookup('ansible.builtin.env', 'AWS_REGION') | default('eu-west-3', true) }}"
+
+filters:
+  instance-state-name: running
+  tag:Project: MicroCRM
+  tag:Environment: poc
+  tag:Ansible: k3s-server
+
+# L'identifiant EC2 est stable et directement compris par la connexion SSM.
+hostnames:
+  - instance-id
+
+compose:
+  ansible_host: instance_id
+
+groups:
+  k3s_servers: ec2_tags.Ansible == 'k3s-server'
+
+strict: true

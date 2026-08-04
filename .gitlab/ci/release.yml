@@ -1,11 +1,15 @@
+# Charge l'archive de l'image frontend construite plus tôt et l'analyse avant
+# toute publication dans le registre.
 release:scan:image:frontend:
   extends: .trivy-job
   stage: release
   needs:
     - job: build:image:frontend
+      # L'archive `.ci/images/frontend.tar` est nécessaire au scan hors registre.
       artifacts: true
   script:
     - mkdir -p .ci/reports/security
+    # Produit d'abord un rapport JSON unique sur les vulnérabilités de l'image.
     - >-
       trivy image
       --input .ci/images/frontend.tar
@@ -14,12 +18,14 @@ release:scan:image:frontend:
       --ignore-unfixed
       --format json
       --output .ci/reports/security/trivy-image-frontend-vulnerabilities.json
+    # Crée une version texte lisible à partir du rapport JSON précédent.
     - >-
       trivy convert
       --severity HIGH,CRITICAL
       --format table
       --output .ci/reports/security/trivy-image-frontend-vulnerabilities.txt
       .ci/reports/security/trivy-image-frontend-vulnerabilities.json
+    # Bloque uniquement sur les vulnérabilités critiques déjà présentes dans le JSON.
     - >-
       trivy convert
       --severity CRITICAL
@@ -27,6 +33,7 @@ release:scan:image:frontend:
       --format table
       --output /dev/null
       .ci/reports/security/trivy-image-frontend-vulnerabilities.json
+    # Cherche séparément des secrets incorporés dans les couches de l'image.
     - >-
       trivy image
       --input .ci/images/frontend.tar
@@ -35,6 +42,7 @@ release:scan:image:frontend:
       --format json
       --output .ci/reports/security/trivy-image-frontend-secrets.json
   artifacts:
+    # Même en cas de blocage, les rapports expliquent précisément la cause.
     when: always
     expire_in: 30 days
     paths:
@@ -42,11 +50,14 @@ release:scan:image:frontend:
       - .ci/reports/security/trivy-image-frontend-vulnerabilities.txt
       - .ci/reports/security/trivy-image-frontend-secrets.json
   rules:
+    # Les scans d'image sont exécutés sur MR, planification, tag SemVer et branche
+    # principale. La regex refuse les tags qui ne suivent pas le format de release.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
+# Équivalent du job précédent pour l'image Java backend.
 release:scan:image:backend:
   extends: .trivy-job
   stage: release
@@ -96,44 +107,56 @@ release:scan:image:backend:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
+# Publie les deux images seulement après construction et réussite des deux scans.
 release:images:
   extends: .docker-job
   stage: release
   needs:
+    # Les deux archives Docker sont téléchargées.
     - job: build:image:frontend
       artifacts: true
     - job: build:image:backend
       artifacts: true
+    # Les scans imposent une relation d'ordre, mais leurs rapports ne sont pas requis ici.
     - job: release:scan:image:frontend
       artifacts: false
     - job: release:scan:image:backend
       artifacts: false
   script:
+    # Restaure dans le daemon dind les images transportées sous forme d'artifacts.
     - docker load --input .ci/images/frontend.tar
     - docker load --input .ci/images/backend.tar
+    # Le mot de passe passe sur l'entrée standard et n'apparaît pas dans la commande.
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
     - docker push "$FRONTEND_IMAGE"
     - docker push "$BACKEND_IMAGE"
     - mkdir -p .ci/release
+    # Après le push, Docker connaît les digests immuables attribués par le registre.
+    # Le premier `>` crée le fichier ; le second `>>` ajoute la ligne backend.
     - docker image inspect "$FRONTEND_IMAGE" --format 'FRONTEND_IMAGE_DIGEST={{index .RepoDigests 0}}' > .ci/release/images.env
     - docker image inspect "$BACKEND_IMAGE" --format 'BACKEND_IMAGE_DIGEST={{index .RepoDigests 0}}' >> .ci/release/images.env
   artifacts:
     expire_in: 30 days
     reports:
+      # Un rapport dotenv réinjecte ces deux variables dans les jobs dépendants.
       dotenv: .ci/release/images.env
     paths:
       - .ci/release/images.env
   rules:
+    # La publication est réservée aux releases SemVer et à la branche principale.
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
+# Génère la preuve JSON reliant version, commit, pipeline et digests publiés.
 release:manifest:
   image: python:3.12.11-slim
   stage: release
   needs:
     - job: release:images
+      # Télécharge `images.env` et importe automatiquement ses variables dotenv.
       artifacts: true
   script:
+    # Comme dans les scans, `>-` garde une commande longue lisible en YAML.
     - >-
       python scripts/ci/release_manifest.py
       --version "$CI_COMMIT_TAG"
@@ -147,4 +170,57 @@ release:manifest:
     paths:
       - .ci/release/release-manifest.json
   rules:
+    # Un manifeste de release n'a de sens que pour un tag SemVer.
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+
+# Crée l'objet visible dans GitLab > Deploy > Releases après validation du
+# manifeste. Le tag reste créé volontairement par le maintainer : ce job
+# automatise la publication de la release et conserve le lien vers sa pipeline.
+release:create:
+  image: registry.gitlab.com/gitlab-org/cli:v1.109.0
+  stage: release
+  needs:
+    - job: release:manifest
+      artifacts: true
+  script:
+    # Empêche la création d'une release si la preuve reliant version, commit,
+    # pipeline et digests n'a pas été produite correctement.
+    - test -s .ci/release/release-manifest.json
+    - echo "Création de la release GitLab $CI_COMMIT_TAG"
+  release:
+    tag_name: '$CI_COMMIT_TAG'
+    name: 'MicroCRM $CI_COMMIT_TAG'
+    description: 'Release automatisée de MicroCRM. Le pipeline $CI_PIPELINE_ID conserve le manifeste et les digests des images.'
+    assets:
+      links:
+        - name: 'Pipeline de release'
+          url: '$CI_PIPELINE_URL'
+          link_type: other
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+
+# Produit une archive Helm versionnée, réutilisable par le job de deployment.
+release:helm:package:
+  image:
+    name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
+    entrypoint: [""]
+  stage: release
+  script:
+    - mkdir -p .ci/packages
+    - >-
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        CHART_VERSION="${CI_COMMIT_TAG#v}";
+      else
+        CHART_VERSION="0.1.0-${CI_COMMIT_SHORT_SHA}";
+      fi;
+      helm package helm/microcrm
+      --destination .ci/packages
+      --version "$CHART_VERSION"
+      --app-version "$CI_COMMIT_SHA"
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - .ci/packages/microcrm-*.tgz
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

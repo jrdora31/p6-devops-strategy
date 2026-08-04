@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "microcrm.fullname" . }}-backend
+  labels:
+    {{- include "microcrm.labels" . | nindent 4 }}
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://{{ include "microcrm.fullname" . }}-database:5432/{{ .Values.database.name }}
+  SPRING_JPA_HIBERNATE_DDL_AUTO: validate

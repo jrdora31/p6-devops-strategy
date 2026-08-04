@@ -1,25 +1,37 @@
+# Les noms commençant par un point sont des jobs cachés : GitLab ne les exécute
+# pas directement. Les jobs concrets héritent de leur configuration avec `extends`.
 .frontend-node:
+  # Image contenant Node.js et npm, utilisée uniquement pendant les jobs frontend.
   image: node:20.19.5-bookworm-slim
   variables:
+    # Place le cache npm dans le workspace pour que GitLab puisse le conserver.
     NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.cache/npm"
   cache:
     key:
+      # Une modification du lockfile produit une nouvelle clé de cache.
       files:
         - front/package-lock.json
+      # Évite de mélanger ce cache avec ceux d'autres composants.
       prefix: frontend
     paths:
       - .cache/npm/
   before_script:
+    # GitLab peut réutiliser un répertoire courant différent après un héritage ;
+    # ce `cd` garantit que les chemins relatifs partent de la racine du dépôt.
     - cd "$CI_PROJECT_DIR"
+    # `npm ci` est centralisé dans le script pour rester identique en local et en CI.
     - bash scripts/ci/dependencies.sh --component frontend --action install
 
 .backend-java:
+  # JDK 21 : nécessaire pour compiler et tester le backend, pas pour son image runtime.
   image: eclipse-temurin:21.0.10_7-jdk-jammy
   variables:
+    # Déplace les téléchargements Gradle dans un dossier que GitLab sait mettre en cache.
     GRADLE_USER_HOME: "$CI_PROJECT_DIR/.cache/gradle"
   cache:
     key:
       files:
+        # Le cache est renouvelé si la version du Wrapper ou le build change.
         - back/gradle/wrapper/gradle-wrapper.properties
         - back/build.gradle
       prefix: backend
@@ -28,28 +40,39 @@
       - .cache/gradle/caches/
   before_script:
     - cd "$CI_PROJECT_DIR"
+    # Le bit exécutable peut être perdu selon le poste qui a créé l'archive Git.
     - chmod +x back/gradlew
+    # Cette action vérifie le Wrapper sans télécharger artificiellement toutes
+    # les dépendances ; Gradle résoudra ensuite celles requises par la tâche lancée.
     - bash scripts/ci/dependencies.sh --component backend --action check
 
 .docker-job:
+  # Le client Docker communique avec le service Docker-in-Docker (`dind`) ci-dessous.
   image: docker:24.0.5-cli
   services:
     - name: docker:24.0.5-dind
+      # Ce nom DNS est repris par `DOCKER_HOST`.
       alias: docker
   variables:
+    # Connexion TLS au daemon isolé du job ; aucun daemon du runner n'est utilisé.
     DOCKER_HOST: "tcp://docker:2376"
     DOCKER_TLS_CERTDIR: "/certs"
     DOCKER_TLS_VERIFY: "1"
     DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
   before_script:
+    # Échoue tôt si le daemon ou ses certificats ne sont pas disponibles.
     - docker info
 
 .trivy-job:
   image:
+    # Le digest verrouille exactement le contenu de l'image, même si le tag change.
     name: aquasec/trivy:0.70.0@sha256:be1190afcb28352bfddc4ddeb71470835d16462af68d310f9f4bca710961a41e
+    # Neutralise l'entrypoint de l'image afin que GitLab exécute directement `script`.
     entrypoint: [""]
   variables:
+    # La base de vulnérabilités est conservée entre pipelines pour accélérer les scans.
     TRIVY_CACHE_DIR: "$CI_PROJECT_DIR/.cache/trivy"
+    # Les logs GitLab restent lisibles et non interactifs.
     TRIVY_NO_PROGRESS: "true"
   cache:
     key: trivy-db

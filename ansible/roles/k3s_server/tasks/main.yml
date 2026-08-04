@@ -1,0 +1,83 @@
+---
+- name: Créer le dossier de configuration K3s
+  ansible.builtin.file:
+    path: "{{ k3s_server_config_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Déployer la configuration K3s
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ k3s_server_config_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Redémarrer K3s
+
+- name: Lire la version K3s installée
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s --version
+  register: k3s_server_installed_version
+  check_mode: false
+  changed_when: false
+  failed_when: false
+
+- name: Télécharger le script d'installation officiel K3s
+  ansible.builtin.get_url:
+    url: "{{ k3s_server_install_script_url }}"
+    dest: /usr/local/src/k3s-install.sh
+    owner: root
+    group: root
+    mode: "0755"
+  when: >-
+    k3s_server_version not in
+    (k3s_server_installed_version.stdout | default(''))
+
+- name: Installer la version K3s attendue
+  ansible.builtin.command:
+    cmd: /usr/local/src/k3s-install.sh
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_server_version }}"
+    INSTALL_K3S_EXEC: "server --config {{ k3s_server_config_path }}"
+  when: >-
+    k3s_server_version not in
+    (k3s_server_installed_version.stdout | default(''))
+  changed_when: true
+
+- name: Appliquer les handlers avant les contrôles de santé
+  ansible.builtin.meta: flush_handlers
+
+- name: Garantir que K3s est démarré au boot
+  ansible.builtin.systemd_service:
+    name: k3s
+    state: started
+    enabled: true
+  when: >-
+    not ansible_check_mode or
+    k3s_server_version in
+    (k3s_server_installed_version.stdout | default(''))
+
+- name: Attendre l'API Kubernetes locale
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 6443
+    timeout: 180
+  when: >-
+    not ansible_check_mode or
+    k3s_server_version in
+    (k3s_server_installed_version.stdout | default(''))
+
+- name: Vérifier que le nœud Kubernetes est prêt
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s kubectl get node --output=name
+  register: k3s_server_node_check
+  changed_when: false
+  retries: 12
+  delay: 5
+  until: k3s_server_node_check.rc == 0
+  when: >-
+    not ansible_check_mode or
+    k3s_server_version in
+    (k3s_server_installed_version.stdout | default(''))

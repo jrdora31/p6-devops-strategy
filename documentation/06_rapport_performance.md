@@ -49,6 +49,22 @@ ne peuvent pas être calculées honnêtement tant que MicroCRM n’est pas dépl
 | Change failure rate | Deployments causant incident ou rollback / deployments totaux | Deployments, incidents et rollbacks | Non mesurable avant P2 |
 | Mean time to restore | Temps entre détection et restauration du service | Alertes, incidents et retour au vert | Non mesurable avant P2 |
 
+## Validation Kubernetes locale
+
+Mesures réalisées le 3 août 2026 sur un profil Minikube local isolé. Elles
+valident le fonctionnement de l'orchestration, pas la performance AWS finale.
+
+| Vérification | Résultat |
+|---|---|
+| Déploiement Helm | Release `microcrm`, statut `deployed` |
+| Disponibilité initiale | Frontend, backend et PostgreSQL prêts, sans restart |
+| Stockage | PVC PostgreSQL `1Gi`, statut `Bound` |
+| Parcours applicatif | Création puis lecture d'une personne via le frontend réussies |
+| Routage Ingress | Contrôleur Nginx prêt ; frontend et API accessibles avec des réponses HTTP `200` via l'hôte `microcrm.local` |
+| Recréation PostgreSQL | Nouveau pod prêt en `4,6 s` |
+| Persistance | Donnée retrouvée après la recréation du pod PostgreSQL |
+| Scalabilité backend | Passage de 1 à 2 endpoints réussi, puis retour à 1 par Helm |
+
 ## Mesures prévues après deployment
 
 - disponibilité du frontend et de l’API ;

@@ -6,25 +6,36 @@
 
 set -Eeuo pipefail
 
+# Résout les chemins depuis ce fichier de test plutôt que depuis le terminal.
 TEST_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly TEST_DIRECTORY
+# Trois remontées conduisent de `scripts/ci/tests` à la racine MicroCRM.
 REPOSITORY_ROOT="$(cd "${TEST_DIRECTORY}/../../.." && pwd)"
 readonly REPOSITORY_ROOT
+# `mktemp -d` crée un dossier unique : les tests parallèles ne partagent ni logs
+# ni fausses données de sauvegarde.
 TEMP_DIRECTORY="$(mktemp -d)"
 readonly TEMP_DIRECTORY
 
+# Compteurs du mini-runner de tests, sans dépendance à un framework Bash externe.
 passed=0
 failed=0
 
 cleanup() {
+  # La cible vient exclusivement de `mktemp -d` ci-dessus. `--` empêche qu'un
+  # chemin commençant par un tiret soit pris pour une option de `rm`.
   rm -rf -- "${TEMP_DIRECTORY}"
 }
+# Même si une assertion échoue, le dossier temporaire est supprimé à la sortie.
 trap cleanup EXIT
 
 assert_success() {
+  # Le premier argument décrit le scénario ; `shift` laisse dans `$@` la commande
+  # complète à exécuter avec ses arguments intacts.
   local description="$1"
   shift
 
+  # stdout et stderr sont capturés. En cas d'échec inattendu, le log est affiché.
   if "$@" >"${TEMP_DIRECTORY}/command.log" 2>&1; then
     printf '[PASS] %s\n' "${description}"
     passed=$((passed + 1))
@@ -39,6 +50,8 @@ assert_failure() {
   local description="$1"
   shift
 
+  # Ici la logique est inversée : un code 0 signifie que le garde-fou testé n'a
+  # pas refusé l'entrée invalide, donc que le test doit échouer.
   if "$@" >"${TEMP_DIRECTORY}/command.log" 2>&1; then
     printf '[FAIL] %s — la commande aurait dû échouer\n' "${description}" >&2
     failed=$((failed + 1))
@@ -50,6 +63,8 @@ assert_failure() {
 
 mkdir -p "${TEMP_DIRECTORY}/source"
 
+# Les premiers scénarios prouvent que les interfaces documentées répondent et
+# qu'un dry-run de backup reste sans écriture réelle.
 assert_success \
   "Aide du script de tests" \
   bash "${REPOSITORY_ROOT}/scripts/ci/test.sh" --help
@@ -74,6 +89,8 @@ assert_success \
   --output "${TEMP_DIRECTORY}/backup.tar" \
   --dry-run
 
+# Les scénarios suivants injectent volontairement des paramètres invalides. Le
+# test réussit uniquement si le script métier retourne un code non nul.
 assert_failure \
   "Refus d'un composant inconnu" \
   bash "${REPOSITORY_ROOT}/scripts/ci/test.sh" --component invalid
@@ -92,4 +109,5 @@ assert_failure \
   --dry-run
 
 printf '\nRésultat : %d test(s) réussi(s), %d échec(s)\n' "${passed}" "${failed}"
+# Cette dernière expression devient le code retour global du fichier de test.
 [[ "${failed}" -eq 0 ]]

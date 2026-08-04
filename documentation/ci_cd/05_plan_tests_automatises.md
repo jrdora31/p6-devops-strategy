@@ -9,11 +9,13 @@
 | Backend Spring | Test de contexte | Démarrage du contexte Spring | MR, `dev`, `main` et tags | Le contexte démarre sans erreur | Rapport JUnit |
 | Backend Spring | Test d’intégration repository | Écriture puis recherche d’une personne par adresse e-mail | MR, `dev`, `main` et tags | La donnée obtenue correspond à la donnée enregistrée | Rapport JUnit et couverture JaCoCo |
 | Backend Spring | Test CRUD de l’API | Création, lecture, modification et suppression d’une personne via HTTP | MR, `dev`, `main`, tags et routine planifiée | Les statuts HTTP et les données retournées sont conformes | Rapport JUnit et couverture JaCoCo |
-| Scripts Bash | Tests fonctionnels des commandes | Aide, dépendances verrouillées, dry-run et refus des paramètres dangereux | MR, `dev`, `main` et tags | 7 tests réussissent | Log du job `test:scripts:bash` |
+| Scripts Bash | Tests fonctionnels des commandes | Aide, dépendances verrouillées, dry-run et refus des paramètres dangereux | MR, `dev`, `main` et tags | 8 tests réussissent | Log du job `test:scripts:bash` |
 | Scripts Python | Tests fonctionnels | Manifeste SemVer, notification locale, erreurs de webhook et absence de fuite | MR, `dev`, `main` et tags | 5 tests réussissent | Rapport JUnit pytest |
 | Scripts Bash | Analyse statique | Erreurs et pratiques dangereuses détectées par ShellCheck | MR, `dev`, `main` et tags | Aucun diagnostic ShellCheck | Log du job `quality:shellcheck` |
 | Application full-stack | Analyse statique SonarQube | Bugs, vulnérabilités, security hotspots, code smells, duplication et couverture | À chaque merge request et sur `main` | Quality gate réussi | Dashboard SonarQube et job `quality:sonarqube` |
-| Images frontend et backend | Smoke test full-stack | Healthchecks, réseau Docker, appel API, création et recherche d’une personne via Caddy vers Spring | MR, `dev`, `main`, tags et routine planifiée | Deux conteneurs `healthy` et parcours create/read réussi | Log du job `verify:images` |
+| Images frontend, backend et PostgreSQL | Smoke test full-stack et persistance | Healthchecks, utilisateurs applicatifs non-root, réseau Docker, appel API, création d’une personne, recréation de PostgreSQL et du backend puis nouvelle lecture | MR, `dev`, `main`, tags et routine planifiée | Trois conteneurs `healthy`, UID applicatifs différents de `0` et donnée encore accessible après redémarrage | Log du job `verify:images` |
+| Chart Helm | Validation statique | Structure du chart, schéma des values et rendu des manifests Minikube | Chaque pipeline | `helm lint` et `helm template` réussissent ; une valeur invalide est refusée | Log du job `test:helm` |
+| Ressources Kubernetes | Analyse de configuration | Contextes de sécurité, capabilities, volumes et configuration des workloads | Chaque pipeline | Aucune mauvaise configuration Trivy `HIGH` ou `CRITICAL` | Artifacts du job `quality:trivy:kubernetes` |
 
 ## Règles bloquantes
 

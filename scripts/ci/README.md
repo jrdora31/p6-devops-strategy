@@ -9,7 +9,7 @@ GitLab.
 | Dépendances | `dependencies.sh` | Bash | Vérifier ou résoudre les dépendances verrouillées |
 | Tests | `test.sh` | Bash | Tester le frontend, le backend ou les deux |
 | Builds | `build.sh` | Bash | Construire Angular et/ou le JAR |
-| Smoke test | `smoke.sh` | Shell POSIX | Vérifier les deux images et leur communication sur un réseau temporaire |
+| Smoke test | `smoke.sh` | Shell POSIX | Vérifier les images, PostgreSQL, leur communication et la persistance sur un réseau temporaire |
 | Backup | `backup.sh` | Bash | Valider le contrat en dry-run en partie 1 |
 | Release | `release_manifest.py` | Python | Générer un manifeste reliant version, pipeline, commit et digests |
 | Notification | `notify.py` | Python | Normaliser le résultat et, sur demande, appeler un webhook |
@@ -35,14 +35,14 @@ différent de zéro en cas d’erreur, ce qui permet à GitLab d'arrêter le job
 bash scripts/ci/dependencies.sh --component all --action check
 bash scripts/ci/test.sh --component backend
 bash scripts/ci/build.sh --component frontend
-sh scripts/ci/smoke.sh --frontend-image IMAGE --backend-image IMAGE
+sh scripts/ci/smoke.sh --frontend-image IMAGE --backend-image IMAGE --database-image POSTGRES_IMAGE
 bash scripts/ci/backup.sh --source /data --output /backup/microcrm.tar --dry-run
 ```
 
 - `dependencies.sh` vérifie ici les fichiers qui verrouillent les dépendances.
 - `test.sh` exécute ici les tests du backend.
 - `build.sh` construit ici le frontend.
-- `smoke.sh` lance les deux images, attend leurs healthchecks et appelle l’API via le frontend.
+- `smoke.sh` lance PostgreSQL et les deux images applicatives, attend leurs healthchecks, vérifie les UID applicatifs, appelle l’API via le frontend, puis recrée la base et le backend pour confirmer la persistance.
 - `backup.sh` simule la future commande de backup sans créer de fichier.
 
 `--component` indique la partie concernée : `frontend`, `backend` ou `all`.

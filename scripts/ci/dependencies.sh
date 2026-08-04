@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Vérifie les mécanismes de verrouillage ou installe les dépendances sans changer
+# leurs versions. Ce script ne remplace ni package-lock.json ni le Gradle Wrapper.
 
 set -Eeuo pipefail
 # Charge les fonctions partagées de journalisation et de validation.
@@ -26,6 +28,8 @@ while (($#)); do
       shift 2
       ;;
     --action)
+      # `check` ne télécharge rien volontairement ; `install` prépare un job frontend
+      # ou demande à Gradle de résoudre les dépendances backend.
       (($# >= 2)) || die "Valeur manquante après --action"
       action="$2"
       shift 2
@@ -41,6 +45,7 @@ while (($#)); do
 done
 
 validate_component "$component"
+# Le groupe entre `[[ ... ]]` n'accepte que les deux actions documentées.
 [[ "$action" == "check" || "$action" == "install" ]] ||
   die "Action invalide : $action (valeurs : check, install)"
 
@@ -54,6 +59,8 @@ frontend_dependencies() {
   if [[ "$action" == "install" ]]; then
     # Les scripts de cycle de vie npm peuvent exécuter du code provenant d'une
     # dépendance pendant l'installation. MicroCRM n'en a pas besoin pour son build.
+    # `npm ci` respecte strictement le lockfile et repart d'une installation propre ;
+    # `--prefer-offline` réutilise le cache lorsque possible sans interdire le réseau.
     (cd "${REPOSITORY_ROOT}/front" && npm ci --ignore-scripts --prefer-offline)
   fi
 }
@@ -65,6 +72,8 @@ backend_dependencies() {
 
   log_info "Backend : Gradle Wrapper présent"
   if [[ "$action" == "install" ]]; then
+    # La tâche `dependencies` force la résolution et affiche l'arbre sans modifier
+    # les versions déclarées dans le projet.
     (cd "${REPOSITORY_ROOT}/back" && ./gradlew --no-daemon dependencies)
   fi
 }

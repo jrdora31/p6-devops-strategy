@@ -1,16 +1,26 @@
+# Analyse statiquement tous les scripts Shell : erreurs de syntaxe probables,
+# variables mal protégées et constructions Bash fragiles.
 quality:shellcheck:
   image:
     name: koalaman/shellcheck-alpine:v0.11.0
+    # Permet à GitLab d'exécuter la commande ShellCheck donnée dans `script`.
     entrypoint: [""]
   stage: quality
   script:
     - shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
 
+# Inspecte les fichiers du dépôt avant la construction des images.
 quality:trivy:repository:
+  # Réutilise l'image, la base en cache et les options communes de Trivy.
   extends: .trivy-job
   stage: quality
   script:
+    # Tous les rapports de sécurité sont regroupés sous un chemin prévisible.
     - mkdir -p .ci/reports/security
+    # `>-` est un scalaire YAML replié : les lignes visuelles ci-dessous sont
+    # envoyées au shell comme une seule commande séparée par des espaces. Cette
+    # première commande recherche les dépendances vulnérables (pas les secrets),
+    # garde les sévérités élevées et exclut les dossiers générés ou mis en cache.
     - >-
       trivy filesystem
       --scanners vuln
@@ -25,12 +35,14 @@ quality:trivy:repository:
       --format json
       --output .ci/reports/security/trivy-repository-vulnerabilities.json
       .
+    # Convertit le JSON de référence en tableau lisible par une personne.
     - >-
       trivy convert
       --severity HIGH,CRITICAL
       --format table
       --output .ci/reports/security/trivy-repository-vulnerabilities.txt
       .ci/reports/security/trivy-repository-vulnerabilities.json
+    # Relit le même JSON et retourne un code non nul si une CVE critique existe.
     - >-
       trivy convert
       --severity CRITICAL
@@ -38,6 +50,7 @@ quality:trivy:repository:
       --format table
       --output /dev/null
       .ci/reports/security/trivy-repository-vulnerabilities.json
+    # Deuxième passe indépendante : recherche de secrets accidentellement versionnés.
     - >-
       trivy filesystem
       --scanners secret
@@ -52,6 +65,7 @@ quality:trivy:repository:
       --output .ci/reports/security/trivy-repository-secrets.json
       .
   artifacts:
+    # Les rapports restent disponibles même lorsque Trivy bloque le job.
     when: always
     expire_in: 30 days
     paths:
@@ -59,23 +73,78 @@ quality:trivy:repository:
       - .ci/reports/security/trivy-repository-vulnerabilities.txt
       - .ci/reports/security/trivy-repository-secrets.json
 
+# Analyse les ressources Kubernetes générées par Helm avant leur déploiement.
+quality:trivy:kubernetes:
+  extends: .trivy-job
+  stage: quality
+  script:
+    - mkdir -p .ci/reports/security
+    - >-
+      trivy config
+      --helm-kube-version 1.30.0
+      --helm-values helm/microcrm/values-minikube.yaml
+      --severity HIGH,CRITICAL
+      --format json
+      --output .ci/reports/security/trivy-kubernetes-minikube.json
+      helm/microcrm
+    - >-
+      trivy config
+      --helm-kube-version 1.30.0
+      --helm-values helm/microcrm/values-minikube.yaml
+      --severity HIGH,CRITICAL
+      --exit-code 1
+      --format table
+      --output .ci/reports/security/trivy-kubernetes-minikube.txt
+      helm/microcrm
+    - >-
+      trivy config
+      --helm-kube-version 1.30.0
+      --helm-values helm/microcrm/values-k3s.yaml
+      --severity HIGH,CRITICAL
+      --format json
+      --output .ci/reports/security/trivy-kubernetes-k3s.json
+      helm/microcrm
+    - >-
+      trivy config
+      --helm-kube-version 1.30.0
+      --helm-values helm/microcrm/values-k3s.yaml
+      --severity HIGH,CRITICAL
+      --exit-code 1
+      --format table
+      --output .ci/reports/security/trivy-kubernetes-k3s.txt
+      helm/microcrm
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - .ci/reports/security/trivy-kubernetes-minikube.json
+      - .ci/reports/security/trivy-kubernetes-minikube.txt
+      - .ci/reports/security/trivy-kubernetes-k3s.json
+      - .ci/reports/security/trivy-kubernetes-k3s.txt
+
+# Envoie à SonarQube le code et les rapports produits par les deux jobs de test.
 quality:sonarqube:
   image:
     name: sonarsource/sonar-scanner-cli:12.1.0.3233_8.0.1
     entrypoint: [""]
   stage: quality
   variables:
+    # Cache local du scanner, distinct des caches npm et Gradle.
     SONAR_USER_HOME: "$CI_PROJECT_DIR/.sonar"
+    # L'historique Git complet est requis pour attribuer correctement le nouveau code.
     GIT_DEPTH: "0"
   cache:
     key: sonar
     paths:
       - .sonar/cache/
+  # `dependencies` télécharge les artifacts des tests, notamment couverture et classes.
   dependencies:
     - test:frontend
     - test:backend
   script:
+    # Le job attend la décision du Quality Gate et échoue si celui-ci refuse l'analyse.
     - sonar-scanner -Dsonar.qualitygate.wait=true
   rules:
+    # Limite l'analyse aux moments où son résultat influence une intégration.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

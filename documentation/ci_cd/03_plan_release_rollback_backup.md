@@ -14,7 +14,7 @@ Une release doit permettre de relier sans ambiguïté le code, le pipeline et le
 
 Le pipeline publie sur `main` et sur les tags SemVer. Les images sont identifiées par le commit SHA et le job `release:images` produit `.ci/release/images.env`.
 
-Sur un tag SemVer, `release:manifest` doit ensuite appeler `release_manifest.py` et conserver `.ci/release/release-manifest.json`. L’exécution distante de ce chemin devra être prouvée avec le premier tag de release.
+Sur un tag SemVer, `release:manifest` appelle `release_manifest.py` et conserve `.ci/release/release-manifest.json`. Après validation de ce manifeste, `release:create` crée l'objet visible dans `Deploy > Releases` et le relie à la pipeline. L’exécution distante de ce chemin devra être prouvée avec le premier tag de release.
 
 ## Déclenchement
 
@@ -23,13 +23,13 @@ Sur un tag SemVer, `release:manifest` doit ensuite appeler `release_manifest.py`
 | Merge request | Tests et builds | Non |
 | `dev` | Tests et builds | Non |
 | `main` | Tests et builds | Images identifiées par SHA |
-| Tag SemVer | Tests, builds et manifeste | Images et manifeste de release |
+| Tag SemVer | Tests, builds, scans et manifeste | Images, manifeste et release GitLab |
 
 ## Responsabilités et contrôles
 
 | Opération | Prérequis | Contrôle final | Responsable |
 |---|---|---|---|
-| Release | Pipeline vert et tag SemVer | Images, digests et manifeste présents | Maintainer GitLab |
+| Release | Pipeline vert et tag SemVer | Images, digests, manifeste et objet GitLab Release présents | Maintainer GitLab |
 | Rollback | Manifeste d’une release précédente validée | Smoke tests après redéploiement | Maintainer du déploiement |
 | Backup | Stockage persistant disponible | Restore exécuté sur une cible contrôlée | Maintainer de l’infrastructure |
 
@@ -43,7 +43,14 @@ En partie 1, le pipeline conserve les identifiants nécessaires. Le rollback ré
 
 Le backup concerne les données persistantes, pas les images déjà conservées dans la registry.
 
-La base actuelle étant éphémère, aucune preuve de backup réelle ne peut encore être produite. `backup.sh --dry-run` vérifie uniquement les paramètres et les garde-fous. La création du backup et le restore seront définis et testés avec le stockage persistant retenu en partie 2.
+PostgreSQL est désormais la base de l’environnement déployé. Le smoke test
+recrée le conteneur de base et le backend avec un même volume, puis confirme que
+la donnée créée reste accessible. Cette preuve valide la persistance, mais ne
+remplace pas un backup : `pg_dump`, le stockage AWS, la rétention et un restore
+sur une cible contrôlée seront définis et exécutés en `Q`.
+
+`backup.sh --dry-run` conserve pour l’instant ses garde-fous sans prétendre
+produire un backup PostgreSQL exploitable.
 
 ## Preuves actuelles
 

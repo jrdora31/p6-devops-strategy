@@ -1,12 +1,24 @@
+# `workflow` décide si GitLab doit créer un pipeline pour l'événement reçu.
+# Cette sélection globale est évaluée avant les règles propres à chaque job.
 workflow:
   rules:
+    # Exécute les contrôles lorsqu'une merge request est créée ou mise à jour.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # Autorise les pipelines périodiques créés dans l'interface GitLab.
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    # Permet de reconstruire ou détruire le POC sans créer un commit artificiel.
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    # Autorise les pipelines de release déclenchés par un tag Git.
     - if: '$CI_COMMIT_TAG'
+    # Exécute le pipeline sur la branche principale configurée dans GitLab.
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    # `dev` reste la branche d'intégration du projet.
     - if: '$CI_COMMIT_BRANCH == "dev"'
+    # Aucun pipeline n'est créé pour les autres branches ou événements.
     - when: never
 
+# Les stages fixent l'ordre général. Tous les jobs d'un stage peuvent s'exécuter
+# en parallèle dès que leurs dépendances (`needs`) sont disponibles.
 stages:
   - test
   - quality
@@ -16,13 +28,22 @@ stages:
   - verify
 
 variables:
+  # Chaque image porte le SHA complet du commit : le tag technique permet de
+  # retrouver sans ambiguïté le code qui a servi à sa construction.
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
   BACKEND_IMAGE: "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA"
+  # PostgreSQL reste une dépendance runtime externe. Le digest fixe exactement
+  # l'image officielle testée par le smoke test et réutilisable par Kubernetes.
+  POSTGRES_IMAGE: "postgres:17.10-alpine3.23@sha256:8189a1f6e40904781fc9e2612687877791d21679866db58b1de996b31fc312e4"
 
+# Le fichier racine reste court : les jobs sont répartis par responsabilité.
+# `local` signifie que GitLab lit ces fichiers dans le même dépôt et au même commit.
 include:
   - local: .gitlab/ci/common.yml
+  - local: .gitlab/ci/iac.yml
   - local: .gitlab/ci/test.yml
   - local: .gitlab/ci/quality.yml
   - local: .gitlab/ci/build.yml
   - local: .gitlab/ci/release.yml
+  - local: .gitlab/ci/deploy.yml
   - local: .gitlab/ci/verify.yml
