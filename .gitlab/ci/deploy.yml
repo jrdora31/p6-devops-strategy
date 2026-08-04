@@ -67,7 +67,6 @@ deploy:helm:aws:
       when: on_success
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: on_success
-  # Le déploiement reste non bloquant tant que l'environnement AWS n'est pas
-  # provisionné. Son exécution échoue néanmoins si ses prérequis sont absents
-  # ou si Helm ne parvient pas à stabiliser la release.
-  allow_failure: true
+  # Sur `main` ou un tag de release, un déploiement AWS en échec doit désormais
+  # bloquer la pipeline : l'environnement K3s est provisionné et vérifiable.
+  allow_failure: false

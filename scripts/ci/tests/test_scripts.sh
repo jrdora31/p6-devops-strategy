@@ -62,6 +62,29 @@ assert_failure() {
 }
 
 mkdir -p "${TEMP_DIRECTORY}/source"
+mkdir -p "${TEMP_DIRECTORY}/mock-bin"
+
+# Les doublures suivantes valident le parcours nominal du script Kubernetes
+# sans exiger un cluster pendant les tests unitaires du dépôt.
+cat >"${TEMP_DIRECTORY}/mock-bin/kubectl" <<'EOF'
+#!/bin/sh
+case "$*" in
+  *"get pvc/"*)
+    printf 'Bound'
+    ;;
+  *"get ingress/"*)
+    printf 'microcrm.example.invalid'
+    ;;
+  *"port-forward"*)
+    while :; do sleep 1; done
+    ;;
+esac
+EOF
+cat >"${TEMP_DIRECTORY}/mock-bin/curl" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+chmod +x "${TEMP_DIRECTORY}/mock-bin/kubectl" "${TEMP_DIRECTORY}/mock-bin/curl"
 
 # Les premiers scénarios prouvent que les interfaces documentées répondent et
 # qu'un dry-run de backup reste sans écriture réelle.
@@ -76,6 +99,16 @@ assert_success \
 assert_success \
   "Aide du script de smoke test" \
   bash "${REPOSITORY_ROOT}/scripts/ci/smoke.sh" --help
+
+assert_success \
+  "Aide du script de vérification Kubernetes" \
+  sh "${REPOSITORY_ROOT}/scripts/ci/verify_kubernetes.sh" --help
+
+assert_success \
+  "Vérification Kubernetes nominale avec commandes simulées" \
+  env PATH="${TEMP_DIRECTORY}/mock-bin:${PATH}" \
+  sh "${REPOSITORY_ROOT}/scripts/ci/verify_kubernetes.sh" \
+  --context test-context
 
 assert_success \
   "Contrôle des dépendances verrouillées" \
@@ -94,6 +127,10 @@ assert_success \
 assert_failure \
   "Refus d'un composant inconnu" \
   bash "${REPOSITORY_ROOT}/scripts/ci/test.sh" --component invalid
+
+assert_failure \
+  "Refus d'une vérification Kubernetes sans contexte" \
+  sh "${REPOSITORY_ROOT}/scripts/ci/verify_kubernetes.sh"
 
 assert_failure \
   "Refus d'un backup sans dry-run" \
