@@ -20,6 +20,7 @@
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s --version
   register: k3s_server_installed_version
+  check_mode: false
   changed_when: false
   failed_when: false
 
@@ -30,7 +31,9 @@
     owner: root
     group: root
     mode: "0755"
-  when: k3s_server_version not in k3s_server_installed_version.stdout
+  when: >-
+    k3s_server_version not in
+    (k3s_server_installed_version.stdout | default(''))
 
 - name: Installer la version K3s attendue
   ansible.builtin.command:
@@ -38,7 +41,9 @@
   environment:
     INSTALL_K3S_VERSION: "{{ k3s_server_version }}"
     INSTALL_K3S_EXEC: "server --config {{ k3s_server_config_path }}"
-  when: k3s_server_version not in k3s_server_installed_version.stdout
+  when: >-
+    k3s_server_version not in
+    (k3s_server_installed_version.stdout | default(''))
   changed_when: true
 
 - name: Appliquer les handlers avant les contrôles de santé
@@ -49,12 +54,20 @@
     name: k3s
     state: started
     enabled: true
+  when: >-
+    not ansible_check_mode or
+    k3s_server_version in
+    (k3s_server_installed_version.stdout | default(''))
 
 - name: Attendre l'API Kubernetes locale
   ansible.builtin.wait_for:
     host: 127.0.0.1
     port: 6443
     timeout: 180
+  when: >-
+    not ansible_check_mode or
+    k3s_server_version in
+    (k3s_server_installed_version.stdout | default(''))
 
 - name: Vérifier que le nœud Kubernetes est prêt
   ansible.builtin.command:
@@ -64,3 +77,7 @@
   retries: 12
   delay: 5
   until: k3s_server_node_check.rc == 0
+  when: >-
+    not ansible_check_mode or
+    k3s_server_version in
+    (k3s_server_installed_version.stdout | default(''))
