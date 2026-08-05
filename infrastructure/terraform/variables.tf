@@ -110,3 +110,20 @@ variable "owner" {
   type        = string
   default     = "jr-pro"
 }
+
+variable "cloudwatch_agent_enabled" {
+  description = "Active les permissions IAM et les groupes de logs nécessaires à l'agent CloudWatch."
+  type        = bool
+  default     = false
+}
+
+variable "cloudwatch_log_group_prefix" {
+  description = "Préfixe des groupes de logs CloudWatch du POC."
+  type        = string
+  default     = "/microcrm/poc"
+
+  validation {
+    condition     = can(regex("^/[a-zA-Z0-9/_-]+$", var.cloudwatch_log_group_prefix))
+    error_message = "cloudwatch_log_group_prefix doit commencer par / et contenir uniquement des caractères de nom de groupe valides."
+  }
+}

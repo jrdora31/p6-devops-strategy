@@ -52,6 +52,53 @@ resource "aws_iam_role_policy_attachment" "ssm" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+data "aws_iam_policy_document" "cloudwatch_agent" {
+  count = var.cloudwatch_agent_enabled ? 1 : 0
+
+  statement {
+    sid       = "PublishMetrics"
+    effect    = "Allow"
+    actions   = ["cloudwatch:PutMetricData"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "PublishPocLogs"
+    effect = "Allow"
+    actions = [
+      "logs:DescribeLogGroups",
+    ]
+    resources = ["arn:aws:logs:${var.aws_region}:*:log-group:${var.cloudwatch_log_group_prefix}*"]
+  }
+
+  statement {
+    sid    = "PublishPocLogStreams"
+    effect = "Allow"
+    actions = [
+      "logs:DescribeLogStreams",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = [
+      "arn:aws:logs:${var.aws_region}:*:log-group:${var.cloudwatch_log_group_prefix}*:log-stream:*"
+    ]
+  }
+
+  statement {
+    sid       = "ReadInstanceTags"
+    effect    = "Allow"
+    actions   = ["ec2:DescribeTags"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "cloudwatch_agent" {
+  count  = var.cloudwatch_agent_enabled ? 1 : 0
+  name   = "${var.name_prefix}-cloudwatch-agent"
+  role   = aws_iam_role.instance.name
+  policy = data.aws_iam_policy_document.cloudwatch_agent[0].json
+}
+
 resource "aws_iam_instance_profile" "this" {
   name = "${var.name_prefix}-instance"
   role = aws_iam_role.instance.name

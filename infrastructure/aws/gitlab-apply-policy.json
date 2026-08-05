@@ -144,6 +144,27 @@
         "ssm:TerminateSession"
       ],
       "Resource": "*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchLogGroupLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:DescribeLogGroups",
+        "logs:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchLogGroupScopedLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DeleteLogGroup",
+        "logs:PutRetentionPolicy",
+        "logs:TagResource",
+        "logs:UntagResource"
+      ],
+      "Resource": "arn:aws:logs:*:*:log-group:/microcrm/poc*"
     }
   ]
 }
