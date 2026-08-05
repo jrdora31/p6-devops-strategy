@@ -35,6 +35,7 @@ test:terraform:
   variables:
     TF_IN_AUTOMATION: "true"
     TF_INPUT: "false"
+    CLOUDWATCH_AGENT_ENABLED: "false"
     TF_PLUGIN_CACHE_DIR: "$CI_PROJECT_DIR/.cache/terraform/providers"
     TF_HTTP_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/microcrm-poc"
     TF_HTTP_LOCK_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/microcrm-poc/lock"
@@ -55,6 +56,12 @@ test:terraform:
     - mkdir -p "$TF_PLUGIN_CACHE_DIR" "$CI_PROJECT_DIR/.aws" "$CI_PROJECT_DIR/.ci/reports/terraform"
     - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - chmod 600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
+    - CLOUDWATCH_AGENT_ENABLED="${CLOUDWATCH_AGENT_ENABLED:-false}"
+    - >-
+      case "$CLOUDWATCH_AGENT_ENABLED" in
+        true|false) ;;
+        *) echo "CLOUDWATCH_AGENT_ENABLED doit valoir true ou false"; exit 1 ;;
+      esac
     - export TF_VAR_cloudwatch_agent_enabled="$CLOUDWATCH_AGENT_ENABLED"
 
 # Produit un plan réel avec des credentials AWS temporaires obtenus par OIDC.
