@@ -1,16 +1,3 @@
-# Interrupteur affiché dans le formulaire "Run pipeline". La valeur par
-# défaut reste sûre ; `true` ne doit être choisi que pour une session AWS
-# autorisée et détruite après collecte des preuves.
-variables:
-  CLOUDWATCH_AGENT_ENABLED:
-    value: "false"
-    options:
-      - "false"
-      - "true"
-    description: >-
-      Active CloudWatch pour cette pipeline uniquement : crée les groupes de
-      logs Terraform et installe l'agent par Ansible.
-
 # Vérifie les sources Terraform sans contacter AWS et sans créer de ressource.
 test:terraform:
   image:
