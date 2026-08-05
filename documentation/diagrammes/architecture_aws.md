@@ -1,6 +1,8 @@
 # Architecture AWS du POC
 
-> Architecture cible au 3 août 2026. Elle deviendra une architecture réalisée après les preuves Terraform, Ansible et Helm.
+> Architecture du POC observée pendant la pipeline `main` `#2731910227` le
+> 5 août 2026. Le cycle AWS a ensuite été détruit ; cette vue décrit les
+> composants réellement utilisés, pas une infrastructure permanente.
 
 ```mermaid
 flowchart LR
@@ -13,7 +15,7 @@ flowchart LR
     subgraph AWS[AWS eu-west-3]
         VPC[VPC]
         SUBNET[Subnet publique]
-        EC2[EC2 t3.medium amd64]
+        EC2[EC2 m7i-flex.large amd64]
         S3[S3 temporaire Ansible]
         SSM[Systems Manager]
 
@@ -50,3 +52,10 @@ mais ne constituent pas une haute disponibilité.
 Une cible de production ajouterait plusieurs nodes répartis entre plusieurs
 Availability Zones, une entrée réseau redondée et une base de données répliquée.
 Cette cible est une recommandation et ne sera pas présentée comme déployée.
+
+## Preuve du cycle
+
+La pipeline `#2731910227` a réussi le deployment Helm, la vérification des
+workloads Kubernetes et `deploy:terraform:destroy`. Le schéma représente donc
+le cycle exécuté, tandis que l'absence de ressources résiduelles doit rester
+contrôlée dans AWS après chaque nouvelle session.

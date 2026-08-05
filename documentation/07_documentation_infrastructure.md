@@ -1,7 +1,8 @@
 # Documentation de l'infrastructure
 
-> État au 3 août 2026 : architecture cible retenue pour le POC. Les sources IaC
-> sont préparées, mais les ressources AWS ne sont pas encore créées.
+> État au 5 août 2026 : architecture du POC déployée puis détruite avec la
+> pipeline `main` `#2731910227`. Le cycle AWS reste éphémère et doit être
+> reconstruit pour chaque nouvelle session de preuve.
 
 ## Architecture AWS retenue
 
@@ -10,7 +11,7 @@ Le POC utilise une seule instance EC2 dans la région `eu-west-3` (Paris). Cette
 | Composant | Choix | Justification |
 |---|---|---|
 | Réseau | Un VPC, une subnet publique, une Internet Gateway et une route Internet | Architecture minimale suffisante pour un POC public |
-| Compute | EC2 `t3.medium`, architecture `amd64`, Ubuntu LTS | 2 vCPU et 4 Gio pour K3s et MicroCRM ; compatible avec les images actuelles |
+| Compute | EC2 `m7i-flex.large`, architecture `amd64`, Ubuntu LTS | 2 vCPU et 8 Gio observés pour K3s et MicroCRM |
 | Stockage | Volume racine gp3 de 20 Gio | Héberge K3s, les images et le volume PostgreSQL `local-path` |
 | Kubernetes | K3s mono-nœud avec Traefik | Pas de coût de control plane EKS ; mêmes charts Helm que les tests Minikube |
 | Accès système | AWS Systems Manager | Ansible peut configurer l'instance sans exposer SSH |
@@ -64,8 +65,8 @@ L'instance reçoit une IPv4 publique dynamique. Elle peut changer après un arr�
 - le state Terraform porte le nom `microcrm-poc` dans GitLab et n'est jamais versionné dans Git ;
 - les jobs AWS obtiennent des credentials temporaires par OIDC et AWS STS ;
 - l'Identity Provider GitLab et le rôle de plan en lecture seule sont configurés ;
-- un rôle séparé réalisera les `apply` et `destroy` manuels, avec une confiance
-  limitée au projet MicroCRM et aux branches `dev` et `main` ;
+- un rôle séparé a été utilisé pour les `apply` et `destroy` manuels, avec une
+  confiance limitée au projet MicroCRM et aux branches `dev` et `main` ;
 - la policy d'écriture versionnée limite IAM et S3 au préfixe `microcrm-poc` et
   les actions EC2 au cycle de vie nécessaire au POC ;
 - l'EC2 utilise un instance profile pour Systems Manager ;
@@ -78,29 +79,38 @@ L'instance reçoit une IPv4 publique dynamique. Elle peut changer après un arr�
 | Noms logiques des ressources | Credentials AWS temporaires générés par STS |
 | Valeurs non sensibles par environnement | Adresses du backend state fournies par les variables CI |
 
-## Maîtrise du coût
+## Coût observé du premier cycle AWS
 
-Le budget de travail est calculé sur une instance active au maximum `80 heures`, puis arrêtée hors essais.
+La facturation détaillée du cycle montre les montants suivants :
 
 | Poste | Hypothèse de contrôle |
 |---|---|
-| EC2 `t3.medium` | plafond de travail `0,06 USD/h`, soit `4,80 USD` pour 80 h |
-| IPv4 publique | `0,005 USD/h`, soit `0,40 USD` pour 80 h |
-| EBS gp3 20 Gio | plafond de travail `2,50 USD/mois` |
-| S3 temporaire | volume très faible, objets supprimés automatiquement |
-| State GitLab | aucune ressource AWS supplémentaire |
+| EC2 Linux/UNIX `m7i-flex.large` | `11,894 h` à `0,11172 USD/h` : `1,33 USD` |
+| EBS gp3 | `0,321 GB-Mo` à `0,0928 USD/GB-Mo` : `0,03 USD` |
+| Total avant crédit | `1,36 USD` |
+| Crédit AWS appliqué | `(1,36 USD)` dans le détail de facturation |
+| Solde de crédits communiqué le 5 août | `22,18 USD` |
 
-Le plafond prévisionnel est donc d'environ `7,70 USD`, hors transfert sortant et taxes. Ce montant n'est pas un devis : le prix de `eu-west-3`, les crédits restants et leur date d'expiration doivent être vérifiés dans AWS avant tout `terraform apply`.
+Le coût observé correspond à environ onze heures d'EC2, et non à une
+consommation AWS inexpliquée pendant toute la nuit. Le cycle suivant doit
+conserver la règle `apply → configuration → deployment → preuves → destroy`
+et éviter de laisser l'instance active après la session.
 
-## Prochaine validation
+## Preuves et limites actuelles
 
-Les sources Terraform passent `fmt` et `validate` localement. Les fichiers YAML
-GitLab et Ansible sont syntaxiquement valides. La pipeline doit encore exécuter
-`ansible-lint` et Trivy IaC avant tout provisionnement.
+- La pipeline `#2731910227` a réussi `deploy:helm:aws`,
+  `verify:kubernetes:aws` et `deploy:terraform:destroy`.
+- Le script de vérification contrôle les rollouts frontend/backend/PostgreSQL,
+  le PVC `Bound`, l'hôte Ingress et les parcours HTTP `/` et `/api/persons`.
+- La pipeline prouve la destruction Terraform, mais une capture séparée de
+  l'inventaire AWS post-destroy reste utile pour la preuve finale d'absence de
+  ressources résiduelles.
+- Aucun backup PostgreSQL, restore ou rollback applicatif réel n'est encore
+  prouvé.
 
-Avant le premier `terraform plan` connecté à AWS : vérifier les crédits,
-confirmer `eu-west-3`, relever le tarif de `t3.medium`, puis autoriser
-explicitement la création des ressources.
+Pour une nouvelle session, vérifier les crédits, confirmer `eu-west-3`, relever
+le tarif de `m7i-flex.large`, puis autoriser explicitement la création des
+ressources.
 
 ## Références
 
