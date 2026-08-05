@@ -49,6 +49,53 @@ ne peuvent pas être calculées honnêtement tant que MicroCRM n’est pas dépl
 | Change failure rate | Deployments causant incident ou rollback / deployments totaux | Deployments, incidents et rollbacks | Non mesurable avant P2 |
 | Mean time to restore | Temps entre détection et restauration du service | Alertes, incidents et retour au vert | Non mesurable avant P2 |
 
+## Indicateurs opérationnels retenus pour la partie 2
+
+La matrice suivante distingue les indicateurs à mesurer pendant une session AWS
+des métriques DORA, qui sont calculées à partir de l'historique GitLab. Les seuils
+marqués « proposition » devront être calibrés après une première mesure réelle.
+
+| Indicateur | Question suivie | Source prévue | Fréquence | Seuil ou résultat attendu |
+|---|---|---|---|---|
+| Disponibilité HTTP | L'application répond-elle ? | Probe frontend `/` et API `/api/persons`, vérification GitLab | 1 à 5 min si monitoring actif ; par déploiement sinon | 100 % des smoke tests ; alerte continue sous 99 % (proposition) |
+| Latence p95 | Les réponses restent-elles acceptables ? | Probe HTTP et logs d'accès | 1 à 5 min | Baseline à établir ; alerte sur dépassement durable de la baseline (proposition) |
+| Taux d'erreur | L'application produit-elle des erreurs ? | Codes HTTP, logs Caddy/backend | 5 min | Alerte au-delà de 1 % sur une fenêtre de 5 min (proposition) |
+| CPU, mémoire, disque | L'instance ou un pod sature-t-il ? | CloudWatch Agent et état Kubernetes | 1 à 5 min | Alerte indicative à 80 % ; vérifier le disque avant toute nouvelle session |
+| Restarts et readiness | Un workload redémarre-t-il ou devient-il indisponible ? | Kubernetes : pods, rollouts, StatefulSet | À chaque vérification et après incident | Aucun restart inattendu ; tous les workloads doivent être prêts |
+| Événements de sécurité | Une activité anormale est-elle détectée ? | GitLab security jobs, CloudTrail si activé, logs système | Par événement et par pipeline | Aucun secret détecté ; toute anomalie doit être analysée |
+| Coût AWS | La session reste-t-elle compatible avec le crédit disponible ? | Cost Explorer/Billing | Relevé avant et après session | Détruire l'environnement le jour même ; seuil budgétaire de session à définir |
+
+Les quatre métriques DORA utilisent les événements GitLab : pipelines,
+deployments, merge requests, incidents et retour au service. Elles ne seront
+calculées qu'après constitution d'un historique suffisant ; une seule session
+AWS ne permet pas d'en déduire une tendance.
+
+## Arbitrage O.2 — CloudWatch comme équivalent provisoire
+
+| Solution | Couverture | Intégration | Ressources et coût POC | Limite principale |
+|---|---|---|---|---|
+| ELK/OpenSearch auto-hébergé | Logs, recherche avancée et dashboards locaux | Plusieurs composants, indexation, stockage et sécurisation à maintenir | Ressources élevées pour une EC2 unique ; instance plus grande potentiellement nécessaire | Risque de concurrence avec K3s, PostgreSQL et MicroCRM |
+| Grafana + Prometheus/Loki | Très bonne visualisation et métriques/logs ouverts | Plusieurs composants à installer et maintenir | Moyens à élevés | Rétention, stockage et exposition à gérer soi-même |
+| CloudWatch Agent + Logs/Metrics | Métriques EC2, logs centralisés, dashboards et alarmes | Native AWS, IAM et HTTPS sortant | Faible empreinte locale ; coût à contrôler par rétention et volume | Dépendance AWS et absence de Kibana |
+
+Proposition provisoire pour `ARB-16` : retenir CloudWatch Agent comme équivalent
+ELK pour le POC éphémère, sans installer ELK/OpenSearch ni Grafana en parallèle.
+CloudWatch couvre la collecte, la centralisation, la visualisation et les
+alarmes ; GitLab reste la source des métriques DORA. L'équivalence doit être
+confirmée par le mentor et démontrée par des captures et des mesures réelles.
+
+### Estimation de ressources et de coût
+
+| Environnement | Dimensionnement | Empreinte locale | Coût estimé pour 12 h |
+|---|---|---|---:|
+| CloudWatch | EC2 `m7i-flex.large`, 2 vCPU, 8 Gio, gp3 20 Gio | Agent léger ; pas d'index local | `1,37–1,49 USD` |
+| ELK/OpenSearch | EC2 théorique `m7i-flex.xlarge`, 4 vCPU, 16 Gio, gp3 30 Gio | JVM, indexation, dashboards et collecteur ; marge réduite pour K3s | `≈2,73 USD` |
+
+Ces montants incluent l'EC2 et le stockage estimés, pas seulement le monitoring.
+Ils ne constituent pas un devis et devront être recalculés dans AWS avant un
+`apply`. Le scénario CloudWatch est retenu provisoirement pour limiter à la
+fois l'empreinte mémoire et le coût du cycle éphémère.
+
 ## Validation Kubernetes locale
 
 Mesures réalisées le 3 août 2026 sur un profil Minikube local isolé. Elles

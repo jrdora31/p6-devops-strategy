@@ -13,9 +13,10 @@ flowchart LR
     subgraph AWS[AWS eu-west-3]
         VPC[VPC]
         SUBNET[Subnet publique]
-        EC2[EC2 t3.medium amd64]
+        EC2[EC2 m7i-flex.large amd64\n2 vCPU / 8 Gio]
         S3[S3 temporaire Ansible]
         SSM[Systems Manager]
+        CW[CloudWatch Logs/Metrics\nDashboard/Alarms]
 
         subgraph K3S[K3s mono-nœud]
             TRAEFIK[Traefik Ingress]
@@ -27,6 +28,7 @@ flowchart LR
 
         VPC --> SUBNET --> EC2 --> K3S
         SSM --> EC2
+        EC2 -.->|HTTPS sortant\nagent à configurer| CW
         ANS -->|transfert temporaire| S3
         TRAEFIK --> FRONT --> BACK --> DB
     end

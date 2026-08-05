@@ -7,3 +7,9 @@ ansible_aws_ssm_bucket_name: "{{ lookup('ansible.builtin.env', 'ANSIBLE_AWS_SSM_
 ansible_aws_ssm_s3_addressing_style: virtual
 ansible_aws_ssm_timeout: 120
 ansible_become: true
+
+# O.4 : un seul interrupteur CI pilote Terraform et Ansible. La valeur par
+# défaut reste désactivée ; l'activation exige une autorisation explicite.
+cloudwatch_agent_enabled: "{{ lookup('ansible.builtin.env', 'CLOUDWATCH_AGENT_ENABLED') | default('false', true) | bool }}"
+cloudwatch_agent_log_group_prefix: "/microcrm/poc"
+cloudwatch_agent_collect_kubernetes_logs: false

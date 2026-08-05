@@ -39,3 +39,4 @@
   roles:
     - role: common
     - role: k3s_server
+    - role: cloudwatch_agent

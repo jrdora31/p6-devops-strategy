@@ -1,7 +1,7 @@
 # Documentation de l'infrastructure
 
-> État au 3 août 2026 : architecture cible retenue pour le POC. Les sources IaC
-> sont préparées, mais les ressources AWS ne sont pas encore créées.
+> État au 5 août 2026 : architecture du POC exécutée puis détruite par la
+> pipeline `main` `#2731910227`. La prochaine session AWS restera éphémère.
 
 ## Architecture AWS retenue
 
@@ -10,7 +10,7 @@ Le POC utilise une seule instance EC2 dans la région `eu-west-3` (Paris). Cette
 | Composant | Choix | Justification |
 |---|---|---|
 | Réseau | Un VPC, une subnet publique, une Internet Gateway et une route Internet | Architecture minimale suffisante pour un POC public |
-| Compute | EC2 `t3.medium`, architecture `amd64`, Ubuntu LTS | 2 vCPU et 4 Gio pour K3s et MicroCRM ; compatible avec les images actuelles |
+| Compute | EC2 `m7i-flex.large`, architecture `amd64`, Ubuntu LTS | 2 vCPU et 8 Gio observés pour K3s et MicroCRM |
 | Stockage | Volume racine gp3 de 20 Gio | Héberge K3s, les images et le volume PostgreSQL `local-path` |
 | Kubernetes | K3s mono-nœud avec Traefik | Pas de coût de control plane EKS ; mêmes charts Helm que les tests Minikube |
 | Accès système | AWS Systems Manager | Ansible peut configurer l'instance sans exposer SSH |
@@ -46,6 +46,53 @@ pour le POC afin de conserver un coût maîtrisé.
 
 Une même ressource n'est gérée que par un seul outil. Terraform fournit les tags et identifiants ; l'inventaire dynamique `amazon.aws.aws_ec2` les transmet à Ansible sans adresse IP codée en dur.
 
+## Observabilité CloudWatch proposée pour le POC
+
+Le flux cible est volontairement limité afin de préserver les ressources de
+l'instance unique et le crédit AWS. CloudWatch est traité comme un équivalent
+provisoire d'ELK, sous réserve de l'avis du mentor :
+
+```text
+EC2 / K3s / Caddy / backend
+          |
+          | CloudWatch Agent (métriques hôte et logs sélectionnés)
+          v
+CloudWatch Metrics + CloudWatch Logs
+          |
+          +--> Dashboard et alarmes de session
+
+GitLab pipelines / deployments / incidents
+          |
+          +--> artifacts et historique GitLab pour les métriques DORA
+```
+
+Sources prévues : logs applicatifs et Caddy, événements K3s utiles, métriques
+CPU/mémoire/disque de l'EC2, résultats de vérification Kubernetes et événements
+GitLab. Les logs Kubernetes détaillés ne seront collectés que si leur volume et
+leur utilité sont démontrés.
+
+Le transport repose sur les sorties HTTPS déjà nécessaires à SSM, GitLab et aux
+registries. Aucun port entrant supplémentaire, notamment pour une interface
+d'administration, ne doit être ouvert sur Internet. L'accès aux données doit
+être limité par IAM ; les secrets, tokens, mots de passe, valeurs PostgreSQL et
+en-têtes sensibles doivent être exclus ou masqués avant centralisation.
+
+### Rétention et enveloppe de volume
+
+Pour une session éphémère, les groupes de logs devront avoir une rétention
+explicite de 1 à 3 jours, puis être supprimés avec l'environnement. Une
+rétention indéfinie n'est pas acceptable pour ce POC compte tenu du suivi des
+crédits.
+
+Avant mesure réelle, l'enveloppe de travail est fixée à 10 Mo de logs par heure,
+soit environ 240 Mo pour 24 heures. Il s'agit d'une estimation de conception,
+pas d'une consommation observée. Si la mesure dépasse cette enveloppe, il faudra
+réduire la verbosité ou la durée de rétention avant de poursuivre.
+
+Cette proposition CloudWatch est liée à l'arbitrage `ARB-16`, qui reste soumis
+à l'avis du mentor. Elle ne signifie pas que l'agent, les groupes de logs ou les
+alarmes sont déjà déployés.
+
 ## Réseau et accès
 
 - `80/443` : entrée HTTP(S) de l'application via Traefik ;
@@ -80,17 +127,23 @@ L'instance reçoit une IPv4 publique dynamique. Elle peut changer après un arr�
 
 ## Maîtrise du coût
 
-Le budget de travail est calculé sur une instance active au maximum `80 heures`, puis arrêtée hors essais.
+Le budget de travail est calculé sur l'instance observée `m7i-flex.large`, active
+au maximum `80 heures`, puis détruite hors essais. CloudWatch est limité aux
+logs critiques, aux métriques nécessaires, à un dashboard et à quelques alarmes.
 
 | Poste | Hypothèse de contrôle |
 |---|---|
-| EC2 `t3.medium` | plafond de travail `0,06 USD/h`, soit `4,80 USD` pour 80 h |
+| EC2 `m7i-flex.large` | observation : `0,11172 USD/h`, soit environ `8,94 USD` pour 80 h |
 | IPv4 publique | `0,005 USD/h`, soit `0,40 USD` pour 80 h |
-| EBS gp3 20 Gio | plafond de travail `2,50 USD/mois` |
+| EBS gp3 20 Gio | environ `0,093 USD/GB-mois`, proratisé selon la durée |
+| CloudWatch contrôlé | environ `0–0,12 USD/jour` selon volume et quotas |
 | S3 temporaire | volume très faible, objets supprimés automatiquement |
 | State GitLab | aucune ressource AWS supplémentaire |
 
-Le plafond prévisionnel est donc d'environ `7,70 USD`, hors transfert sortant et taxes. Ce montant n'est pas un devis : le prix de `eu-west-3`, les crédits restants et leur date d'expiration doivent être vérifiés dans AWS avant tout `terraform apply`.
+Le coût prévisionnel de l'EC2 seule sur 80 heures est donc d'environ `8,94 USD`,
+hors transfert, taxes, CloudWatch et ressources temporaires. Ce montant n'est
+pas un devis : le prix de `eu-west-3`, les crédits restants et leur date
+d'expiration doivent être vérifiés dans AWS avant tout `terraform apply`.
 
 ## Prochaine validation
 
@@ -98,9 +151,9 @@ Les sources Terraform passent `fmt` et `validate` localement. Les fichiers YAML
 GitLab et Ansible sont syntaxiquement valides. La pipeline doit encore exécuter
 `ansible-lint` et Trivy IaC avant tout provisionnement.
 
-Avant le premier `terraform plan` connecté à AWS : vérifier les crédits,
-confirmer `eu-west-3`, relever le tarif de `t3.medium`, puis autoriser
-explicitement la création des ressources.
+Avant le prochain `terraform plan` connecté à AWS : vérifier les crédits,
+confirmer `eu-west-3`, relever le tarif de `m7i-flex.large` et les coûts
+CloudWatch, puis autoriser explicitement la création des ressources.
 
 ## Références
 
@@ -110,3 +163,5 @@ explicitement la création des ressources.
 - [Inventaire EC2 et connexion SSM Ansible](https://docs.ansible.com/projects/ansible/latest/collections/amazon/aws/aws_ec2_inventory.html)
 - [Connexion Ansible par AWS Systems Manager](https://docs.ansible.com/projects/ansible/latest/collections/amazon/aws/aws_ssm_connection.html)
 - [Tarification des IPv4 publiques AWS](https://aws.amazon.com/vpc/pricing/)
+- [Agent Amazon CloudWatch](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html)
+- [Tarification Amazon CloudWatch](https://aws.amazon.com/cloudwatch/pricing/)

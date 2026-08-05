@@ -1,0 +1,119 @@
+---
+- name: Installer les prérequis de l'agent CloudWatch
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: cloudwatch_agent_enabled | bool
+
+- name: Préparer le trousseau temporaire de vérification CloudWatch Agent
+  ansible.builtin.file:
+    path: "{{ cloudwatch_agent_gpg_home }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  when: cloudwatch_agent_enabled | bool
+
+- name: Télécharger la clé de signature officielle CloudWatch Agent
+  ansible.builtin.get_url:
+    url: "{{ cloudwatch_agent_signing_key_url }}"
+    dest: "{{ cloudwatch_agent_signing_key_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: cloudwatch_agent_enabled | bool
+
+- name: Télécharger le paquet officiel CloudWatch Agent
+  ansible.builtin.get_url:
+    url: "{{ cloudwatch_agent_package_url }}"
+    dest: "{{ cloudwatch_agent_package_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: cloudwatch_agent_enabled | bool
+
+- name: Télécharger la signature du paquet CloudWatch Agent
+  ansible.builtin.get_url:
+    url: "{{ cloudwatch_agent_signature_url }}"
+    dest: "{{ cloudwatch_agent_signature_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: cloudwatch_agent_enabled | bool
+
+- name: Importer la clé de signature CloudWatch Agent
+  ansible.builtin.command:
+    cmd: >-
+      gpg --batch --homedir {{ cloudwatch_agent_gpg_home }}
+      --import {{ cloudwatch_agent_signing_key_path }}
+  register: cloudwatch_agent_key_import
+  changed_when: "'unchanged' not in cloudwatch_agent_key_import.stderr"
+  when:
+    - cloudwatch_agent_enabled | bool
+    - not ansible_check_mode
+
+- name: Vérifier l’empreinte de la clé CloudWatch Agent
+  ansible.builtin.command:
+    cmd: >-
+      gpg --batch --homedir {{ cloudwatch_agent_gpg_home }}
+      --with-colons --fingerprint
+  register: cloudwatch_agent_key_fingerprint
+  changed_when: false
+  failed_when: >-
+    cloudwatch_agent_expected_fingerprint | lower not in
+    (cloudwatch_agent_key_fingerprint.stdout | lower)
+  when:
+    - cloudwatch_agent_enabled | bool
+    - not ansible_check_mode
+
+- name: Vérifier la signature du paquet CloudWatch Agent
+  ansible.builtin.command:
+    cmd: >-
+      gpg --batch --homedir {{ cloudwatch_agent_gpg_home }}
+      --verify {{ cloudwatch_agent_signature_path }} {{ cloudwatch_agent_package_path }}
+  register: cloudwatch_agent_signature_check
+  changed_when: false
+  when:
+    - cloudwatch_agent_enabled | bool
+    - not ansible_check_mode
+
+- name: Installer CloudWatch Agent
+  ansible.builtin.apt:
+    deb: "{{ cloudwatch_agent_package_path }}"
+    state: present
+  when: cloudwatch_agent_enabled | bool
+
+- name: Déployer la configuration CloudWatch Agent
+  ansible.builtin.template:
+    src: amazon-cloudwatch-agent.json.j2
+    dest: "{{ cloudwatch_agent_config_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: cloudwatch_agent_enabled | bool
+
+- name: Appliquer la configuration CloudWatch Agent
+  ansible.builtin.command:
+    cmd: >-
+      /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl
+      -a fetch-config -m ec2 -c file:{{ cloudwatch_agent_config_path }} -s
+  register: cloudwatch_agent_configure
+  changed_when: true
+  when:
+    - cloudwatch_agent_enabled | bool
+    - not ansible_check_mode
+
+- name: Vérifier le statut CloudWatch Agent
+  ansible.builtin.command:
+    cmd: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a status
+  register: cloudwatch_agent_status
+  changed_when: false
+  failed_when: cloudwatch_agent_status.rc != 0
+  when:
+    - cloudwatch_agent_enabled | bool
+    - not ansible_check_mode

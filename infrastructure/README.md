@@ -7,7 +7,7 @@ ne signifie pas que les ressources sont déjà créées.
 
 | Dossier | Rôle |
 |---|---|
-| `terraform/` | Crée le réseau, l'EC2, son rôle SSM et le bucket temporaire Ansible |
+| `terraform/` | Crée le réseau, l'EC2, son rôle SSM et le bucket temporaire Ansible ; la collecte CloudWatch sera ajoutée après validation de `ARB-16` |
 | `../ansible/` | Configure Ubuntu et installe K3s via l'inventaire EC2 dynamique |
 | `../helm/microcrm/` | Déploie l'application et PostgreSQL dans K3s |
 
@@ -24,6 +24,12 @@ ansible-lint ansible/
 ```
 
 Ces commandes vérifient les fichiers mais ne créent aucune ressource.
+
+L'observabilité CloudWatch reste désactivée par défaut. Pour une exécution
+manuelle explicitement autorisée, la variable CI `CLOUDWATCH_AGENT_ENABLED`
+doit être positionnée à `true` ; elle pilote à la fois la création Terraform
+des groupes de logs et l'installation Ansible de l'agent. Elle ne doit pas être
+activée dans un simple contrôle de qualité.
 
 ## Exécution future
 
@@ -65,6 +71,12 @@ Un pipeline lancé depuis l'interface GitLab sur `dev` ou `main` permet de
 reconstruire le POC sans commit artificiel. Le cycle attendu est : plan, apply
 Terraform manuel, check mode Ansible, configuration Ansible manuelle,
 déploiement Helm, preuves, puis destroy manuel.
+
+Le monitoring provisoire cible CloudWatch plutôt qu'une stack ELK/OpenSearch
+locale afin de conserver les ressources de l'EC2 pour K3s et MicroCRM. La
+configuration de l'agent, les permissions IAM, les groupes de logs, les
+dashboards et les alarmes devront être versionnés avant le déploiement. Aucun
+composant CloudWatch n'est encore créé par la présence de cette documentation.
 
 ## Limite de disponibilité
 
