@@ -218,5 +218,8 @@ La CI utilise la même image PostgreSQL épinglée par digest.
 Le chart [`helm/microcrm`](helm/microcrm/README.md) décrit le frontend, le
 backend et PostgreSQL. Les fichiers de values séparent les paramètres Minikube
 et K3s, tandis que les credentials restent dans un Secret Kubernetes externe au
-repository. Il a été validé sur un profil Minikube isolé ; le deployment AWS
-reste manuel et protégé tant que l'infrastructure K3s n'est pas disponible.
+repository. Il a été validé sur un profil Minikube isolé puis déployé sur K3s
+AWS par la pipeline [#2731910227](https://gitlab.com/project_6_group/microcrm/-/pipelines/2731910227).
+Cette pipeline a également vérifié les workloads Kubernetes et exécuté le
+`terraform destroy`. L'environnement AWS reste volontairement éphémère : il
+est recréé pour une session de preuve puis détruit à sa fin.

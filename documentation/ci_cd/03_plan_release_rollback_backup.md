@@ -37,7 +37,10 @@ Sur un tag SemVer, `release:manifest` appelle `release_manifest.py` et conserve 
 
 Le rollback applicatif consiste à sélectionner le manifeste de la dernière release validée, redéployer ses digests, puis exécuter les smoke tests. En cas d’échec des smoke tests, le déploiement reste déclaré en échec et nécessite une intervention.
 
-En partie 1, le pipeline conserve les identifiants nécessaires. Le rollback réel sera exécuté après le deployment Kubernetes en partie 2.
+En partie 1, le pipeline conserve les identifiants nécessaires. Le deployment
+Kubernetes AWS est maintenant prouvé, mais aucun rollback réel n'est encore
+documenté comme exécuté. Le rollback restera à tester avec une release
+précédente et un smoke test dans les étapes prévues pour Q/R.
 
 ## Backup et restore
 
@@ -62,6 +65,20 @@ produire un backup PostgreSQL exploitable.
 | Digests conservés | Artifact `.ci/release/images.env` du job `release:images` |
 | Pipeline complète avant clôture | [Pipeline de MR #2723633630](https://gitlab.com/project_6_group/microcrm/-/pipelines/2723633630) |
 | Validation post-merge sur `dev` | [Pipeline #2723639714](https://gitlab.com/project_6_group/microcrm/-/pipelines/2723639714) |
+| Deployment Kubernetes AWS et destruction du cycle | [Pipeline main #2731910227](https://gitlab.com/project_6_group/microcrm/-/pipelines/2731910227) : `deploy:helm:aws`, `verify:kubernetes:aws` et `deploy:terraform:destroy` réussis |
 
-La référence finale sera remplacée par la pipeline `main`, ses digests et le
-manifeste du premier tag SemVer après validation de la partie 1.
+La pipeline `main` prouve le deployment Helm, la vérification des workloads et
+la destruction du cycle AWS. Elle ne constitue pas à elle seule la preuve d'un
+backup, d'un restore, d'un rollback ou d'un premier tag SemVer `v0.1.1`.
+
+## État N.9 après le premier cycle AWS
+
+- `helm upgrade --install --atomic --wait` est utilisé pour le deployment AWS.
+- Les images sont sélectionnées par digest et le chart est fourni comme
+  artifact du pipeline.
+- La procédure de rollback applicatif reste à exécuter sur une release
+  précédente.
+- `backup.sh --dry-run` ne produit toujours pas un backup PostgreSQL
+  restaurable.
+- Le backup réel, son stockage, sa rétention et le restore restent prévus en
+  `Q`.

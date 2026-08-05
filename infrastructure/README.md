@@ -25,7 +25,7 @@ ansible-lint ansible/
 
 Ces commandes vérifient les fichiers mais ne créent aucune ressource.
 
-## Exécution future
+## Exécution via GitLab
 
 Le job `quality:terraform:plan` obtient des credentials AWS temporaires avec le
 token OIDC émis par GitLab. La variable GitLab `AWS_PLAN_ROLE_ARN` contient
@@ -56,15 +56,17 @@ puis le job manuel `deploy:ansible:apply`.
 Ces jobs installent la version `1.2.835.0` du Session Manager Plugin depuis le
 paquet officiel AWS ; ce binaire est requis par la connexion Ansible SSM.
 
-Les commandes `apply` et `destroy` restent manuelles et partagent le même
-`resource_group`, ce qui interdit leur exécution simultanée. Le destroy exige la
-variable `TF_DESTROY_CONFIRM=destroy-microcrm-poc`. Aucun `apply` ne doit être
-lancé avant vérification du coût et autorisation explicite.
+Le pipeline lancé depuis l'interface GitLab sur `dev` ou `main` exécute l'apply
+Terraform et la configuration Ansible après l'autorisation donnée par le
+lancement manuel de la pipeline. Le `destroy` reste un job séparé, manuel et
+protégé par la confirmation native GitLab. Les jobs `apply` et `destroy`
+partagent le même `resource_group`, ce qui interdit leur exécution simultanée.
+Aucune nouvelle pipeline Web ne doit être lancée avant vérification du coût et
+autorisation explicite.
 
-Un pipeline lancé depuis l'interface GitLab sur `dev` ou `main` permet de
-reconstruire le POC sans commit artificiel. Le cycle attendu est : plan, apply
-Terraform manuel, check mode Ansible, configuration Ansible manuelle,
-déploiement Helm, preuves, puis destroy manuel.
+Le cycle attendu est : plan, apply Terraform, check mode Ansible,
+configuration Ansible, déploiement Helm, vérification, preuves, puis destroy
+manuel. La pipeline `main` `#2731910227` a prouvé ce cycle sur le POC.
 
 ## Limite de disponibilité
 
