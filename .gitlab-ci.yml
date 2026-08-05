@@ -28,6 +28,17 @@ stages:
   - verify
 
 variables:
+  # Interrupteur affiché dans le formulaire "Run pipeline". La valeur par
+  # défaut reste sûre ; `true` ne doit être choisi que pour une session AWS
+  # autorisée et détruite après collecte des preuves.
+  CLOUDWATCH_AGENT_ENABLED:
+    value: "false"
+    options:
+      - "false"
+      - "true"
+    description: >-
+      Active CloudWatch pour cette pipeline uniquement : crée les groupes de
+      logs Terraform et installe l'agent par Ansible.
   # Chaque image porte le SHA complet du commit : le tag technique permet de
   # retrouver sans ambiguïté le code qui a servi à sa construction.
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
