@@ -1,0 +1,14 @@
+# Environnement d'intégration déployé automatiquement depuis la branche dev.
+# Le namespace est fourni par le job GitLab ; l'hôte reste distinct de la
+# production même si le POC utilise un domaine de documentation.
+fullnameOverride: microcrm-staging
+
+database:
+  persistence:
+    size: 2Gi
+    storageClass: local-path
+
+ingress:
+  enabled: true
+  className: traefik
+  host: microcrm-staging.example.invalid

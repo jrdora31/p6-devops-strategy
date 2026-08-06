@@ -70,12 +70,16 @@ test:helm:
     entrypoint: [""]
   stage: test
   script:
-    # `lint` vérifie la structure du chart et le schéma des deux jeux de values.
+    # `lint` vérifie la structure du chart et chaque variante de values.
     - helm lint helm/microcrm --values helm/microcrm/values-minikube.yaml
     - helm lint helm/microcrm --values helm/microcrm/values-k3s.yaml
+    - helm lint helm/microcrm --values helm/microcrm/values-staging.yaml
+    - helm lint helm/microcrm --values helm/microcrm/values-production.yaml
     # `template` prouve que les ressources locales et AWS peuvent être générées.
     - helm template microcrm helm/microcrm --namespace microcrm --values helm/microcrm/values-minikube.yaml > /dev/null
     - helm template microcrm helm/microcrm --namespace microcrm --values helm/microcrm/values-k3s.yaml > /dev/null
+    - helm template microcrm helm/microcrm --namespace microcrm-staging --values helm/microcrm/values-staging.yaml > /dev/null
+    - helm template microcrm helm/microcrm --namespace microcrm-prod --values helm/microcrm/values-production.yaml > /dev/null
     # Couvre aussi le chemin réellement utilisé par le déploiement AWS, avec
     # uniquement de fausses valeurs encodées pour les deux Secrets gérés.
     - >-

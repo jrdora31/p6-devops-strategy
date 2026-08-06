@@ -170,6 +170,7 @@ shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
 | `release:manifest` | Traçabilité de la version, du commit, de la pipeline et des images | Manifeste JSON de release |
 | `release:create` | Publication d’un tag SemVer dans GitLab Releases | Release GitLab liée à sa pipeline |
 | `release:helm:package` | Création de l’archive du chart | Package Helm conservé comme artifact |
+| `deploy:helm:staging` | Deployment automatique de `dev` vers staging | Release Helm dans `microcrm-staging` |
 | `deploy:helm:aws` | Deployment manuel et atomique sur K3s/AWS | Release Helm et environnement GitLab |
 
 Avec SonarQube Cloud Free, `quality:sonarqube` s’exécute sur les merge requests

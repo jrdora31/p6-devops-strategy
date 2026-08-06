@@ -36,9 +36,9 @@ Le plan SonarQube Cloud Free analyse les merge requests et la branche principale
 | Événement | Tests applicatifs et scripts | SonarQube | Build | Release |
 |---|---|---|---|---|
 | Merge request | Oui | Oui | Oui | Non |
-| Push sur `dev` | Oui | Non | Oui | Non |
-| Push sur `main` | Oui | Oui | Oui | Publication des images |
-| Tag SemVer | Oui | Non | Oui | Publication des images et manifeste |
+| Push sur `dev` | Oui | Non | Oui | Publication des images, scans et déploiement staging |
+| Push sur `main` | Oui | Oui | Oui | Publication des images, sans promotion production |
+| Tag SemVer | Oui | Non | Oui | Publication des images et manifeste ; promotion production manuelle |
 | Pipeline planifiée | Oui | Non | Oui | Scans du repository et des images, sans publication |
 
 Une pipeline échoue dès qu’un test ou un contrôle bloquant retourne un code non

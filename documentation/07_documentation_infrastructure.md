@@ -108,6 +108,12 @@ L'instance reçoit une IPv4 publique dynamique. Elle peut changer après un arr�
 
 ## State, identités et variables
 
+Le POC utilise un seul cluster K3s pour limiter le coût, avec deux environnements
+applicatifs isolés par namespace : `microcrm-staging` pour `dev` et
+`microcrm-prod` pour les tags SemVer promus manuellement. Cette séparation permet
+de tester la livraison avant la production, mais ne doit pas être présentée
+comme deux clusters, une haute disponibilité ou une isolation AWS complète.
+
 - le state Terraform porte le nom `microcrm-poc` dans GitLab et n'est jamais versionné dans Git ;
 - les jobs AWS obtiennent des credentials temporaires par OIDC et AWS STS ;
 - l'Identity Provider GitLab et le rôle de plan en lecture seule sont configurés ;

@@ -1,7 +1,6 @@
-# Déploie automatiquement les images publiées avec le chart testé plus tôt.
-# Le job échoue explicitement si l'infrastructure K3s, le GitLab Agent ou les
-# variables protégées ne sont pas disponibles.
-deploy:helm:aws:
+# Base commune aux déploiements applicatifs dans les deux environnements du
+# même cluster K3s. Les namespaces et les values isolent staging et production.
+.deploy:helm:k3s:
   image:
     name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
     entrypoint: [""]
@@ -11,13 +10,11 @@ deploy:helm:aws:
       artifacts: true
     - job: release:helm:package
       artifacts: true
-    # Dans une pipeline Web sur main, Helm attend la configuration complète de
-    # K3s. Ce job IaC n'existe pas dans une pipeline de tag, d'où optional.
+    # Une pipeline Web peut provisionner K3s juste avant le déploiement. Ce job
+    # IaC n'existe pas dans une pipeline de tag, d'où `optional`.
     - job: deploy:ansible:apply
       optional: true
   resource_group: aws-poc
-  environment:
-    name: aws-poc
   variables:
     KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
     KUBERNETES_REGISTRY_SECRET: microcrm-registry
@@ -42,9 +39,9 @@ deploy:helm:aws:
     - >-
       helm upgrade --install microcrm .ci/packages/microcrm-*.tgz
       --kube-context "$KUBE_CONTEXT"
-      --namespace microcrm
+      --namespace "$KUBE_NAMESPACE"
       --create-namespace
-      --values helm/microcrm/values-k3s.yaml
+      --values "$HELM_VALUES"
       --set-string "frontend.image.repository=$FRONTEND_REPOSITORY"
       --set-string "frontend.image.digest=$FRONTEND_DIGEST"
       --set-string "backend.image.repository=$BACKEND_REPOSITORY"
@@ -62,12 +59,31 @@ deploy:helm:aws:
       --atomic
       --wait
       --timeout 5m
+
+# `dev` constitue l'environnement d'intégration : chaque pipeline publie les
+# images contrôlées puis les déploie automatiquement dans staging.
+deploy:helm:staging:
+  extends: .deploy:helm:k3s
+  environment:
+    name: aws-poc-staging
+  variables:
+    KUBE_NAMESPACE: microcrm-staging
+    HELM_VALUES: helm/microcrm/values-staging.yaml
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      when: on_success
+  allow_failure: false
+
+# La production est une promotion explicite d'un tag SemVer. Le job manuel
+# réutilise les images et le chart produits dans la même pipeline de tag.
+deploy:helm:aws:
+  extends: .deploy:helm:k3s
+  environment:
+    name: aws-poc-production
+  variables:
+    KUBE_NAMESPACE: microcrm-prod
+    HELM_VALUES: helm/microcrm/values-production.yaml
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
-      when: on_success
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: on_success
-  # Le déploiement reste non bloquant tant que l'environnement AWS n'est pas
-  # provisionné. Son exécution échoue néanmoins si ses prérequis sont absents
-  # ou si Helm ne parvient pas à stabiliser la release.
-  allow_failure: true
+      when: manual
+  allow_failure: false

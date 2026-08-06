@@ -88,7 +88,7 @@ La nouvelle CI sera organisée dans l’ordre suivant :
 
 Les contrôles rapides sont placés dans les premiers jobs afin d’interrompre tôt un pipeline invalide. La syntaxe CI est vérifiée par GitLab avant la création du pipeline ; les linters et validations de scripts sont donc exécutés dans `test` ou `quality`, sans stage supplémentaire. Les livrables sont construits une seule fois. Le stage `release` scanne les images avant de les publier ; le deployment utilise ainsi une version testée, contrôlée et traçable.
 
-Les pipelines sont créés pour les merge requests, `dev`, `main` et les tags. Avec le plan SonarQube Cloud Free, l’analyse SonarQube s’exécute uniquement sur les merge requests et sur `main` : les push directs sur `dev` conservent les tests et builds, mais pas l’analyse de branche SonarQube. Les changements destinés à être intégrés doivent donc passer par une merge request.
+Les pipelines sont créés pour les merge requests, `dev`, `main` et les tags. Avec le plan SonarQube Cloud Free, l’analyse SonarQube s’exécute uniquement sur les merge requests et sur `main` : les push directs sur `dev` conservent les tests, scans, publication et déploiement staging, mais pas l’analyse de branche SonarQube. Les changements destinés à être intégrés doivent donc passer par une merge request.
 
 #### Organisation de la configuration
 
@@ -118,9 +118,10 @@ Le template Auto DevOps de GitLab sert de référence pour la modularité, les i
 | Déclencheur | Parcours |
 |---|---|
 | Merge request | `test → quality → build` |
-| Branche principale | mêmes contrôles, puis `release` |
-| Tag | mêmes contrôles, puis release versionnée |
-| Deployment partie 2 | `deploy → verify`, avec environnement protégé |
+| `dev` | mêmes contrôles, scans/publication, puis déploiement automatique staging |
+| Branche principale | mêmes contrôles, puis `release`, sans promotion automatique |
+| Tag | mêmes contrôles, release versionnée, puis promotion production manuelle |
+| Deployment partie 2 | `deploy → verify`, avec environnements staging/production protégés selon le job |
 
 #### Compatibilité des outils
 

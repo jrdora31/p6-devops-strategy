@@ -23,7 +23,9 @@ l'image.
 
 - `values.yaml` : valeurs communes ;
 - `values-minikube.yaml` : images locales et Ingress Nginx ;
-- `values-k3s.yaml` : stockage `local-path` et Ingress Traefik.
+- `values-k3s.yaml` : valeurs historiques communes au POC K3s ;
+- `values-staging.yaml` : environnement d'intégration déployé depuis `dev` ;
+- `values-production.yaml` : environnement promu par tag SemVer.
 
 Les valeurs `frontend.image.tag` et `backend.image.tag` doivent identifier les
 images à déployer. En CI/CD ou sur AWS, un digest immuable peut être fourni avec
@@ -140,8 +142,10 @@ kubectl --namespace microcrm create secret generic microcrm-database \
   --dry-run=client --output=yaml | kubectl apply -f -
 ```
 
-Pour K3s/AWS, le job manuel `deploy:helm:aws` utilise le kubeconfig injecté par
-le GitLab Agent. Il génère le Secret Registry depuis le deploy token GitLab
-`gitlab-deploy-token` et le Secret PostgreSQL depuis la variable protégée
-`KUBERNETES_DATABASE_PASSWORD`. Les valeurs sensibles ne sont ni versionnées ni
-conservées comme artifacts du pipeline.
+Pour K3s/AWS, `deploy:helm:staging` utilise le kubeconfig injecté par le GitLab
+Agent et déploie automatiquement le contenu de `dev` dans `microcrm-staging`.
+`deploy:helm:aws` déploie la production dans `microcrm-prod` uniquement après
+validation manuelle d'un tag SemVer. Les deux jobs génèrent le Secret Registry
+depuis le deploy token GitLab et le Secret PostgreSQL depuis la variable
+protégée `KUBERNETES_DATABASE_PASSWORD`. Les valeurs sensibles ne sont ni
+versionnées ni conservées comme artifacts du pipeline.
