@@ -60,8 +60,9 @@
       --wait
       --timeout 5m
 
-# `dev` constitue l'environnement d'intégration : chaque pipeline publie les
-# images contrôlées puis les déploie automatiquement dans staging.
+# `dev` constitue l'environnement d'intégration : les pipelines publient les
+# images contrôlées. Le déploiement staging s'exécute uniquement dans une
+# pipeline Web autorisée à provisionner l'infrastructure AWS éphémère.
 deploy:helm:staging:
   extends: .deploy:helm:k3s
   environment:
@@ -70,7 +71,9 @@ deploy:helm:staging:
     KUBE_NAMESPACE: microcrm-staging
     HELM_VALUES: helm/microcrm/values-staging.yaml
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
       when: on_success
   allow_failure: false
 
