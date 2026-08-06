@@ -12,7 +12,10 @@ Une release doit permettre de relier sans ambiguïté le code, le pipeline et le
 | Registry | GitLab Container Registry du repository |
 | Manifest | Version, commit, pipeline et digests frontend/backend |
 
-Le pipeline publie sur `main` et sur les tags SemVer. Les images sont identifiées par le commit SHA et le job `release:images` produit `.ci/release/images.env`.
+Le pipeline publie sur `dev`, `main` et les tags SemVer. Les images sont
+identifiées par le commit SHA et le job `release:images` produit
+`.ci/release/images.env`. La branche `dev` alimente staging ; un tag SemVer
+produit la version qui pourra être promue en production.
 
 Sur un tag SemVer, `release:manifest` appelle `release_manifest.py` et conserve `.ci/release/release-manifest.json`. Après validation de ce manifeste, `release:create` crée l'objet visible dans `Deploy > Releases` et le relie à la pipeline. L’exécution distante de ce chemin devra être prouvée avec le premier tag de release.
 
@@ -21,9 +24,15 @@ Sur un tag SemVer, `release:manifest` appelle `release_manifest.py` et conserve 
 | Événement | Contrôles | Publication |
 |---|---|---|
 | Merge request | Tests et builds | Non |
-| `dev` | Tests et builds | Non |
-| `main` | Tests et builds | Images identifiées par SHA |
+| `dev` | Tests, builds et scans d’image | Images identifiées par SHA, puis déploiement automatique staging |
+| `main` | Tests et builds | Images identifiées par SHA, sans promotion automatique |
 | Tag SemVer | Tests, builds, scans et manifeste | Images, manifeste et release GitLab |
+
+La production utilise le même cluster K3s mais un namespace distinct
+(`microcrm-prod`). Le job de déploiement associé au tag est manuel et doit être
+protégé dans GitLab. Staging (`microcrm-staging`) est réservé à l’intégration et
+aux essais préproduction ; cette séparation logique ne constitue pas une haute
+disponibilité ni une isolation AWS complète.
 
 ## Responsabilités et contrôles
 
