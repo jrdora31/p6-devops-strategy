@@ -143,7 +143,8 @@ kubectl --namespace microcrm create secret generic microcrm-database \
 ```
 
 Pour K3s/AWS, `deploy:helm:staging` utilise le kubeconfig injecté par le GitLab
-Agent et déploie automatiquement le contenu de `dev` dans `microcrm-staging`.
+Agent et déploie le contenu de `dev` dans `microcrm-staging` pendant une
+pipeline Web autorisée, après provisionnement de l'infrastructure éphémère.
 `deploy:helm:aws` déploie la production dans `microcrm-prod` uniquement après
 validation manuelle d'un tag SemVer. Les deux jobs génèrent le Secret Registry
 depuis le deploy token GitLab et le Secret PostgreSQL depuis la variable

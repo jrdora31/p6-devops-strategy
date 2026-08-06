@@ -24,7 +24,7 @@ Sur un tag SemVer, `release:manifest` appelle `release_manifest.py` et conserve 
 | Événement | Contrôles | Publication |
 |---|---|---|
 | Merge request | Tests et builds | Non |
-| `dev` | Tests, builds et scans d’image | Images identifiées par SHA, puis déploiement automatique staging |
+| `dev` | Tests, builds et scans d’image | Images identifiées par SHA ; déploiement staging via pipeline Web autorisée |
 | `main` | Tests et builds | Images identifiées par SHA, sans promotion automatique |
 | Tag SemVer | Tests, builds, scans et manifeste | Images, manifeste et release GitLab |
 
