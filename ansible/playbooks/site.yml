@@ -9,6 +9,9 @@
       {{ lookup('ansible.builtin.env', 'ANSIBLE_AWS_SSM_BUCKET_NAME') }}
     ansible_aws_ssm_region: >-
       {{ lookup('ansible.builtin.env', 'AWS_REGION') | default('eu-west-3', true) }}
+    cloudwatch_agent_enabled: >-
+      {{ lookup('ansible.builtin.env', 'CLOUDWATCH_AGENT_ENABLED')
+         | default('false', true) | bool }}
 
   pre_tasks:
     - name: Vérifier la variable du bucket temporaire SSM
