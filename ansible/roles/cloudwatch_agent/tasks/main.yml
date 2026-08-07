@@ -86,7 +86,9 @@
   ansible.builtin.apt:
     deb: "{{ cloudwatch_agent_package_path }}"
     state: present
-  when: cloudwatch_agent_enabled | bool
+  when:
+    - cloudwatch_agent_enabled | bool
+    - not ansible_check_mode
 
 - name: Déployer la configuration CloudWatch Agent
   ansible.builtin.template:
