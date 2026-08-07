@@ -4,3 +4,6 @@ ci_access:
     - id: project_6_group/microcrm
       environments:
         - aws-poc
+        - aws-poc-infrastructure
+        - aws-poc-staging
+        - aws-poc-production
