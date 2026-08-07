@@ -39,6 +39,14 @@ variables:
     description: >-
       Active CloudWatch pour cette pipeline uniquement : crée les groupes de
       logs Terraform et installe l'agent par Ansible.
+  TF_DESTROY_CONFIRM:
+    value: "false"
+    options:
+      - "false"
+      - "true"
+    description: >-
+      Autorise le job manuel de destruction Terraform uniquement si la valeur
+      est true ; le job reste manuel et doit être lancé séparément.
   # Chaque image porte le SHA complet du commit : le tag technique permet de
   # retrouver sans ambiguïté le code qui a servi à sa construction.
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"

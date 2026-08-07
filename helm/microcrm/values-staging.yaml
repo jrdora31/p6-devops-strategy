@@ -1,4 +1,4 @@
-# Environnement d'intégration déployé automatiquement depuis la branche dev.
+# Environnement d'intégration déployé depuis dev par une pipeline Web autorisée.
 # Le namespace est fourni par le job GitLab ; l'hôte reste distinct de la
 # production même si le POC utilise un domaine de documentation.
 fullnameOverride: microcrm-staging
