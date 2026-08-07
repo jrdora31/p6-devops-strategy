@@ -134,8 +134,10 @@ deploy:terraform:apply:
       when: on_success
   allow_failure: false
 
-# Le destroy est une action séparée, manuelle et sérialisée. Une confirmation
-# explicite saisie au lancement évite une suppression déclenchée par erreur.
+# Le destroy est une action séparée, manuelle et sérialisée. La variable
+# TF_DESTROY_CONFIRM est préremplie à false dans le formulaire de pipeline ;
+# elle doit être passée à true uniquement pour une session autorisée, puis le
+# job manuel doit encore être lancé explicitement.
 deploy:terraform:destroy:
   extends: .terraform:aws-oidc
   stage: deploy
@@ -146,7 +148,7 @@ deploy:terraform:destroy:
     name: aws-poc-infrastructure
     action: stop
   script:
-    - test "$TF_DESTROY_CONFIRM" = "destroy-microcrm-poc"
+    - test "$TF_DESTROY_CONFIRM" = "true"
     - terraform -chdir=infrastructure/terraform init -reconfigure
     - terraform -chdir=infrastructure/terraform plan -destroy -no-color -out="$CI_PROJECT_DIR/.terraform-destroy-plan"
     - terraform -chdir=infrastructure/terraform show -no-color "$CI_PROJECT_DIR/.terraform-destroy-plan" > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-plan.txt"

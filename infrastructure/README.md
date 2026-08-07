@@ -37,10 +37,17 @@ Le job `quality:terraform:plan` obtient des credentials AWS temporaires avec le
 token OIDC émis par GitLab. La variable GitLab `AWS_PLAN_ROLE_ARN` contient
 l'ARN du rôle AWS de lecture utilisé pour le plan. `AWS_APPLY_ROLE_ARN` désigne
 un second rôle, limité aux branches autorisées et aux ressources du POC, pour
-les opérations manuelles `apply` et `destroy`. Ces ARN ne sont pas des secrets.
+les opérations Terraform autorisées (`apply` dans une pipeline Web et
+`destroy` manuel). Ces ARN ne sont pas des secrets.
 La politique d'autorisations proposée est versionnée dans
 `aws/gitlab-apply-policy.json`. Elle limite IAM et S3 au préfixe
 `microcrm-poc` et n'accorde à EC2 que les actions nécessaires au cycle du POC.
+Cette policy du rôle `MicroCRM-GitLab-Terraform-Apply` n'est pas gérée par
+Terraform : après toute modification du fichier, sa version active dans AWS
+doit être synchronisée avant un nouvel `apply`. Lorsque CloudWatch est activé,
+elle doit notamment autoriser la gestion des groupes de logs `/microcrm/poc*`
+et `iam:GetRolePolicy`, `iam:PutRolePolicy` et `iam:DeleteRolePolicy` sur les
+rôles d'instance `microcrm-poc-*`.
 
 La relation de confiance du rôle d'écriture doit accepter uniquement les
 subjects GitLab suivants :
@@ -56,21 +63,28 @@ son authentification sont construites dans le job à partir de
 n'est enregistré dans le repository.
 
 `deploy:terraform:apply` consomme le plan binaire produit par
-`quality:terraform:plan`. Après l'application, les outputs `aws_region` et
+`quality:terraform:plan` et s'exécute automatiquement dans une pipeline Web
+autorisée. Après l'application, les outputs `aws_region` et
 `ansible_transfer_bucket` alimentent automatiquement `deploy:ansible:check`,
-puis le job manuel `deploy:ansible:apply`.
+puis `deploy:ansible:apply`.
 Ces jobs installent la version `1.2.835.0` du Session Manager Plugin depuis le
 paquet officiel AWS ; ce binaire est requis par la connexion Ansible SSM.
 
-Les commandes `apply` et `destroy` restent manuelles et partagent le même
-`resource_group`, ce qui interdit leur exécution simultanée. Le destroy exige la
-variable `TF_DESTROY_CONFIRM=destroy-microcrm-poc`. Aucun `apply` ne doit être
-lancé avant vérification du coût et autorisation explicite.
+`deploy:terraform:apply` reste déclenché uniquement par une pipeline Web
+autorisée. `deploy:terraform:destroy` reste manuel et les deux jobs partagent
+le même `resource_group`, ce qui interdit leur exécution simultanée.
+
+Dans le formulaire `Build > Pipelines > Run pipeline`, la variable
+`TF_DESTROY_CONFIRM` est préremplie à `false` et propose `false` ou `true`.
+Conserver `false` par défaut ; sélectionner `true` uniquement pour une session
+AWS autorisée et après vérification du coût. Cette sélection ne lance pas le
+destroy automatiquement : il faut ensuite déclencher le job manuel
+`deploy:terraform:destroy`.
 
 Un pipeline lancé depuis l'interface GitLab sur `dev` ou `main` permet de
 reconstruire le POC sans commit artificiel. Le cycle attendu est : plan, apply
-Terraform manuel, check mode Ansible, configuration Ansible manuelle,
-déploiement Helm, preuves, puis destroy manuel.
+Terraform autorisé, check et configuration Ansible, déploiement Helm, preuves,
+puis destroy manuel.
 
 Le monitoring provisoire cible CloudWatch plutôt qu'une stack ELK/OpenSearch
 locale afin de conserver les ressources de l'EC2 pour K3s et MicroCRM. La
