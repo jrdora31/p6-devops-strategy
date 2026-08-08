@@ -1,4 +1,6 @@
 ---
+# Ce fichier reste sous inventory/group_vars afin que l'inventaire dynamique
+# charge effectivement ces variables pour le groupe k3s_servers.
 # La connexion passe par Systems Manager : aucun port SSH ni fichier de clé
 # privée n'est nécessaire sur le runner GitLab ou le poste d'administration.
 ansible_connection: amazon.aws.aws_ssm
