@@ -18,6 +18,11 @@ output "public_ip" {
   value       = module.compute.public_ip
 }
 
+output "cloudwatch_dashboard_name" {
+  description = "Nom du dashboard CloudWatch créé lorsque l'agent CloudWatch est activé."
+  value       = try(aws_cloudwatch_dashboard.poc[0].dashboard_name, null)
+}
+
 output "ansible_transfer_bucket" {
   description = "Bucket temporaire requis par la connexion Ansible SSM."
   value       = module.ansible_transfer.bucket_name

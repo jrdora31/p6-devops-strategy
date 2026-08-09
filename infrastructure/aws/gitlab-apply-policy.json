@@ -168,6 +168,22 @@
         "logs:UntagResource"
       ],
       "Resource": "arn:aws:logs:*:*:log-group:/microcrm/poc*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchDashboardLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DeleteDashboards",
+        "cloudwatch:GetDashboard",
+        "cloudwatch:PutDashboard"
+      ],
+      "Resource": "arn:aws:cloudwatch::*:dashboard/microcrm-*-monitoring"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchDashboardList",
+      "Effect": "Allow",
+      "Action": "cloudwatch:ListDashboards",
+      "Resource": "*"
     }
   ]
 }

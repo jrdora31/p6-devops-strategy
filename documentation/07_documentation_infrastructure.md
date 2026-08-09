@@ -90,8 +90,13 @@ pas d'une consommation observée. Si la mesure dépasse cette enveloppe, il faud
 réduire la verbosité ou la durée de rétention avant de poursuivre.
 
 Cette proposition CloudWatch est liée à l'arbitrage `ARB-16`, qui reste soumis
-à l'avis du mentor. Elle ne signifie pas que l'agent, les groupes de logs ou les
-alarmes sont déjà déployés.
+à l'avis du mentor. L'agent et les groupes de logs ont été observés dans le
+cycle du 8 août ; le dashboard est désormais versionné par Terraform mais
+n'est pas encore une preuve de déploiement. Il regroupe la disponibilité EC2,
+les métriques CPU, mémoire et disque de l'hôte courant, les anomalies
+applicatives et les traces de démarrage ou de migration. La sécurité n'a pas
+encore de source dédiée dans le POC ; les alarmes restent à traiter dans le lot
+de fiabilisation du monitoring.
 
 ## Réseau et accès
 
