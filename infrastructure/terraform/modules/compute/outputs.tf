@@ -8,6 +8,11 @@ output "public_ip" {
   value       = aws_instance.k3s.public_ip
 }
 
+output "metric_hostname" {
+  description = "Nom d'hôte court publié dans la dimension host des métriques CloudWatch Agent."
+  value       = split(".", aws_instance.k3s.private_dns)[0]
+}
+
 output "ami_id" {
   description = "AMI réellement utilisée."
   value       = local.selected_ami_id

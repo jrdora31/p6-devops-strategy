@@ -88,9 +88,13 @@ puis destroy manuel.
 
 Le monitoring provisoire cible CloudWatch plutôt qu'une stack ELK/OpenSearch
 locale afin de conserver les ressources de l'EC2 pour K3s et MicroCRM. La
-configuration de l'agent, les permissions IAM, les groupes de logs, les
-dashboards et les alarmes devront être versionnés avant le déploiement. Aucun
-composant CloudWatch n'est encore créé par la présence de cette documentation.
+configuration de l'agent, les permissions IAM, les groupes de logs et le
+dashboard sont maintenant versionnés. Le dashboard cible la disponibilité EC2,
+le CPU, la mémoire, le disque racine détecté par ses dimensions, les anomalies
+applicatives et les traces de démarrage ou de migration. Il reste conditionnel
+à `CLOUDWATCH_AGENT_ENABLED=true` et doit encore être vérifié dans une nouvelle
+session AWS. Aucune alarme ni collecte de sécurité dédiée n'est encore
+versionnée dans ce lot.
 
 ## Limite de disponibilité
 
