@@ -141,7 +141,7 @@ resource "aws_cloudwatch_dashboard" "poc" {
         properties = {
           title  = "Erreurs et avertissements MicroCRM"
           region = var.aws_region
-          query  = "SOURCE logGroups(namePrefix: '${var.cloudwatch_log_group_prefix}/kubernetes') | fields @timestamp, @message | filter @message like /ERROR/ or @message like /WARN/ | sort @timestamp desc | limit 50"
+          query  = "SOURCE '${var.cloudwatch_log_group_prefix}/kubernetes' | fields @timestamp, @message | filter @message like /ERROR/ or @message like /WARN/ | sort @timestamp desc | limit 50"
           view   = "table"
         }
       },
@@ -154,7 +154,7 @@ resource "aws_cloudwatch_dashboard" "poc" {
         properties = {
           title  = "Déploiements — démarrages et migrations"
           region = var.aws_region
-          query  = "SOURCE logGroups(namePrefix: '${var.cloudwatch_log_group_prefix}/kubernetes') | fields @timestamp, @message | filter @message like /MicroCRMApplication/ or @message like /Liquibase/ or @message like /liquibase/ | sort @timestamp desc | limit 50"
+          query  = "SOURCE '${var.cloudwatch_log_group_prefix}/kubernetes' | fields @timestamp, @message | filter @message like /MicroCRMApplication/ or @message like /Liquibase/ or @message like /liquibase/ | sort @timestamp desc | limit 50"
           view   = "table"
         }
       }
