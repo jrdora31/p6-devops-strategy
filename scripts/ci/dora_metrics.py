@@ -119,30 +119,27 @@ def collect_gitlab_data(
     }
 
 
-def calculate_metrics(
-    source: dict[str, Any],
-    environment: str,
-    start: datetime,
-    end: datetime,
-    incident_tracking_start: datetime,
-) -> dict[str, Any]:
-    """Calcule les métriques selon les conventions documentées du projet."""
-    deployments = source.get("deployments", [])
-    successful = [
-        deployment
-        for deployment in deployments
-        if deployment.get("status") == "success"
-        and (finished := deployment_finished_at(deployment)) is not None
-        and start <= finished <= end
-    ]
-    successful.sort(key=lambda item: deployment_finished_at(item) or start)
+def successful_deployments(
+    source: dict[str, Any], start: datetime, end: datetime
+) -> list[dict[str, Any]]:
+    """Sélectionne les deployments réussis terminés dans la période."""
+    selected = []
+    for deployment in source.get("deployments", []):
+        if deployment.get("status") != "success":
+            continue
+        finished = deployment_finished_at(deployment)
+        if finished is None or not start <= finished <= end:
+            continue
+        selected.append(deployment)
+    return sorted(selected, key=lambda item: deployment_finished_at(item) or start)
 
-    period_days = max((end - start).total_seconds() / 86400, 1)
-    frequency_per_week = len(successful) * 7 / period_days
 
+def lead_time_samples(
+    deployments: list[dict[str, Any]], merge_requests: dict[str, list[dict[str, Any]]]
+) -> list[float]:
+    """Retourne les délais MR fusionnée -> premier deployment réussi."""
     first_delivery_by_mr: dict[str, tuple[datetime, datetime]] = {}
-    merge_requests = source.get("deployment_merge_requests", {})
-    for deployment in successful:
+    for deployment in deployments:
         finished = deployment_finished_at(deployment)
         if finished is None:
             continue
@@ -154,43 +151,136 @@ def calculate_metrics(
             previous = first_delivery_by_mr.get(key)
             if previous is None or finished < previous[1]:
                 first_delivery_by_mr[key] = (merged, finished)
-    lead_samples = [
+    return [
         (finished - merged).total_seconds()
         for merged, finished in first_delivery_by_mr.values()
     ]
 
-    stability_start = max(start, incident_tracking_start)
-    stability_deployments = [
-        deployment
-        for deployment in successful
-        if (deployment_finished_at(deployment) or start) >= stability_start
-    ]
-    stability_ids = {int(deployment["id"]) for deployment in stability_deployments}
+
+def incident_deployment_id(incident: dict[str, Any]) -> int | None:
+    """Extrait le deployment relié par le contrat DORA de l'incident."""
+    match = INCIDENT_DEPLOYMENT_PATTERN.search(incident.get("description") or "")
+    return int(match.group(1)) if match else None
+
+
+def tracked_incidents(
+    source: dict[str, Any], stability_start: datetime, end: datetime
+) -> list[dict[str, Any]]:
+    """Sélectionne et annote les incidents suivis sur la période."""
     incidents = []
     for incident in source.get("incidents", []):
         created = parse_timestamp(incident.get("created_at"))
         if created is None or not stability_start <= created <= end:
             continue
-        match = INCIDENT_DEPLOYMENT_PATTERN.search(incident.get("description") or "")
-        deployment_id = int(match.group(1)) if match else None
-        incidents.append({**incident, "dora_deployment_id": deployment_id})
+        incidents.append({**incident, "dora_deployment_id": incident_deployment_id(incident)})
+    return incidents
 
-    failed_change_ids = {
-        incident["dora_deployment_id"]
-        for incident in incidents
-        if incident["dora_deployment_id"] in stability_ids
-    }
-    change_failure_rate = (
-        len(failed_change_ids) / len(stability_deployments) * 100
-        if stability_deployments
-        else None
-    )
-    restore_samples = []
+
+def restore_samples(incidents: list[dict[str, Any]]) -> list[float]:
+    """Retourne les durées des incidents clôturés."""
+    samples = []
     for incident in incidents:
         created = parse_timestamp(incident.get("created_at"))
         closed = parse_timestamp(incident.get("closed_at"))
         if created is not None and closed is not None and closed >= created:
-            restore_samples.append((closed - created).total_seconds())
+            samples.append((closed - created).total_seconds())
+    return samples
+
+
+def stability_deployments(
+    deployments: list[dict[str, Any]], stability_start: datetime, start: datetime
+) -> list[dict[str, Any]]:
+    """Sélectionne les deployments du dénominateur de stabilité."""
+    return [
+        deployment
+        for deployment in deployments
+        if (deployment_finished_at(deployment) or start) >= stability_start
+    ]
+
+
+def failure_ids(incidents: list[dict[str, Any]], deployment_ids: set[int]) -> set[int]:
+    """Retourne les deployments réussis ayant causé un incident suivi."""
+    return {
+        incident["dora_deployment_id"]
+        for incident in incidents
+        if incident["dora_deployment_id"] in deployment_ids
+    }
+
+
+def frequency_metric(successful_count: int, period_days: float) -> dict[str, Any]:
+    """Construit la métrique de fréquence."""
+    return {
+        "value": round(successful_count * 7 / period_days, 2),
+        "unit": "successful_deployments_per_week",
+        "successful_deployments": successful_count,
+        "sample_size": successful_count,
+        "status": "measured",
+    }
+
+
+def median_metric(
+    samples: list[float], unit: str, unavailable_message: str
+) -> dict[str, Any]:
+    """Construit une métrique médiane avec un état non calculable explicite."""
+    if samples:
+        return {
+            "value": round(statistics.median(samples), 2),
+            "unit": unit,
+            "sample_size": len(samples),
+            "status": "measured",
+            "limit": None,
+        }
+    return {
+        "value": None,
+        "unit": unit,
+        "sample_size": 0,
+        "status": "not_calculable",
+        "limit": unavailable_message,
+    }
+
+
+def failure_metric(failed_count: int, deployment_count: int) -> dict[str, Any]:
+    """Construit le taux d'échec des changements."""
+    if not deployment_count:
+        return {
+            "value": None,
+            "unit": "percent",
+            "failed_deployments": failed_count,
+            "deployment_denominator": 0,
+            "sample_size": 0,
+            "status": "not_calculable",
+            "limit": "Aucun déploiement réussi depuis le début du suivi des incidents.",
+        }
+    return {
+        "value": round(failed_count / deployment_count * 100, 2),
+        "unit": "percent",
+        "failed_deployments": failed_count,
+        "deployment_denominator": deployment_count,
+        "sample_size": deployment_count,
+        "status": "measured",
+        "limit": None,
+    }
+
+
+def calculate_metrics(
+    source: dict[str, Any],
+    environment: str,
+    start: datetime,
+    end: datetime,
+    incident_tracking_start: datetime,
+) -> dict[str, Any]:
+    """Calcule les métriques selon les conventions documentées du projet."""
+    successful = successful_deployments(source, start, end)
+    period_days = max((end - start).total_seconds() / 86400, 1)
+    lead_samples = lead_time_samples(
+        successful, source.get("deployment_merge_requests", {})
+    )
+    stability_start = max(start, incident_tracking_start)
+    stable_deployments = stability_deployments(successful, stability_start, start)
+    stability_ids = {int(deployment["id"]) for deployment in stable_deployments}
+    incidents = tracked_incidents(source, stability_start, end)
+    failed_change_ids = failure_ids(incidents, stability_ids)
+    restore_duration_samples = restore_samples(incidents)
 
     return {
         "schema_version": 1,
@@ -207,40 +297,18 @@ def calculate_metrics(
             ),
         },
         "metrics": {
-            "deployment_frequency": {
-                "value": round(frequency_per_week, 2),
-                "unit": "successful_deployments_per_week",
-                "successful_deployments": len(successful),
-                "sample_size": len(successful),
-                "status": "measured",
-            },
-            "lead_time_for_changes": {
-                "value": round(statistics.median(lead_samples), 2) if lead_samples else None,
-                "unit": "seconds",
-                "sample_size": len(lead_samples),
-                "status": "measured" if lead_samples else "not_calculable",
-                "limit": None if lead_samples else "Aucune MR fusionnée reliée aux déploiements.",
-            },
-            "change_failure_rate": {
-                "value": round(change_failure_rate, 2) if change_failure_rate is not None else None,
-                "unit": "percent",
-                "failed_deployments": len(failed_change_ids),
-                "deployment_denominator": len(stability_deployments),
-                "sample_size": len(stability_deployments),
-                "status": "measured" if change_failure_rate is not None else "not_calculable",
-                "limit": (
-                    None
-                    if change_failure_rate is not None
-                    else "Aucun déploiement réussi depuis le début du suivi des incidents."
-                ),
-            },
-            "time_to_restore_service": {
-                "value": round(statistics.median(restore_samples), 2) if restore_samples else None,
-                "unit": "seconds",
-                "sample_size": len(restore_samples),
-                "status": "measured" if restore_samples else "not_calculable",
-                "limit": None if restore_samples else "Aucun incident clôturé sur la période suivie.",
-            },
+            "deployment_frequency": frequency_metric(len(successful), period_days),
+            "lead_time_for_changes": median_metric(
+                lead_samples, "seconds", "Aucune MR fusionnée reliée aux déploiements."
+            ),
+            "change_failure_rate": failure_metric(
+                len(failed_change_ids), len(stable_deployments)
+            ),
+            "time_to_restore_service": median_metric(
+                restore_duration_samples,
+                "seconds",
+                "Aucun incident clôturé sur la période suivie.",
+            ),
         },
         "quality": {
             "incidents_total": len(incidents),
