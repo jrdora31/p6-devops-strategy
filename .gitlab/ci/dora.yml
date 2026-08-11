@@ -9,7 +9,7 @@ pages:dora:
     DORA_INCIDENT_TRACKING_START: "2026-08-11T00:00:00Z"
   script:
     - test -n "$DORA_GITLAB_TOKEN"
-    - python scripts/ci/dora_metrics.py --output public
+    - python scripts/ci/dora_metrics.py
   pages: true
   artifacts:
     expire_in: 30 days

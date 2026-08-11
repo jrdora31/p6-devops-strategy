@@ -80,8 +80,6 @@ def test_cli_writes_html_json_and_csv(tmp_path: Path) -> None:
             str(DORA_SCRIPT),
             "--fixture",
             str(fixture_path),
-            "--output",
-            str(output),
             "--days",
             "10",
             "--now",

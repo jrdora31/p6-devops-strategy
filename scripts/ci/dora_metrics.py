@@ -18,6 +18,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+OUTPUT_DIRECTORY = Path("public")
+
 INCIDENT_DEPLOYMENT_PATTERN = re.compile(
     r"^DORA_DEPLOYMENT_ID:\s*(\d+)\s*$", re.IGNORECASE | re.MULTILINE
 )
@@ -400,7 +402,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--environment", default=os.getenv("DORA_ENVIRONMENT", "aws-poc-staging"))
     parser.add_argument("--days", type=int, default=int(os.getenv("DORA_PERIOD_DAYS", "90")))
     parser.add_argument("--incident-tracking-start", default=os.getenv("DORA_INCIDENT_TRACKING_START", "2026-08-11T00:00:00Z"))
-    parser.add_argument("--output", type=Path, default=Path("public"))
     parser.add_argument("--fixture", type=Path, help="Données locales de test, sans appel réseau.")
     parser.add_argument("--now", help="Date de fin forcée pour un test reproductible.")
     return parser
@@ -419,7 +420,7 @@ def main() -> int:
     start = end - timedelta(days=arguments.days)
 
     try:
-        output_directory = safe_path(arguments.output)
+        output_directory = safe_path(OUTPUT_DIRECTORY)
         if arguments.fixture:
             fixture_path = safe_path(arguments.fixture)
             source = json.loads(fixture_path.read_text(encoding="utf-8"))
@@ -431,7 +432,7 @@ def main() -> int:
                 print("DORA_GITLAB_TOKEN, CI_API_V4_URL et CI_PROJECT_ID sont requis", file=sys.stderr)
                 return 2
             source = collect_gitlab_data(GitLabClient(api_url, project_id, token), arguments.environment, start)
-    except (OSError, ValueError, json.JSONDecodeError, RuntimeError) as error:
+    except (OSError, ValueError, RuntimeError) as error:
         print(str(error), file=sys.stderr)
         return 1
 
