@@ -1,0 +1,22 @@
+# Génère et publie un rapport statique depuis l'historique GitLab uniquement.
+# Ce job ne contacte ni Terraform, ni AWS, ni le cluster K3s.
+pages:dora:
+  image: python:3.12.11-slim
+  stage: verify
+  variables:
+    DORA_ENVIRONMENT: aws-poc-staging
+    DORA_PERIOD_DAYS: "90"
+    DORA_INCIDENT_TRACKING_START: "2026-08-11T00:00:00Z"
+  script:
+    - test -n "$DORA_GITLAB_TOKEN"
+    - python scripts/ci/dora_metrics.py
+  pages: true
+  artifacts:
+    expire_in: 30 days
+    paths:
+      - public/
+  rules:
+    # La MR valide le script avec pytest ; elle ne publie pas une page de test.
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'

@@ -13,6 +13,7 @@ GitLab.
 | Backup | `backup.sh` | Bash | Valider le contrat en dry-run en partie 1 |
 | Release | `release_manifest.py` | Python | Générer un manifeste reliant version, pipeline, commit et digests |
 | Notification | `notify.py` | Python | Normaliser le résultat et, sur demande, appeler un webhook |
+| DORA | `dora_metrics.py` | Python | Calculer les quatre métriques et générer la page GitLab Pages avec ses exports |
 
 Chaque commande accepte `--help`. Elle retourne `0` en cas de succès et un code
 différent de zéro en cas d’erreur, ce qui permet à GitLab d'arrêter le job.
@@ -28,6 +29,7 @@ différent de zéro en cas d’erreur, ce qui permet à GitLab d'arrêter le job
 | `smoke.sh` | Job `verify:images` après la construction et le scan des images |
 | `backup.sh` | Dry-run testé ; backup réel réservé au stockage persistant de la partie 2 |
 | `notify.py` | Comportement testé sans envoi ; canal réel encore à choisir |
+| `dora_metrics.py` | Job `pages:dora` sur `dev` ou dans la planification hebdomadaire, sans accès AWS |
 
 ## Commandes Bash
 
@@ -84,13 +86,40 @@ variable protégée GitLab et ne sera jamais écrite dans le repository.
 
 ```shell
 bash scripts/ci/tests/test_scripts.sh
-python -m pytest scripts/ci/tests/test_python_scripts.py
+python -m pytest scripts/ci/tests/
 shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
 ```
 
 - le premier test vérifie les commandes Bash et leurs erreurs attendues ;
-- le second vérifie le manifeste, la notification et l’indisponibilité d’un webhook ;
+- le second vérifie le manifeste, la notification, l’indisponibilité d’un webhook et les calculs/exports DORA ;
 - ShellCheck détecte les erreurs et pratiques fragiles dans les scripts Bash.
 
 Dans GitLab, les tests Python produisent un rapport JUnit consultable depuis la
 merge request et le pipeline.
+
+## Rapport DORA et GitLab Pages
+
+```shell
+python scripts/ci/dora_metrics.py --output public
+```
+
+Le job `pages:dora` collecte les déploiements, les merge requests associées et
+les incidents via l'API GitLab, puis publie `public/index.html`,
+`public/dora-metrics.json` et `public/dora-metrics.csv`. La période par défaut
+est de 90 jours. Le périmètre est `aws-poc-staging`, présenté explicitement
+comme proxy de staging du POC et non comme historique de production réel.
+
+Le job nécessite `DORA_GITLAB_TOKEN`, variable CI/CD masquée contenant un jeton
+de projet ou personnel limité à `read_api`. `CI_JOB_TOKEN` couvre les
+déploiements et certaines lectures de merge requests, mais pas l'API Issues
+requise pour les incidents. Le jeton ne doit jamais être écrit dans un rapport.
+
+Les incidents suivis portent le label `dora` et contiennent dans leur
+description une ligne reliant l'incident au déploiement responsable :
+
+```text
+DORA_DEPLOYMENT_ID: 123
+```
+
+Un déploiement GitLab en échec n'est pas un échec de changement DORA : seuls
+les déploiements réussis ayant ensuite causé un incident comptent au numérateur.

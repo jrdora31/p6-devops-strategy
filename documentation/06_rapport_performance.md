@@ -39,15 +39,27 @@ corrigibles de la baseline locale.
 
 ## Métriques DORA
 
-Les métriques DORA mesurent la performance de la livraison en production. Elles
-ne peuvent pas être calculées honnêtement tant que MicroCRM n’est pas déployé.
+Les métriques DORA mesurent la vitesse et la stabilité de la livraison. Le POC
+automatise les quatre indicateurs demandés avec `scripts/ci/dora_metrics.py` et
+publie un rapport HTML/JSON/CSV par GitLab Pages, sans dépendre de la présence
+de l'infrastructure AWS.
 
-| Métrique | Calcul futur | Source prévue | État P1 |
-|---|---|---|---|
-| Deployment frequency | Nombre de deployments réussis par période | GitLab Environments et deployments | Non mesurable avant P2 |
-| Lead time for changes | Temps entre le commit et son deployment | Commits, pipelines et deployment | Non mesurable avant P2 |
-| Change failure rate | Deployments causant incident ou rollback / deployments totaux | Deployments, incidents et rollbacks | Non mesurable avant P2 |
-| Mean time to restore | Temps entre détection et restauration du service | Alertes, incidents et retour au vert | Non mesurable avant P2 |
+| Métrique | Convention retenue | Source GitLab |
+|---|---|---|
+| Deployment frequency | Nombre moyen de déploiements réussis par semaine sur 90 jours | Deployments de `aws-poc-staging`, date de fin |
+| Lead time for changes | Médiane entre la fusion d'une MR et son premier déploiement réussi | MRs associées aux deployments |
+| Change failure rate | Déploiements réussis reliés à un incident / déploiements réussis depuis le début du suivi | Deployments et incidents labellisés `dora` |
+| Time to restore service | Médiane entre création et clôture des incidents suivis | Incidents GitLab |
+
+`aws-poc-staging` est utilisé comme proxy opérationnel parce qu'il possède un
+historique réel de déploiements du POC. Cette mesure ne doit pas être présentée
+comme une performance de production. Quand `aws-poc-production` possédera un
+historique suffisant, la variable `DORA_ENVIRONMENT` permettra de basculer le
+périmètre sans modifier le script.
+
+Le suivi des incidents débute le 11 août 2026. Une valeur indisponible reste
+affichée « non calculable » plutôt que d'être estimée depuis un simple échec de
+pipeline ou un historique antérieur non suivi.
 
 ## Indicateurs opérationnels retenus pour la partie 2
 
