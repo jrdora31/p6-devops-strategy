@@ -66,3 +66,4 @@ include:
   - local: .gitlab/ci/release.yml
   - local: .gitlab/ci/deploy.yml
   - local: .gitlab/ci/verify.yml
+  - local: .gitlab/ci/dora.yml
