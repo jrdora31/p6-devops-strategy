@@ -375,17 +375,22 @@ table{{border-collapse:collapse;width:100%;background:white}}th,td{{padding:.7re
 
 def write_outputs(report: dict[str, Any], output_directory: Path) -> None:
     output_directory.mkdir(parents=True, exist_ok=True)
-    (output_directory / "dora-metrics.json").write_text(
-        json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
-    with (output_directory / "dora-metrics.csv").open("w", encoding="utf-8", newline="") as stream:
+    json_path = safe_path(output_directory / "dora-metrics.json")
+    with open(json_path, "w", encoding="utf-8") as stream:
+        stream.write(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+
+    csv_path = safe_path(output_directory / "dora-metrics.csv")
+    with open(csv_path, "w", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream)
         writer.writerow(["metric", "value", "unit", "sample_size", "status", "limit"])
         for name, metric in report["metrics"].items():
             writer.writerow(
                 [name, metric["value"], metric["unit"], metric["sample_size"], metric["status"], metric.get("limit") or ""]
             )
-    (output_directory / "index.html").write_text(render_html(report), encoding="utf-8")
+
+    html_path = safe_path(output_directory / "index.html")
+    with open(html_path, "w", encoding="utf-8") as stream:
+        stream.write(render_html(report))
 
 
 def safe_path(path: Path) -> Path:
