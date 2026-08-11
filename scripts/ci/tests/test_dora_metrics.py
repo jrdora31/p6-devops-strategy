@@ -10,7 +10,8 @@ from pathlib import Path
 CI_DIRECTORY = Path(__file__).resolve().parents[1]
 DORA_SCRIPT = CI_DIRECTORY / "dora_metrics.py"
 SPEC = importlib.util.spec_from_file_location("dora_metrics", DORA_SCRIPT)
-assert SPEC and SPEC.loader
+assert SPEC is not None
+assert SPEC.loader is not None
 dora_metrics = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(dora_metrics)
 
@@ -91,6 +92,7 @@ def test_cli_writes_html_json_and_csv(tmp_path: Path) -> None:
         check=False,
         capture_output=True,
         text=True,
+        cwd=tmp_path,
     )
 
     assert result.returncode == 0, result.stderr
@@ -98,3 +100,16 @@ def test_cli_writes_html_json_and_csv(tmp_path: Path) -> None:
     assert (output / "dora-metrics.json").is_file()
     assert (output / "dora-metrics.csv").is_file()
     assert "staging" in (output / "index.html").read_text(encoding="utf-8")
+
+
+def test_safe_path_rejects_path_outside_working_directory(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    outside_path = tmp_path.parent / "outside.json"
+
+    try:
+        dora_metrics.safe_path(outside_path)
+    except ValueError as error:
+        assert "hors du répertoire autorisé" in str(error)
+    else:
+        raise AssertionError("Un chemin extérieur au répertoire de travail doit être refusé")

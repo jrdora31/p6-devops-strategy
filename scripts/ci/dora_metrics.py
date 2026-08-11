@@ -386,6 +386,15 @@ def write_outputs(report: dict[str, Any], output_directory: Path) -> None:
     (output_directory / "index.html").write_text(render_html(report), encoding="utf-8")
 
 
+def safe_path(path: Path) -> Path:
+    """Garantir que le chemin canonique reste dans le répertoire de travail."""
+    resolved = os.path.realpath(path)
+    base_directory = os.path.realpath(os.getcwd())
+    if resolved != base_directory and not resolved.startswith(base_directory + os.sep):
+        raise ValueError(f"Chemin hors du répertoire autorisé : {path}")
+    return Path(resolved)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Génère le rapport DORA statique de MicroCRM.")
     parser.add_argument("--environment", default=os.getenv("DORA_ENVIRONMENT", "aws-poc-staging"))
@@ -409,24 +418,26 @@ def main() -> int:
         return 2
     start = end - timedelta(days=arguments.days)
 
-    if arguments.fixture:
-        source = json.loads(arguments.fixture.read_text(encoding="utf-8"))
-    else:
-        token = os.getenv("DORA_GITLAB_TOKEN")
-        api_url = os.getenv("CI_API_V4_URL")
-        project_id = os.getenv("CI_PROJECT_ID")
-        if not token or not api_url or not project_id:
-            print("DORA_GITLAB_TOKEN, CI_API_V4_URL et CI_PROJECT_ID sont requis", file=sys.stderr)
-            return 2
-        try:
+    try:
+        output_directory = safe_path(arguments.output)
+        if arguments.fixture:
+            fixture_path = safe_path(arguments.fixture)
+            source = json.loads(fixture_path.read_text(encoding="utf-8"))
+        else:
+            token = os.getenv("DORA_GITLAB_TOKEN")
+            api_url = os.getenv("CI_API_V4_URL")
+            project_id = os.getenv("CI_PROJECT_ID")
+            if not token or not api_url or not project_id:
+                print("DORA_GITLAB_TOKEN, CI_API_V4_URL et CI_PROJECT_ID sont requis", file=sys.stderr)
+                return 2
             source = collect_gitlab_data(GitLabClient(api_url, project_id, token), arguments.environment, start)
-        except RuntimeError as error:
-            print(str(error), file=sys.stderr)
-            return 1
+    except (OSError, ValueError, json.JSONDecodeError, RuntimeError) as error:
+        print(str(error), file=sys.stderr)
+        return 1
 
     report = calculate_metrics(source, arguments.environment, start, end, incident_start)
-    write_outputs(report, arguments.output)
-    print(f"Rapport DORA généré dans {arguments.output}")
+    write_outputs(report, output_directory)
+    print(f"Rapport DORA généré dans {output_directory}")
     return 0
 
 
