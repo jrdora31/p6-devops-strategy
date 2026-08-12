@@ -163,11 +163,39 @@
       "Effect": "Allow",
       "Action": [
         "logs:DeleteLogGroup",
+        "logs:DeleteMetricFilter",
+        "logs:PutMetricFilter",
         "logs:PutRetentionPolicy",
         "logs:TagResource",
         "logs:UntagResource"
       ],
       "Resource": "arn:aws:logs:*:*:log-group:/microcrm/poc*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchMetricFilterRead",
+      "Effect": "Allow",
+      "Action": "logs:DescribeMetricFilters",
+      "Resource": "*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchAlarmLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DeleteAlarms",
+        "cloudwatch:PutMetricAlarm",
+        "cloudwatch:TagResource",
+        "cloudwatch:UntagResource"
+      ],
+      "Resource": "arn:aws:cloudwatch:*:*:alarm:microcrm-*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchAlarmRead",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:ListTagsForResource"
+      ],
+      "Resource": "*"
     },
     {
       "Sid": "MicrocrmCloudWatchDashboardLifecycle",
