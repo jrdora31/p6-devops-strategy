@@ -59,6 +59,79 @@ resource "aws_cloudwatch_log_group" "poc" {
   tags = local.common_tags
 }
 
+resource "aws_cloudwatch_log_metric_filter" "authentication_failures" {
+  count          = var.cloudwatch_agent_enabled ? 1 : 0
+  name           = "${var.project_name}-${var.environment}-authentication-failures"
+  pattern        = "?\"authentication failure\" ?\"Failed password\" ?\"Invalid user\""
+  log_group_name = aws_cloudwatch_log_group.poc["system"].name
+
+  metric_transformation {
+    name          = "AuthenticationFailureCount"
+    namespace     = "MicroCRM/Poc/Security"
+    value         = "1"
+    default_value = "0"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "instance_unavailable" {
+  count               = var.cloudwatch_agent_enabled ? 1 : 0
+  alarm_name          = "${var.project_name}-${var.environment}-instance-unavailable"
+  alarm_description   = "[CRITICAL] Disponibilité EC2. Responsable: Ops. Action: diagnostiquer l'instance et restaurer le service. Canal: état CloudWatch."
+  namespace           = "AWS/EC2"
+  metric_name         = "StatusCheckFailed"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  datapoints_to_alarm = 1
+  period              = 60
+  statistic           = "Maximum"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    InstanceId = module.compute.instance_id
+  }
+
+  tags = merge(local.common_tags, { Severity = "critical" })
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu_high" {
+  count               = var.cloudwatch_agent_enabled ? 1 : 0
+  alarm_name          = "${var.project_name}-${var.environment}-cpu-high"
+  alarm_description   = "[WARNING] CPU EC2 supérieur ou égal à 80 % pendant 10 minutes. Responsable: Ops. Action: vérifier la charge et les processus. Canal: état CloudWatch."
+  namespace           = "AWS/EC2"
+  metric_name         = "CPUUtilization"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 2
+  period              = 300
+  statistic           = "Average"
+  threshold           = 80
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    InstanceId = module.compute.instance_id
+  }
+
+  tags = merge(local.common_tags, { Severity = "warning" })
+}
+
+resource "aws_cloudwatch_metric_alarm" "authentication_failures" {
+  count               = var.cloudwatch_agent_enabled ? 1 : 0
+  alarm_name          = "${var.project_name}-${var.environment}-authentication-failures"
+  alarm_description   = "[HIGH] Échec d'authentification détecté dans les logs système. Responsable: Ops. Action: vérifier la source et sécuriser l'accès. Canal: état CloudWatch."
+  namespace           = "MicroCRM/Poc/Security"
+  metric_name         = "AuthenticationFailureCount"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  period              = 300
+  statistic           = "Sum"
+  threshold           = 1
+  treat_missing_data  = "notBreaching"
+
+  tags = merge(local.common_tags, { Severity = "high" })
+
+  depends_on = [aws_cloudwatch_log_metric_filter.authentication_failures]
+}
+
 resource "aws_cloudwatch_dashboard" "poc" {
   count          = var.cloudwatch_agent_enabled ? 1 : 0
   dashboard_name = "${var.project_name}-${var.environment}-monitoring"

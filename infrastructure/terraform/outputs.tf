@@ -23,6 +23,15 @@ output "cloudwatch_dashboard_name" {
   value       = try(aws_cloudwatch_dashboard.poc[0].dashboard_name, null)
 }
 
+output "cloudwatch_alarm_names" {
+  description = "Noms des alarmes CloudWatch créées lorsque le monitoring est activé."
+  value = var.cloudwatch_agent_enabled ? [
+    aws_cloudwatch_metric_alarm.instance_unavailable[0].alarm_name,
+    aws_cloudwatch_metric_alarm.cpu_high[0].alarm_name,
+    aws_cloudwatch_metric_alarm.authentication_failures[0].alarm_name,
+  ] : []
+}
+
 output "ansible_transfer_bucket" {
   description = "Bucket temporaire requis par la connexion Ansible SSM."
   value       = module.ansible_transfer.bucket_name
