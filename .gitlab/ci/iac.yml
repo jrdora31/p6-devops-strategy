@@ -163,7 +163,9 @@ deploy:terraform:destroy:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
       when: manual
-  allow_failure: false
+  # Le destroy reste protégé par son lancement manuel et
+  # TF_DESTROY_CONFIRM=true, mais son absence ne bloque pas le stage verify.
+  allow_failure: true
 
 # Les jobs runtime Ansible utilisent les outputs Terraform transmis par le
 # rapport dotenv et le même rôle AWS temporaire que le provisionnement.
