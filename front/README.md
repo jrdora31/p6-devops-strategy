@@ -1,27 +1,32 @@
-# MicroCRM
+# Frontend MicroCRM
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.7.
+Application Angular 17 servie par le serveur de développement Angular en local
+et par Caddy dans l’image de production.
 
-## Development server
+## Développement
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+```shell
+npm ci
+npm start
+```
 
-## Code scaffolding
+Ouvrir `http://localhost:4200`. Le proxy de développement transmet `/api` vers
+le backend configuré dans `proxy.conf.json`.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Tests
+
+```shell
+npm test -- --watch=false --browsers=ChromeHeadless --code-coverage
+```
+
+Les tests utilisent Karma, Jasmine et Chrome. Aucun framework de test end-to-end
+n’est configuré.
 
 ## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```shell
+npm run build
+```
 
-## Running unit tests
-
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Running end-to-end tests
-
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+La sortie utilisée par la CI est `dist/microcrm/browser/`. Les commandes CI
+partagées sont documentées dans [`../scripts/ci/README.md`](../scripts/ci/README.md).

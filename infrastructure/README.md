@@ -1,17 +1,15 @@
 # Infrastructure MicroCRM
 
-Ce dossier contient les sources de l'infrastructure AWS du POC. Leur présence
-ne signifie pas que les ressources sont déjà créées.
+Ce dossier contient les sources Terraform du POC AWS. Ansible configure
+l’instance dans `../ansible/` et Helm déploie l’application depuis
+`../helm/microcrm/`.
 
-## Responsabilités
+L’architecture et ses limites sont décrites dans
+[`../documentation/livrables/infrastructure.md`](../documentation/livrables/infrastructure.md).
 
-| Dossier | Rôle |
-|---|---|
-| `terraform/` | Crée le réseau, l'EC2, son rôle SSM et le bucket temporaire Ansible ; la collecte CloudWatch sera ajoutée après validation de `ARB-16` |
-| `../ansible/` | Configure Ubuntu et installe K3s via l'inventaire EC2 dynamique |
-| `../helm/microcrm/` | Déploie l'application et PostgreSQL dans K3s |
+## Validation locale sans création AWS
 
-## Validation sans création AWS
+Depuis la racine du dépôt :
 
 ```shell
 terraform -chdir=infrastructure/terraform fmt -check -recursive
@@ -23,83 +21,36 @@ ANSIBLE_CONFIG=ansible/ansible.cfg \
 ansible-lint ansible/
 ```
 
-Ces commandes vérifient les fichiers mais ne créent aucune ressource.
+Ces commandes ne créent aucune ressource. La validation connectée à AWS et
+l’apply s’exécutent dans GitLab CI.
 
-L'observabilité CloudWatch reste désactivée par défaut. Pour une exécution
-manuelle explicitement autorisée, la variable CI `CLOUDWATCH_AGENT_ENABLED`
-doit être positionnée à `true` ; elle pilote à la fois la création Terraform
-des groupes de logs et l'installation Ansible de l'agent. Elle ne doit pas être
-activée dans un simple contrôle de qualité.
+## Variables GitLab
 
-## Exécution future
+| Variable | Usage |
+|---|---|
+| `AWS_PLAN_ROLE_ARN` | Rôle OIDC en lecture pour le plan Terraform |
+| `AWS_APPLY_ROLE_ARN` | Rôle OIDC d’écriture limité au POC |
+| `GITLAB_AGENT_TOKEN` | Connexion du GitLab Agent installé par Ansible |
+| `KUBERNETES_DATABASE_PASSWORD` | Secret PostgreSQL créé pendant le déploiement Helm |
+| `CLOUDWATCH_AGENT_ENABLED` | Active Terraform et Ansible CloudWatch ; défaut `false` |
+| `TF_DESTROY_CONFIRM` | Autorise le job manuel de destroy ; défaut `false` |
 
-Le job `quality:terraform:plan` obtient des credentials AWS temporaires avec le
-token OIDC émis par GitLab. La variable GitLab `AWS_PLAN_ROLE_ARN` contient
-l'ARN du rôle AWS de lecture utilisé pour le plan. `AWS_APPLY_ROLE_ARN` désigne
-un second rôle, limité aux branches autorisées et aux ressources du POC, pour
-les opérations Terraform autorisées (`apply` dans une pipeline Web et
-`destroy` manuel). Ces ARN ne sont pas des secrets.
-La politique d'autorisations proposée est versionnée dans
-`aws/gitlab-apply-policy.json`. Elle limite IAM et S3 au préfixe
-`microcrm-poc` et n'accorde à EC2 que les actions nécessaires au cycle du POC.
-Cette policy du rôle `MicroCRM-GitLab-Terraform-Apply` n'est pas gérée par
-Terraform : après toute modification du fichier, sa version active dans AWS
-doit être synchronisée avant un nouvel `apply`. Lorsque CloudWatch est activé,
-elle doit notamment autoriser la gestion des groupes de logs `/microcrm/poc*`
-et `iam:GetRolePolicy`, `iam:PutRolePolicy` et `iam:DeleteRolePolicy` sur les
-rôles d'instance `microcrm-poc-*`.
+La policy attendue pour le rôle d’écriture est
+`aws/gitlab-apply-policy.json`. Terraform ne synchronise pas cette policy avec
+AWS.
 
-La relation de confiance du rôle d'écriture doit accepter uniquement les
-subjects GitLab suivants :
+## Cycle AWS
 
-```text
-project_path:project_6_group/microcrm:ref_type:branch:ref:dev
-project_path:project_6_group/microcrm:ref_type:branch:ref:main
-```
+Une pipeline Web autorisée sur `dev` exécute le plan, l’apply Terraform, le
+check Ansible, la configuration Ansible et le déploiement Helm staging.
 
-Le state distant utilise le backend HTTP GitLab `microcrm-poc`. Ses adresses et
-son authentification sont construites dans le job à partir de
-`CI_API_V4_URL`, `CI_PROJECT_ID` et `CI_JOB_TOKEN` ; aucun credential durable
-n'est enregistré dans le repository.
+Le destroy n’est jamais automatique :
 
-`deploy:terraform:apply` consomme le plan binaire produit par
-`quality:terraform:plan` et s'exécute automatiquement dans une pipeline Web
-autorisée. Après l'application, les outputs `aws_region` et
-`ansible_transfer_bucket` alimentent automatiquement `deploy:ansible:check`,
-puis `deploy:ansible:apply`.
-Ces jobs installent la version `1.2.835.0` du Session Manager Plugin depuis le
-paquet officiel AWS ; ce binaire est requis par la connexion Ansible SSM.
+1. lancer la pipeline avec `TF_DESTROY_CONFIRM=true` ;
+2. vérifier que les preuves utiles ont été collectées ;
+3. déclencher manuellement `deploy:terraform:destroy` ;
+4. contrôler les ressources résiduelles dans `eu-west-3` et les buckets S3.
 
-`deploy:terraform:apply` reste déclenché uniquement par une pipeline Web
-autorisée. `deploy:terraform:destroy` reste manuel et les deux jobs partagent
-le même `resource_group`, ce qui interdit leur exécution simultanée.
-
-Dans le formulaire `Build > Pipelines > Run pipeline`, la variable
-`TF_DESTROY_CONFIRM` est préremplie à `false` et propose `false` ou `true`.
-Conserver `false` par défaut ; sélectionner `true` uniquement pour une session
-AWS autorisée et après vérification du coût. Cette sélection ne lance pas le
-destroy automatiquement : il faut ensuite déclencher le job manuel
-`deploy:terraform:destroy`.
-
-Un pipeline lancé depuis l'interface GitLab sur `dev` ou `main` permet de
-reconstruire le POC sans commit artificiel. Le cycle attendu est : plan, apply
-Terraform autorisé, check et configuration Ansible, déploiement Helm, preuves,
-puis destroy manuel.
-
-Le monitoring provisoire cible CloudWatch plutôt qu'une stack ELK/OpenSearch
-locale afin de conserver les ressources de l'EC2 pour K3s et MicroCRM. La
-configuration de l'agent, les permissions IAM, les groupes de logs et le
-dashboard sont maintenant versionnés. Le dashboard cible la disponibilité EC2,
-le CPU, la mémoire, le disque racine détecté par ses dimensions, les anomalies
-applicatives et les traces de démarrage ou de migration. Il reste conditionnel
-à `CLOUDWATCH_AGENT_ENABLED=true` et doit encore être vérifié dans une nouvelle
-session AWS. Aucune alarme ni collecte de sécurité dédiée n'est encore
-versionnée dans ce lot.
-
-## Limite de disponibilité
-
-Le POC utilise une seule EC2. Les probes, les redémarrages Kubernetes, les
-backups et la reconstruction par IaC améliorent sa résilience, mais ne rendent
-pas l'infrastructure hautement disponible. Une cible de production ajouterait
-plusieurs nodes répartis sur plusieurs Availability Zones, une entrée réseau et
-une base de données redondées.
+`CLOUDWATCH_AGENT_ENABLED=true` crée les groupes de logs et le dashboard, puis
+installe l’agent. Utiliser cette option uniquement pour une session AWS
+autorisée.
