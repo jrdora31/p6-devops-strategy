@@ -27,9 +27,9 @@ l'image.
 - `values-staging.yaml` : environnement d'intégration déployé depuis `dev` ;
 - `values-production.yaml` : environnement promu par tag SemVer.
 
-Les valeurs `frontend.image.tag` et `backend.image.tag` doivent identifier les
-images à déployer. En CI/CD ou sur AWS, un digest immuable peut être fourni avec
-`frontend.image.digest` et `backend.image.digest`.
+Les values locales utilisent des tags d’image. Les jobs AWS remplacent ces
+valeurs par `frontend.image.digest` et `backend.image.digest` afin de déployer
+les images immuables produites par la pipeline.
 
 ## Validation locale
 
@@ -132,8 +132,8 @@ perte de données involontaire.
 ## Gestion des Secrets
 
 Pour un déploiement local, le namespace cible doit contenir un Secret nommé
-`microcrm-database` avec les clés `username` et `password`. Il reste créé hors
-du repository :
+`microcrm-database` avec les clés `username` et `password`. Sa valeur n’est pas
+versionnée :
 
 ```shell
 kubectl --namespace microcrm create secret generic microcrm-database \

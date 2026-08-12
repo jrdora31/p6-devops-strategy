@@ -10,7 +10,7 @@ GitLab.
 | Tests | `test.sh` | Bash | Tester le frontend, le backend ou les deux |
 | Builds | `build.sh` | Bash | Construire Angular et/ou le JAR |
 | Smoke test | `smoke.sh` | Shell POSIX | Vérifier les images, PostgreSQL, leur communication et la persistance sur un réseau temporaire |
-| Backup | `backup.sh` | Bash | Valider le contrat en dry-run en partie 1 |
+| Backup | `backup.sh` | Bash | Valider les paramètres en dry-run sans créer d’archive |
 | Release | `release_manifest.py` | Python | Générer un manifeste reliant version, pipeline, commit et digests |
 | Notification | `notify.py` | Python | Normaliser le résultat et, sur demande, appeler un webhook |
 | DORA | `dora_metrics.py` | Python | Calculer les quatre métriques et générer la page GitLab Pages avec ses exports |
@@ -27,7 +27,7 @@ différent de zéro en cas d’erreur, ce qui permet à GitLab d'arrêter le job
 | `build.sh` | Jobs `build:frontend` et `build:backend` |
 | `release_manifest.py` | Génération du manifeste après publication d’un tag SemVer |
 | `smoke.sh` | Job `verify:images` après la construction et le scan des images |
-| `backup.sh` | Dry-run testé ; backup réel réservé au stockage persistant de la partie 2 |
+| `backup.sh` | Dry-run testé ; aucune sauvegarde réelle implémentée |
 | `notify.py` | Comportement testé sans envoi ; canal réel encore à choisir |
 | `dora_metrics.py` | Job `pages:dora` sur `dev` ou dans la planification hebdomadaire, sans accès AWS |
 
@@ -77,10 +77,10 @@ python scripts/ci/notify.py \
   --commit "$CI_COMMIT_SHA"
 ```
 
-Cette commande prépare et affiche le résumé du pipeline sur la sortie standard :
-elle n'écrit aucun fichier et n'envoie aucun message par défaut. Le canal et l'envoi réel seront décidés plus tard
-dans l'arbitrage `ARB-07`. L'adresse d'un éventuel webhook restera dans une
-variable protégée GitLab et ne sera jamais écrite dans le repository.
+Cette commande prépare et affiche le résumé du pipeline sur la sortie standard.
+Elle n’écrit aucun fichier et n’envoie aucun message par défaut. Aucun canal de
+notification n’est configuré dans la pipeline. L’adresse d’un éventuel webhook
+doit rester dans une variable GitLab masquée.
 
 ## Vérification des scripts
 

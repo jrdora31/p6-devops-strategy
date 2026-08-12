@@ -1,28 +1,44 @@
-# Read Me First
+# Backend MicroCRM
 
-# Getting Started
+API REST Spring Boot avec Spring Data JPA, PostgreSQL et migrations Liquibase.
+Les tests utilisent HSQLDB.
 
-### Reference Documentation
+## Build et tests
 
-For further reference, please consider the following sections:
+Sous Linux :
 
-- [Official Gradle documentation](https://docs.gradle.org)
-- [Spring Boot Gradle Plugin Reference Guide](https://docs.spring.io/spring-boot/3.5/gradle-plugin/index.html)
-- [Create an OCI image](https://docs.spring.io/spring-boot/3.5/gradle-plugin/packaging-oci-image.html)
-- [Spring Web](https://docs.spring.io/spring-boot/3.5/reference/web/index.html)
-- [Spring Data JPA](https://docs.spring.io/spring-boot/3.5/reference/data/sql.html#data.sql.jpa-and-spring-data)
+```shell
+./gradlew test
+./gradlew build
+```
 
-### Guides
+Sous Windows :
 
-The following guides illustrate how to use some features concretely:
+```powershell
+.\gradlew.bat test
+.\gradlew.bat build
+```
 
-- [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
-- [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
-- [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
-- [Accessing Data with JPA](https://spring.io/guides/gs/accessing-data-jpa/)
+Les rapports sont générés dans `build/reports/tests/test/` et
+`build/reports/jacoco/test/`.
 
-### Additional Links
+## Exécution avec PostgreSQL
 
-These additional references should also help you:
+Définir les variables suivantes avant de lancer le JAR :
 
-- [Gradle Build Scans – insights for your project's build](https://scans.gradle.com#gradle)
+```text
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/microcrm
+SPRING_DATASOURCE_USERNAME=microcrm
+SPRING_DATASOURCE_PASSWORD=<valeur-locale>
+```
+
+```shell
+java -jar build/libs/microcrm-0.0.1-SNAPSHOT.jar
+```
+
+Liquibase applique le changelog
+`src/main/resources/db/changelog/db.changelog-master.yaml`. Hibernate valide
+ensuite le schéma avec `spring.jpa.hibernate.ddl-auto=validate`.
+
+Le démarrage complet de PostgreSQL, du backend et du frontend est documenté
+dans [`../README.md`](../README.md).
