@@ -32,6 +32,11 @@ output "cloudwatch_alarm_names" {
   ] : []
 }
 
+output "cloudwatch_alert_topic_arn" {
+  description = "ARN du topic SNS utilisé par les alarmes lorsque ALERT_EMAIL est renseigné."
+  value       = try(aws_sns_topic.poc_alerts[0].arn, null)
+}
+
 output "ansible_transfer_bucket" {
   description = "Bucket temporaire requis par la connexion Ansible SSM."
   value       = module.ansible_transfer.bucket_name

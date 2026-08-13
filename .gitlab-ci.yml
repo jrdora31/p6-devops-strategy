@@ -39,6 +39,11 @@ variables:
     description: >-
       Active CloudWatch pour cette pipeline uniquement : crée les groupes de
       logs Terraform et installe l'agent par Ansible.
+  ALERT_EMAIL:
+    value: ""
+    description: >-
+      Adresse e-mail abonnée via SNS aux passages en ALARM des trois alarmes
+      CloudWatch. Laisser vide pour désactiver les notifications.
   TF_DESTROY_CONFIRM:
     value: "false"
     options:
