@@ -47,6 +47,13 @@ variables:
     description: >-
       Autorise le job manuel de destruction Terraform uniquement si la valeur
       est true ; le job reste manuel et doit être lancé séparément.
+  HELM_ROLLBACK_REVISION:
+    value: "1"
+    description: >-
+      Révision Helm staging ciblée par le job manuel : pour cette démonstration,
+      1 = version stable sans bandeau et 2 = version avec bandeau rollback.
+      Vérifier l'historique Helm avant exécution, car les numéros évoluent après
+      chaque déploiement et rollback.
   # Chaque image porte le SHA complet du commit : le tag technique permet de
   # retrouver sans ambiguïté le code qui a servi à sa construction.
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
