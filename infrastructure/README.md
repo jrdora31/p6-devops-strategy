@@ -33,6 +33,7 @@ l’apply s’exécutent dans GitLab CI.
 | `GITLAB_AGENT_TOKEN` | Connexion du GitLab Agent installé par Ansible |
 | `KUBERNETES_DATABASE_PASSWORD` | Secret PostgreSQL créé pendant le déploiement Helm |
 | `CLOUDWATCH_AGENT_ENABLED` | Active Terraform et Ansible CloudWatch ; défaut `false` |
+| `ALERT_EMAIL` | Adresse optionnelle recevant les passages en `ALARM` via SNS |
 | `TF_DESTROY_CONFIRM` | Autorise le job manuel de destroy ; défaut `false` |
 
 La policy attendue pour le rôle d’écriture est
@@ -52,5 +53,10 @@ Le destroy n’est jamais automatique :
 4. contrôler les ressources résiduelles dans `eu-west-3` et les buckets S3.
 
 `CLOUDWATCH_AGENT_ENABLED=true` crée les groupes de logs et le dashboard, puis
-installe l’agent. Utiliser cette option uniquement pour une session AWS
+installe l'agent. Utiliser cette option uniquement pour une session AWS
 autorisée.
+
+Lorsque `ALERT_EMAIL` est renseignée, Terraform crée le topic SNS
+`microcrm-poc-alerts` et un abonnement e-mail commun aux trois alarmes. Le
+destinataire doit confirmer l'abonnement depuis l'e-mail envoyé par AWS avant
+de recevoir les alertes. Seuls les passages en `ALARM` sont notifiés.

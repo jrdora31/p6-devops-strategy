@@ -11,6 +11,21 @@ locals {
     ManagedBy   = "Terraform"
     Owner       = var.owner
   }
+  alarm_actions = var.cloudwatch_agent_enabled && var.alert_email != "" ? [aws_sns_topic.poc_alerts[0].arn] : []
+}
+
+resource "aws_sns_topic" "poc_alerts" {
+  count = var.cloudwatch_agent_enabled && var.alert_email != "" ? 1 : 0
+  name  = "${var.project_name}-${var.environment}-alerts"
+
+  tags = local.common_tags
+}
+
+resource "aws_sns_topic_subscription" "poc_alert_email" {
+  count     = var.cloudwatch_agent_enabled && var.alert_email != "" ? 1 : 0
+  topic_arn = aws_sns_topic.poc_alerts[0].arn
+  protocol  = "email"
+  endpoint  = var.alert_email
 }
 
 module "network" {
@@ -86,6 +101,7 @@ resource "aws_cloudwatch_metric_alarm" "instance_unavailable" {
   statistic           = "Maximum"
   threshold           = 1
   treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions
 
   dimensions = {
     InstanceId = module.compute.instance_id
@@ -106,6 +122,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   statistic           = "Average"
   threshold           = 80
   treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions
 
   dimensions = {
     InstanceId = module.compute.instance_id
@@ -126,6 +143,7 @@ resource "aws_cloudwatch_metric_alarm" "authentication_failures" {
   statistic           = "Sum"
   threshold           = 1
   treat_missing_data  = "notBreaching"
+  alarm_actions       = local.alarm_actions
 
   tags = merge(local.common_tags, { Severity = "high" })
 

@@ -117,6 +117,18 @@ variable "cloudwatch_agent_enabled" {
   default     = false
 }
 
+variable "alert_email" {
+  description = "Adresse e-mail optionnelle abonnée aux alarmes CloudWatch du POC."
+  type        = string
+  default     = ""
+  sensitive   = true
+
+  validation {
+    condition     = var.alert_email == "" || can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", var.alert_email))
+    error_message = "alert_email doit être vide ou contenir une adresse e-mail valide."
+  }
+}
+
 variable "cloudwatch_log_group_prefix" {
   description = "Préfixe des groupes de logs CloudWatch du POC."
   type        = string

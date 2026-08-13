@@ -198,6 +198,32 @@
       "Resource": "*"
     },
     {
+      "Sid": "MicrocrmSnsAlertTopicLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "sns:CreateTopic",
+        "sns:DeleteTopic",
+        "sns:GetTopicAttributes",
+        "sns:ListTagsForResource",
+        "sns:SetTopicAttributes",
+        "sns:Subscribe",
+        "sns:TagResource",
+        "sns:Unsubscribe",
+        "sns:UntagResource"
+      ],
+      "Resource": "arn:aws:sns:*:*:microcrm-*-alerts"
+    },
+    {
+      "Sid": "MicrocrmSnsRead",
+      "Effect": "Allow",
+      "Action": [
+        "sns:GetSubscriptionAttributes",
+        "sns:ListSubscriptionsByTopic",
+        "sns:ListTopics"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "MicrocrmCloudWatchDashboardLifecycle",
       "Effect": "Allow",
       "Action": [

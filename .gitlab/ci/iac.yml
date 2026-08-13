@@ -61,6 +61,7 @@ test:terraform:
         *) echo "CLOUDWATCH_AGENT_ENABLED doit valoir true ou false"; exit 1 ;;
       esac
     - export TF_VAR_cloudwatch_agent_enabled="$CLOUDWATCH_AGENT_ENABLED"
+    - export TF_VAR_alert_email="${ALERT_EMAIL:-}"
 
 # Produit un plan réel avec des credentials AWS temporaires obtenus par OIDC.
 # Le job ne possède aucun droit d'écriture et ne lance jamais terraform apply.
