@@ -19,13 +19,28 @@ SPEC.loader.exec_module(dora_metrics)
 def fixture() -> dict:
     return {
         "deployments": [
-            {"id": 10, "status": "success", "finished_at": "2026-08-02T12:00:00Z"},
-            {"id": 11, "status": "failed", "finished_at": "2026-08-03T12:00:00Z"},
-            {"id": 12, "status": "success", "finished_at": "2026-08-06T12:00:00Z"},
+            {
+                "id": 1010,
+                "iid": 10,
+                "status": "success",
+                "finished_at": "2026-08-02T12:00:00Z",
+            },
+            {
+                "id": 1011,
+                "iid": 11,
+                "status": "failed",
+                "finished_at": "2026-08-03T12:00:00Z",
+            },
+            {
+                "id": 1012,
+                "iid": 12,
+                "status": "success",
+                "finished_at": "2026-08-06T12:00:00Z",
+            },
         ],
         "deployment_merge_requests": {
-            "10": [{"id": 100, "merged_at": "2026-08-01T12:00:00Z"}],
-            "12": [{"id": 101, "merged_at": "2026-08-06T06:00:00Z"}],
+            "1010": [{"id": 100, "merged_at": "2026-08-01T12:00:00Z"}],
+            "1012": [{"id": 101, "merged_at": "2026-08-06T06:00:00Z"}],
         },
         "incidents": [
             {

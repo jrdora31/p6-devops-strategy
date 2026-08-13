@@ -115,7 +115,8 @@ déploiements et certaines lectures de merge requests, mais pas l'API Issues
 requise pour les incidents. Le jeton ne doit jamais être écrit dans un rapport.
 
 Les incidents suivis portent le label `dora` et contiennent dans leur
-description une ligne reliant l'incident au déploiement responsable :
+description une ligne reliant l'incident à l'IID du déploiement responsable,
+tel qu'il apparaît dans la colonne `ID` de l'historique GitLab :
 
 ```text
 DORA_DEPLOYMENT_ID: 123
