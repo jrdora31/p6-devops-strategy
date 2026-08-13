@@ -279,7 +279,10 @@ def calculate_metrics(
     )
     stability_start = max(start, incident_tracking_start)
     stable_deployments = stability_deployments(successful, stability_start, start)
-    stability_ids = {int(deployment["id"]) for deployment in stable_deployments}
+    stability_ids = {
+        int(deployment.get("iid", deployment["id"]))
+        for deployment in stable_deployments
+    }
     incidents = tracked_incidents(source, stability_start, end)
     failed_change_ids = failure_ids(incidents, stability_ids)
     restore_duration_samples = restore_samples(incidents)
