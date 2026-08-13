@@ -77,6 +77,46 @@ deploy:helm:staging:
       when: on_success
   allow_failure: false
 
+# Retour manuel vers une révision Helm staging explicitement choisie. Le job
+# reste séparé du déploiement normal afin qu'aucun rollback ne soit automatique.
+deploy:helm:rollback:staging:
+  image:
+    name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
+    entrypoint: [""]
+  stage: deploy
+  needs:
+    - job: deploy:helm:staging
+  resource_group: aws-poc
+  variables:
+    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
+    KUBE_NAMESPACE: microcrm-staging
+  environment:
+    name: aws-poc-staging
+  script:
+    - 'test -s "$KUBECONFIG"'
+    - 'test -n "$KUBE_CONTEXT"'
+    - 'test -n "$HELM_ROLLBACK_REVISION"'
+    - 'printf "%s" "$HELM_ROLLBACK_REVISION" | grep -Eq "^[1-9][0-9]*$"'
+    - >-
+      helm rollback microcrm "$HELM_ROLLBACK_REVISION"
+      --kube-context "$KUBE_CONTEXT"
+      --namespace "$KUBE_NAMESPACE"
+      --wait
+      --timeout 5m
+    - >-
+      helm status microcrm
+      --kube-context "$KUBE_CONTEXT"
+      --namespace "$KUBE_NAMESPACE"
+    - >-
+      helm history microcrm
+      --kube-context "$KUBE_CONTEXT"
+      --namespace "$KUBE_NAMESPACE"
+      --output table
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
+      when: manual
+  allow_failure: true
+
 # La production est une promotion explicite d'un tag SemVer. Le job manuel
 # réutilise les images et le chart produits dans la même pipeline de tag.
 deploy:helm:aws:
