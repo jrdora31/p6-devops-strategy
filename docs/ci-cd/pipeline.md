@@ -1,0 +1,1 @@
+Quand et dans quel ordre les jobs GitLab s'exécutent ?

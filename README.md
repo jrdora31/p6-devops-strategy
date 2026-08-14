@@ -1,113 +1,198 @@
 <p align="center">
-  <img src="./front/src/favicon.png" width="192" alt="MicroCRM" />
+   <img src="./front/src/favicon.png" width="192px" />
 </p>
 
-# MicroCRM
+# MicroCRM (P5 - Expert DevOps - Gérez le cycle de vie de développement logiciel)
 
-MicroCRM est un monorepo de démonstration composé d’un frontend Angular, d’un
-backend Spring Boot et d’une base PostgreSQL. Il gère des personnes rattachées à
-des organisations.
+MicroCRM est une application de démonstration basique ayant pour être objectif de servir de socle pour le module "P5 - Expert DevOps".
 
-## Composants
+L'application MicroCRM est une implémentation simplifiée d'un ["CRM" (Customer Relationship Management)](https://fr.wikipedia.org/wiki/Gestion_de_la_relation_client). Les fonctionnalités sont limitées à la création, édition et la visualisations des individus liés à des organisations.
 
-| Composant | Chemin | Technologie | Port local |
-|---|---|---|---:|
-| Frontend | `front/` | Angular, Caddy en conteneur | `4200` en développement, `80` en conteneur |
-| Backend | `back/` | Spring Boot, Liquibase | `8080` |
-| Base | chart Helm ou image officielle | PostgreSQL 17 | `5432` |
+![Page d'accueil](./misc/screenshots/screenshot_1.png)
+![Édition de la fiche d'un individu](./misc/screenshots/screenshot_2.png)
 
-Le frontend appelle l’API avec `/api`. Caddy transmet cette route au backend.
+## Code source
 
-## Démarrage local
+### Organisation
 
-### Backend et PostgreSQL
+Ce [monorepo](https://en.wikipedia.org/wiki/Monorepo) contient les 2 composantes du projet "MicroCRM":
 
-Prérequis : Docker et JDK compatible avec le Gradle Wrapper.
+- La partie serveur (ou "backend"), en Java SpringBoot 3;
+- La partie cliente (ou "frontend"), en Angular 17.
 
-```shell
-docker volume create microcrm-postgres
-docker run --detach --name microcrm-postgres \
-  --publish 5432:5432 \
-  --env POSTGRES_DB=microcrm \
-  --env POSTGRES_USER=microcrm \
-  --env POSTGRES_PASSWORD=microcrm-local \
-  --volume microcrm-postgres:/var/lib/postgresql/data \
-  postgres:17.10-alpine3.23
+Une intégration basique avec Gitlab CI est définie via le fichier [`.gitlab-ci.yml`](./.gitlab-ci.yml).
 
-cd back
-./gradlew build
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/microcrm \
-SPRING_DATASOURCE_USERNAME=microcrm \
-SPRING_DATASOURCE_PASSWORD=microcrm-local \
-java -jar build/libs/microcrm-0.0.1-SNAPSHOT.jar
-```
+### Démarrer avec les sources
 
-Sous Windows, utiliser `gradlew.bat build`, puis définir les trois variables
-avec `$env:NOM='valeur'` dans PowerShell avant de lancer le JAR.
+#### Serveur
 
-Vérification : `http://localhost:8080` doit répondre.
+##### Dépendances
 
-### Frontend
+- [OpenJDK >= 17](https://openjdk.org/)
 
-Prérequis : Node.js et npm compatibles avec Angular 17.
+##### Procédure
+
+1. Se positionner dans le répertoire `back` avec une invite de commande:
+
+   ```shell
+   cd back
+   ```
+
+2. Construire le JAR:
+
+   ```shell
+   # Sur Linux
+   ./gradlew build
+
+   # Sur Windows
+   gradlew.bat build
+   ```
+
+3. Démarrer le service:
+
+   ```shell
+   java -jar build/libs/microcrm-0.0.1-SNAPSHOT.jar
+   ```
+
+Puis ouvrir l'URL http://localhost:8080 dans votre navigateur.
+
+#### Client
+
+##### Dépendances
+
+- [NPM >= 10.2.4](https://www.npmjs.com/)
+
+##### Procédure
+
+1. Se positionner dans le répertoire `front` avec une invite de commande:
+
+   ```shell
+   cd front
+   ```
+
+2. (La première fois seulement) Installer les dépendances NodeJS:
+
+   ```shell
+   npm install
+   ```
+
+3. Démarrer le service de développement:
+
+   ```shell
+   npx @angular/cli serve
+   ```
+
+Puis ouvrir l'URL http://localhost:4200 dans votre navigateur.
+
+### Exécution des tests
+
+#### Client
+
+**Dépendances**
+
+- Google Chrome ou Chromium
+
+Dans votre terminal:
 
 ```shell
 cd front
-npm ci
-npm start
+CHROME_BIN=</path/to/google/chrome> npm test
 ```
 
-Ouvrir `http://localhost:4200`.
+#### Serveur
 
-## Tests et builds
-
-Depuis la racine du dépôt :
+Dans votre terminal:
 
 ```shell
-bash scripts/ci/test.sh --component frontend
-bash scripts/ci/test.sh --component backend
-bash scripts/ci/tests/test_scripts.sh
-python -m pytest scripts/ci/tests/
-bash scripts/ci/build.sh --component all
+cd back
+./gradlew test
 ```
 
-La liste complète des jobs, artéfacts et contrôles bloquants se trouve dans la
-[documentation des tests](documentation/ci_cd/tests.md) et la
-[documentation de sécurité](documentation/ci_cd/securite.md).
+### Images Docker
 
-## Images Docker
+#### Client
 
-Construire d’abord les artéfacts applicatifs :
+##### Construire l'image
 
 ```shell
-bash scripts/ci/build.sh --component all
-docker build --file misc/docker/frontend.Dockerfile --tag microcrm-frontend:local .
-docker build --file misc/docker/backend.Dockerfile --tag microcrm-backend:local .
+docker build --target front -t orion-microcrm-front:latest .
 ```
 
-Tester les trois conteneurs :
+##### Exécuter l'image
 
 ```shell
-sh scripts/ci/smoke.sh \
-  --frontend-image microcrm-frontend:local \
-  --backend-image microcrm-backend:local \
-  --database-image postgres:17.10-alpine3.23
+docker run -it --rm -p 80:80 -p 443:443 orion-microcrm-front:latest
 ```
 
-Le smoke test vérifie les healthchecks, les utilisateurs non-root, l’API via le
-frontend et la persistance sur un même volume Docker.
+L'application sera disponible sur https://localhost.
 
-## Kubernetes et AWS
+#### Serveur
 
-- Déploiement local : [`helm/microcrm/README.md`](helm/microcrm/README.md).
-- Validation et cycle AWS :
-  [`infrastructure/README.md`](infrastructure/README.md).
-- Architecture :
-  [`documentation/diagrammes/architecture_aws.md`](documentation/diagrammes/architecture_aws.md).
-- Pipeline :
-  [`documentation/diagrammes/workflow_ci_actuel.md`](documentation/diagrammes/workflow_ci_actuel.md).
+##### Construire l'image
+
+```shell
+docker build --target back -t orion-microcrm-back:latest .
+```
+
+##### Exécuter l'image
+
+```shell
+docker run -it --rm -p 8080:8080 orion-microcrm-back:latest
+```
+
+L'API sera disponible sur http://localhost:8080.
+
+#### Tout en un
+
+```shell
+docker build --target standalone -t orion-microcrm-standalone:latest .
+```
+
+##### Exécuter l'image
+
+```shell
+docker run -it --rm -p 8080:8080 -p 80:80 -p 443:443 orion-microcrm-standalone:latest
+```
+
+L'application sera disponible sur https://localhost et l'API sur http://localhost:8080.
+
 
 ## Documentation
 
-Le point d’entrée est [`documentation/README.md`](documentation/README.md). Il
-distingue les références opérationnelles actuelles des livrables historiques.
+Pour reprendre le projet depuis un clone et effectuer un premier déploiement sur AWS :
+
+→ [`docs/GET_STARTED.md`](./docs/GET_STARTED.md)
+
+### Stack
+
+La stack technique complète du projet est documentée dans [`docs/stack.md`](./docs/stack.md).
+
+### Architecture et infrastructure
+
+- [`docs/schema_architecture_aws.md`](./docs/schema_architecture_aws.md) — Vue détaillée de l’architecture AWS et des interactions entre les composants.
+- [`docs/infrastructure/terraform.md`](./docs/infrastructure/terraform.md) — Provisionnement de l’infrastructure AWS avec Terraform.
+- [`docs/infrastructure/ansible.md`](./docs/infrastructure/ansible.md) — Configuration des instances et du cluster K3s avec Ansible.
+- [`docs/infrastructure/helm.md`](./docs/infrastructure/helm.md) — Déploiement et configuration de MicroCRM dans K3s avec Helm.
+
+### CI/CD
+
+- [`docs/ci-cd/pipeline.md`](./docs/ci-cd/pipeline.md) — Fonctionnement et organisation de la pipeline GitLab CI/CD.
+- [`docs/ci-cd/deployment-strategy.md`](./docs/ci-cd/deployment-strategy.md) — Stratégie de release, canary, promotion et déclenchement du rollback.
+
+### Qualité
+
+- [`docs/quality/testing.md`](./docs/quality/testing.md) — Stratégie de tests, couverture et critères de validation.
+- [`docs/quality/security.md`](./docs/quality/security.md) — Sécurité, gestion des secrets, scans et contrôles d’accès.
+- [`docs/quality/performance.md`](./docs/quality/performance.md) — Tests de performance, métriques DORA, résultats et optimisations.
+
+### Maintenance
+
+- [`docs/Maintenance/supervision.md`](./docs/Maintenance/supervision.md) — Supervision CloudWatch, métriques, logs et alertes.
+- [`docs/Maintenance/backup-recovery.md`](./docs/Maintenance/backup-recovery.md) — Stratégie de sauvegarde et procédure de restauration.
+- [`docs/Maintenance/rollback.md`](./docs/Maintenance/rollback.md) — Procédure opérationnelle de retour à une version précédente.
+- [`docs/Maintenance/dependency-updates.md`](./docs/Maintenance/dependency-updates.md) — Contrôle et mise à jour des dépendances.
+
+### Scripts d’automatisation
+
+- [`scripts/bootstrap/bootstrap.md`](./scripts/bootstrap/bootstrap.md) — Fonctionnement technique des scripts d’initialisation AWS et GitLab.
+- [`scripts/ci/scripts.md`](./scripts/ci/scripts.md) — Référence des scripts utilisés par la pipeline CI/CD.
