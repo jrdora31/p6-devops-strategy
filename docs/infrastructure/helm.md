@@ -1,0 +1,1 @@
+Comment l'application est déclarée/déployée dans K3s ? (nombre de pods / replicas / services ..)

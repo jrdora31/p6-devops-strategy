@@ -1,0 +1,1 @@
+Comment l'infrastructure AWS est provisionnée ?
