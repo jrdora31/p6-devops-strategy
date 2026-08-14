@@ -176,7 +176,7 @@ deploy:terraform:destroy:
     GITLAB_OIDC_TOKEN:
       aud: https://gitlab.com
   variables:
-    ANSIBLE_CONFIG: "$CI_PROJECT_DIR/ansible/ansible.cfg"
+    ANSIBLE_CONFIG: "$CI_PROJECT_DIR/infrastructure/ansible/ansible.cfg"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
     AWS_WEB_IDENTITY_TOKEN_FILE: "$CI_PROJECT_DIR/.aws/gitlab-oidc-token"
@@ -184,8 +184,8 @@ deploy:terraform:destroy:
   cache:
     key:
       files:
-        - ansible/requirements-ci.txt
-        - ansible/requirements.yml
+        - infrastructure/ansible/requirements-ci.txt
+        - infrastructure/ansible/requirements.yml
       prefix: ansible
     paths:
       - .cache/pip/
@@ -198,8 +198,8 @@ deploy:terraform:destroy:
     - dpkg --install /tmp/session-manager-plugin.deb
     - session-manager-plugin --version
     - rm -f /tmp/session-manager-plugin.deb && rm -rf /var/lib/apt/lists/*
-    - python -m pip install --requirement ansible/requirements-ci.txt
-    - ansible-galaxy collection install --requirements-file ansible/requirements.yml
+    - python -m pip install --requirement infrastructure/ansible/requirements-ci.txt
+    - ansible-galaxy collection install --requirements-file infrastructure/ansible/requirements.yml
 
 # Le check mode s'exécute automatiquement après l'apply Terraform. Il prouve
 # la connexion SSM avant toute configuration réelle.
@@ -212,7 +212,7 @@ deploy:ansible:check:
   resource_group: aws-poc
   script:
     - ansible-inventory --graph
-    - ansible-playbook --check --diff ansible/playbooks/site.yml
+    - ansible-playbook --check --diff infrastructure/ansible/playbooks/site.yml
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
@@ -232,7 +232,7 @@ deploy:ansible:apply:
   environment:
     name: aws-poc-infrastructure
   script:
-    - ansible-playbook --diff ansible/playbooks/site.yml
+    - ansible-playbook --diff infrastructure/ansible/playbooks/site.yml
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
@@ -245,23 +245,23 @@ test:ansible:
   image: python:3.12.11-slim-bookworm
   stage: test
   variables:
-    ANSIBLE_CONFIG: "$CI_PROJECT_DIR/ansible/ansible.cfg"
+    ANSIBLE_CONFIG: "$CI_PROJECT_DIR/infrastructure/ansible/ansible.cfg"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   cache:
     key:
       files:
-        - ansible/requirements-ci.txt
-        - ansible/requirements.yml
+        - infrastructure/ansible/requirements-ci.txt
+        - infrastructure/ansible/requirements.yml
       prefix: ansible
     paths:
       - .cache/pip/
   before_script:
-    - python -m pip install --requirement ansible/requirements-ci.txt
-    - ansible-galaxy collection install --requirements-file ansible/requirements.yml
+    - python -m pip install --requirement infrastructure/ansible/requirements-ci.txt
+    - ansible-galaxy collection install --requirements-file infrastructure/ansible/requirements.yml
   script:
     # L'inventaire local évite tout appel AWS pendant le simple contrôle syntaxique.
-    - ansible-playbook --syntax-check --inventory localhost, ansible/playbooks/site.yml
-    - ansible-lint ansible/
+    - ansible-playbook --syntax-check --inventory localhost, infrastructure/ansible/playbooks/site.yml
+    - ansible-lint infrastructure/ansible/
 
 # Trivy conserve toutes les observations élevées mais bloque uniquement les
 # mauvaises configurations critiques, comme la politique de sécurité du projet.

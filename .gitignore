@@ -16,6 +16,6 @@ override.tf.json
 *_override.tf.json
 
 # Cache local de l'inventaire et reprises éventuelles d'Ansible.
-ansible/.cache/
+infrastructure/ansible/.cache/
 *.retry
 

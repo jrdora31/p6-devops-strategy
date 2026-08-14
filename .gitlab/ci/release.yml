@@ -217,7 +217,7 @@ release:helm:package:
       else
         CHART_VERSION="0.1.0-${CI_COMMIT_SHORT_SHA}";
       fi;
-      helm package helm/microcrm
+      helm package infrastructure/helm/microcrm
       --destination .ci/packages
       --version "$CHART_VERSION"
       --app-version "$CI_COMMIT_SHA"
