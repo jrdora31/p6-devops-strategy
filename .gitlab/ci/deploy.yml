@@ -69,7 +69,7 @@ deploy:helm:staging:
     name: aws-poc-staging
   variables:
     KUBE_NAMESPACE: microcrm-staging
-    HELM_VALUES: helm/microcrm/values-staging.yaml
+    HELM_VALUES: infrastructure/helm/microcrm/values-staging.yaml
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
@@ -125,7 +125,7 @@ deploy:helm:aws:
     name: aws-poc-production
   variables:
     KUBE_NAMESPACE: microcrm-prod
-    HELM_VALUES: helm/microcrm/values-production.yaml
+    HELM_VALUES: infrastructure/helm/microcrm/values-production.yaml
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
       when: manual

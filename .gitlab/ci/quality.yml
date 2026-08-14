@@ -82,71 +82,71 @@ quality:trivy:kubernetes:
     - >-
       trivy config
       --helm-kube-version 1.30.0
-      --helm-values helm/microcrm/values-minikube.yaml
+      --helm-values infrastructure/helm/microcrm/values-minikube.yaml
       --severity HIGH,CRITICAL
       --format json
       --output .ci/reports/security/trivy-kubernetes-minikube.json
-      helm/microcrm
+      infrastructure/helm/microcrm
     - >-
       trivy config
       --helm-kube-version 1.30.0
-      --helm-values helm/microcrm/values-minikube.yaml
+      --helm-values infrastructure/helm/microcrm/values-minikube.yaml
       --severity HIGH,CRITICAL
       --exit-code 1
       --format table
       --output .ci/reports/security/trivy-kubernetes-minikube.txt
-      helm/microcrm
+      infrastructure/helm/microcrm
     - >-
       trivy config
       --helm-kube-version 1.30.0
-      --helm-values helm/microcrm/values-k3s.yaml
+      --helm-values infrastructure/helm/microcrm/values-k3s.yaml
       --severity HIGH,CRITICAL
       --format json
       --output .ci/reports/security/trivy-kubernetes-k3s.json
-      helm/microcrm
+      infrastructure/helm/microcrm
     - >-
       trivy config
       --helm-kube-version 1.30.0
-      --helm-values helm/microcrm/values-k3s.yaml
+      --helm-values infrastructure/helm/microcrm/values-k3s.yaml
       --severity HIGH,CRITICAL
       --exit-code 1
       --format table
       --output .ci/reports/security/trivy-kubernetes-k3s.txt
-      helm/microcrm
+      infrastructure/helm/microcrm
     - >-
       trivy config
       --helm-kube-version 1.30.0
-      --helm-values helm/microcrm/values-staging.yaml
+      --helm-values infrastructure/helm/microcrm/values-staging.yaml
       --severity HIGH,CRITICAL
       --format json
       --output .ci/reports/security/trivy-kubernetes-staging.json
-      helm/microcrm
+      infrastructure/helm/microcrm
     - >-
       trivy config
       --helm-kube-version 1.30.0
-      --helm-values helm/microcrm/values-staging.yaml
+      --helm-values infrastructure/helm/microcrm/values-staging.yaml
       --severity HIGH,CRITICAL
       --exit-code 1
       --format table
       --output .ci/reports/security/trivy-kubernetes-staging.txt
-      helm/microcrm
+      infrastructure/helm/microcrm
     - >-
       trivy config
       --helm-kube-version 1.30.0
-      --helm-values helm/microcrm/values-production.yaml
+      --helm-values infrastructure/helm/microcrm/values-production.yaml
       --severity HIGH,CRITICAL
       --format json
       --output .ci/reports/security/trivy-kubernetes-production.json
-      helm/microcrm
+      infrastructure/helm/microcrm
     - >-
       trivy config
       --helm-kube-version 1.30.0
-      --helm-values helm/microcrm/values-production.yaml
+      --helm-values infrastructure/helm/microcrm/values-production.yaml
       --severity HIGH,CRITICAL
       --exit-code 1
       --format table
       --output .ci/reports/security/trivy-kubernetes-production.txt
-      helm/microcrm
+      infrastructure/helm/microcrm
   artifacts:
     when: always
     expire_in: 30 days
