@@ -124,9 +124,29 @@ TODO : décrire brièvement les appels réalisés et leur ordre.
 
 TODO : lister uniquement les variables réellement créées par le script.
 
+### Protection des releases
+
+Le script doit sécuriser la création des releases en configurant les tags Git
+correspondants dans GitLab.
+
+TODO : implémenter les opérations suivantes :
+
+1. rechercher la règle de protection correspondant au motif `v*` ;
+2. créer cette règle lorsqu'elle n'existe pas ;
+3. autoriser uniquement les Maintainers à créer les tags correspondants ;
+4. vérifier la configuration lorsque la règle existe déjà ;
+5. signaler toute différence sans supprimer automatiquement une protection
+   existante ;
+6. confirmer dans le rapport final que les tags de release sont protégés.
+
+Cette protection contrôle les personnes autorisées à créer ou supprimer une
+version Git. La pipeline reste responsable de vérifier le format SemVer du tag
+et que le commit destiné à la production appartient à la branche `main`.
+
 ### Sorties
 
 * variables CI/CD créées ou mises à jour ;
+* protection des tags de release créée ou vérifiée ;
 * TODO : résultat / journal de validation éventuel.
 
 ---
