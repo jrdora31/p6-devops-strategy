@@ -110,21 +110,21 @@ deploy:terraform:apply:
     - job: quality:terraform:plan
       artifacts: true
 
-  # Le provisionnement AWS ne doit jamais devancer la chaîne d'images :
-  # GitLab attend donc la construction et les deux validations Trivy avant
-  # de pouvoir exécuter terraform apply.
-  - job: build:image:frontend
-    artifacts: false
-  - job: build:image:backend
-    artifacts: false
-  - job: release:trivy:image:frontend
-    artifacts: false
-  - job: release:trivy:image:backend
-    artifacts: false
+    # Le provisionnement AWS ne doit jamais devancer la chaîne d'images :
+    # GitLab attend donc la construction et les deux validations Trivy avant
+    # de pouvoir exécuter terraform apply.
+    - job: build:image:frontend
+      artifacts: false
+    - job: build:image:backend
+      artifacts: false
+    - job: release:trivy:image:frontend
+      artifacts: false
+    - job: release:trivy:image:backend
+      artifacts: false
 
-  # En mode DAG, cette dépendance empêche l'apply de démarrer avant le scan
-  # Trivy IaC, même si le plan Terraform est déjà disponible.
-  - job: quality:trivy:iac
+    # En mode DAG, cette dépendance empêche l'apply de démarrer avant le scan
+    # Trivy IaC, même si le plan Terraform est déjà disponible.
+    - job: quality:trivy:iac
 
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
