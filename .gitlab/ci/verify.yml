@@ -16,6 +16,11 @@ verify:images:
     - job: release:trivy:image:backend
       artifacts: false
       optional: true
+    # En pipeline Web, le smoke test doit attendre le déploiement Helm staging.
+    # Ce job étant absent des autres pipelines, la dépendance reste optionnelle.
+    - job: deploy:helm:staging
+      artifacts: false
+      optional: true
   script:
     # Chaque job Docker possède un daemon isolé : il faut donc recharger les archives.
     - docker load --input .ci/images/frontend.tar

@@ -4,7 +4,7 @@
   image:
     name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
     entrypoint: [""]
-  stage: deploy
+  stage: helm
   needs:
     - job: release:images
       artifacts: true
@@ -83,7 +83,7 @@ deploy:helm:rollback:staging:
   image:
     name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
     entrypoint: [""]
-  stage: deploy
+  stage: helm
   needs:
     - job: deploy:helm:staging
   resource_group: aws-poc
