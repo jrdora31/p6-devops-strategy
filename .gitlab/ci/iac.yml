@@ -105,7 +105,7 @@ quality:terraform:plan:
 # qualité. Le rôle AWS d'écriture est distinct du rôle de lecture du plan.
 deploy:terraform:apply:
   extends: .terraform:aws-oidc
-  stage: deploy
+  stage: terraform
   needs:
   - job: quality:terraform:plan
     artifacts: true
@@ -157,7 +157,7 @@ deploy:terraform:apply:
 # job manuel doit encore être lancé explicitement.
 deploy:terraform:destroy:
   extends: .terraform:aws-oidc
-  stage: deploy
+  stage: terraform
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
   resource_group: aws-poc
@@ -221,7 +221,7 @@ deploy:terraform:destroy:
 # la connexion SSM avant toute configuration réelle.
 deploy:ansible:check:
   extends: .ansible:aws-oidc
-  stage: deploy
+  stage: ansible
   needs:
     - job: deploy:terraform:apply
       artifacts: true
@@ -239,7 +239,7 @@ deploy:ansible:check:
 # et le check mode Ansible ont réussi.
 deploy:ansible:apply:
   extends: .ansible:aws-oidc
-  stage: deploy
+  stage: ansible
   needs:
     - job: deploy:terraform:apply
       artifacts: true

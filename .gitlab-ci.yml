@@ -24,7 +24,9 @@ stages:
   - quality
   - build
   - release
-  - deploy
+  - terraform
+  - ansible
+  - helm
   - verify
 
 variables:
