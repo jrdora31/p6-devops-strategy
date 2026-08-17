@@ -109,6 +109,17 @@ deploy:terraform:apply:
   needs:
     - job: quality:terraform:plan
       artifacts: true
+    # Le provisionnement AWS ne doit jamais devancer la chaîne d'images :
+    # GitLab attend donc la construction et les deux validations Trivy avant
+    # de pouvoir exécuter terraform apply.
+    - job: build:image:frontend
+      artifacts: false
+    - job: build:image:backend
+      artifacts: false
+    - job: release:trivy:image:frontend
+      artifacts: false
+    - job: release:trivy:image:backend
+      artifacts: false
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
   resource_group: aws-poc

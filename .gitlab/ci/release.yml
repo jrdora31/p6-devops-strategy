@@ -1,6 +1,6 @@
 # Charge l'archive de l'image frontend construite plus tôt et l'analyse avant
 # toute publication dans le registre.
-release:scan:image:frontend:
+release:trivy:image:frontend:
   extends: .trivy-job
   stage: release
   needs:
@@ -59,7 +59,7 @@ release:scan:image:frontend:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 # Équivalent du job précédent pour l'image Java backend.
-release:scan:image:backend:
+release:trivy:image:backend:
   extends: .trivy-job
   stage: release
   needs:
@@ -120,9 +120,9 @@ release:images:
     - job: build:image:backend
       artifacts: true
     # Les scans imposent une relation d'ordre, mais leurs rapports ne sont pas requis ici.
-    - job: release:scan:image:frontend
+    - job: release:trivy:image:frontend
       artifacts: false
-    - job: release:scan:image:backend
+    - job: release:trivy:image:backend
       artifacts: false
   script:
     # Restaure dans le daemon dind les images transportées sous forme d'artifacts.
