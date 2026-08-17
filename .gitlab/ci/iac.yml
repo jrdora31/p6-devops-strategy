@@ -109,6 +109,9 @@ deploy:terraform:apply:
   needs:
     - job: quality:terraform:plan
       artifacts: true
+    # En mode DAG, cette dépendance empêche l'apply de démarrer avant le scan
+    # Trivy IaC, même si le plan Terraform est déjà disponible.
+    - job: quality:trivy:iac
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
   resource_group: aws-poc
