@@ -10,10 +10,10 @@ verify:images:
       artifacts: true
     # Les jobs de scan ne sont pas toujours créés par leurs `rules`. `optional`
     # évite alors une erreur de configuration tout en les attendant s'ils existent.
-    - job: release:scan:image:frontend
+    - job: release:trivy:image:frontend
       artifacts: false
       optional: true
-    - job: release:scan:image:backend
+    - job: release:trivy:image:backend
       artifacts: false
       optional: true
   script:
