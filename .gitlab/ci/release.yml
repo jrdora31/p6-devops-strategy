@@ -7,6 +7,9 @@ release:trivy:image:frontend:
     - job: build:image:frontend
       # L'archive `.ci/images/frontend.tar` est nécessaire au scan hors registre.
       artifacts: true
+    # Le smoke local valide l'assemblage des trois conteneurs avant le scan.
+    - job: verify:images
+      artifacts: false
   script:
     - mkdir -p .ci/reports/security
     # Produit d'abord un rapport JSON unique sur les vulnérabilités de l'image.
@@ -65,6 +68,8 @@ release:trivy:image:backend:
   needs:
     - job: build:image:backend
       artifacts: true
+    - job: verify:images
+      artifacts: false
   script:
     - mkdir -p .ci/reports/security
     - >-
@@ -123,6 +128,9 @@ release:images:
     - job: release:trivy:image:frontend
       artifacts: false
     - job: release:trivy:image:backend
+      artifacts: false
+    # Garde explicite : les images ne sont publiées qu'après le smoke local.
+    - job: verify:images
       artifacts: false
   script:
     # Restaure dans le daemon dind les images transportées sous forme d'artifacts.

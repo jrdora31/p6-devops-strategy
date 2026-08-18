@@ -78,6 +78,10 @@ assert_success \
   bash "${REPOSITORY_ROOT}/scripts/ci/smoke.sh" --help
 
 assert_success \
+  "Aide du script de smoke de déploiement" \
+  bash "${REPOSITORY_ROOT}/scripts/ci/smoke_deployment.sh" --help
+
+assert_success \
   "Contrôle des dépendances verrouillées" \
   bash "${REPOSITORY_ROOT}/scripts/ci/dependencies.sh" \
   --component all --action check
