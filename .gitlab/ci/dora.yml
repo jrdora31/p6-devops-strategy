@@ -3,6 +3,7 @@
 pages:dora:
   image: python:3.12.11-slim
   stage: verify
+  allow_failure: true
   variables:
     DORA_ENVIRONMENT: aws-poc-staging
     DORA_PERIOD_DAYS: "90"
