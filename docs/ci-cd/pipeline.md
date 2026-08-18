@@ -17,37 +17,35 @@ Comment une version passe du code source à une release déployée ?
 
 ### Étapes de livraison
 
-TODO : décrire brièvement :
-
-1. validation du code ;
-2. build et validation des images ;
-3. création / identification de la version ;
-4. promotion de l'image validée ;
-5. déploiement ;
-6. vérification post-déploiement.
+1. valider le code puis construire, tester, scanner et publier les images SHA
+   sur `dev` ;
+2. créer une RC `vX.Y.Z-rc.N` et la valider en staging ;
+3. après merge vers `main`, créer le tag final annoté avec
+   `Promote-From: vX.Y.Z-rc.N` ;
+4. vérifier les sources puis reprendre les digests de la RC, sans rebuild ;
+5. archiver le manifeste, les digests et le chart dans le Generic Package
+   Registry ;
+6. promouvoir manuellement puis exécuter le contrôle HTTP post-déploiement.
 
 Voir aussi [`deployment-strategy.md`](./deployment-strategy.md).
 
 ### Rollback
 
-TODO :
-
-* expliquer quand un rollback est déclenché ;
-* préciser son intégration dans le processus de release.
+Le rollback consiste à relancer le job manuel de l'environnement depuis la
+pipeline du tag stable précédent. Il ne prend plus un numéro de révision Helm :
+la release choisie fournit elle-même son chart et ses digests immuables.
 
 La procédure détaillée est décrite dans [`../Maintenance/rollback.md`](../Maintenance/rollback.md).
 
 ### Versioning
 
-TODO :
-
-* convention de version utilisée ;
-* création et protection des tags ;
-* lien entre tag, commit SHA et image publiée.
+Les RC utilisent `vMAJOR.MINOR.PATCH-rc.N` et les finales
+`vMAJOR.MINOR.PATCH`. Le manifeste final relie aussi la RC promue et son commit
+source aux digests frontend/backend conservés.
 
 ## Traçabilité des versions et déploiements
 
-TODO : expliquer comment la pipeline permet de retrouver :
+Depuis la release GitLab et son manifeste, on retrouve :
 
 * le commit SHA associé à une version ;
 * le tag / numéro de release ;

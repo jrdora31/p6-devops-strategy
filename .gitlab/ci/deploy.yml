@@ -5,15 +5,6 @@
     name: alpine/helm:3.18.6
     entrypoint: [""]
   stage: helm
-  needs:
-    - job: release:images
-      artifacts: true
-    - job: release:helm:package
-      artifacts: true
-    # Une pipeline Web peut provisionner K3s juste avant le déploiement. Ce job
-    # IaC n'existe pas dans une pipeline de tag, d'où `optional`.
-    - job: deploy:ansible:apply
-      optional: true
   resource_group: aws-poc
   variables:
     KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
@@ -27,6 +18,27 @@
     - 'test -n "$CI_DEPLOY_USER"'
     - 'test -n "$CI_DEPLOY_PASSWORD"'
     - 'test -n "$KUBERNETES_DATABASE_PASSWORD"'
+    # Une pipeline de tag recharge la release durable. Une pipeline Web `dev`
+    # continue d'utiliser directement les artifacts de sa propre construction.
+    - >-
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        apk add --no-cache curl;
+        RELEASE_VERSION="$CI_COMMIT_TAG";
+        CHART_VERSION="${CI_COMMIT_TAG#v}";
+        RELEASE_BASE_URL="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/microcrm-release/$RELEASE_VERSION";
+        mkdir -p .ci/release .ci/packages;
+        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN"
+        "$RELEASE_BASE_URL/images.env" --output .ci/release/images.env;
+        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN"
+        "$RELEASE_BASE_URL/release-manifest.json" --output .ci/release/release-manifest.json;
+        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN"
+        "$RELEASE_BASE_URL/microcrm-$CHART_VERSION.tgz" --output ".ci/packages/microcrm-$CHART_VERSION.tgz";
+        . .ci/release/images.env;
+        export FRONTEND_IMAGE_DIGEST BACKEND_IMAGE_DIGEST;
+        test -s .ci/release/release-manifest.json;
+      fi
+    - 'printf "%s" "$FRONTEND_IMAGE_DIGEST" | grep -Eq "^.+@sha256:[0-9a-f]{64}$"'
+    - 'printf "%s" "$BACKEND_IMAGE_DIGEST" | grep -Eq "^.+@sha256:[0-9a-f]{64}$"'
     # Les valeurs sont encodées afin de les transmettre au chart sans les
     # afficher ni les écrire dans un artifact du pipeline.
     - REGISTRY_USERNAME_B64="$(printf '%s' "$CI_DEPLOY_USER" | base64 | tr -d '\n')"
@@ -83,6 +95,13 @@
 # pipeline Web autorisée à provisionner l'infrastructure AWS éphémère.
 deploy:helm:staging:
   extends: .deploy:helm:k3s
+  needs:
+    - job: release:images
+      artifacts: true
+    - job: release:helm:package
+      artifacts: true
+    - job: deploy:ansible:apply
+      optional: true
   environment:
     name: aws-poc-staging
   variables:
@@ -95,73 +114,37 @@ deploy:helm:staging:
       when: on_success
   allow_failure: false
 
-# Retour manuel vers une révision Helm staging explicitement choisie. Le job
-# reste séparé du déploiement normal afin qu'aucun rollback ne soit automatique.
-deploy:helm:rollback:staging:
-  image:
-    name: alpine/helm:3.18.6
-    entrypoint: [""]
-  stage: helm
+# Promotion ou rollback de staging par release : ce job ne dépend que du
+# bundle durable du tag, jamais d'artifacts de build temporaires.
+deploy:helm:release:staging:
+  extends: .deploy:helm:k3s
   needs:
-    - job: deploy:helm:staging
-  resource_group: aws-poc
-  variables:
-    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
-    KUBE_NAMESPACE: microcrm-staging
+    - job: release:bundle
+      artifacts: false
   environment:
     name: aws-poc-staging
-  script:
-    - 'test -s "$KUBECONFIG"'
-    - 'test -n "$KUBE_CONTEXT"'
-    - 'test -n "$HELM_ROLLBACK_REVISION"'
-    - 'printf "%s" "$HELM_ROLLBACK_REVISION" | grep -Eq "^[1-9][0-9]*$"'
-    - >-
-      helm rollback microcrm "$HELM_ROLLBACK_REVISION"
-      --kube-context "$KUBE_CONTEXT"
-      --namespace "$KUBE_NAMESPACE"
-      --wait
-      --timeout 5m
-    - >-
-      helm status microcrm
-      --kube-context "$KUBE_CONTEXT"
-      --namespace "$KUBE_NAMESPACE"
-    - >-
-      helm history microcrm
-      --kube-context "$KUBE_CONTEXT"
-      --namespace "$KUBE_NAMESPACE"
-      --output table
-  after_script:
-    # Le rollback est notifié qu'il réussisse, échoue ou soit annulé.
-    - >-
-      if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
-        apk add --no-cache python3 >/dev/null &&
-        python3 scripts/ci/notify.py
-        --event rollback
-        --status "$CI_JOB_STATUS"
-        --job "$CI_JOB_NAME"
-        --pipeline-id "$CI_PIPELINE_ID"
-        --pipeline-url "$CI_PIPELINE_URL"
-        --ref "$CI_COMMIT_REF_NAME"
-        --commit "$CI_COMMIT_SHA"
-        --send-webhook-env SLACK_WEBHOOK_URL;
-      else
-        echo "Notification Slack ignorée : SLACK_WEBHOOK_URL indisponible.";
-      fi
+  variables:
+    KUBE_NAMESPACE: microcrm-staging
+    HELM_VALUES: infrastructure/helm/microcrm/values-staging.yaml
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.[1-9][0-9]*$/'
       when: manual
-  allow_failure: true
+  allow_failure: false
 
 # La production est une promotion explicite d'un tag SemVer. Le job manuel
-# réutilise les images et le chart produits dans la même pipeline de tag.
+# recharge les images et le chart archivés pour ce tag. Relancer le job d'une
+# ancienne pipeline constitue le rollback vers cette release exacte.
 deploy:helm:aws:
   extends: .deploy:helm:k3s
+  needs:
+    - job: release:bundle
+      artifacts: false
   environment:
     name: aws-poc-production
   variables:
     KUBE_NAMESPACE: microcrm-prod
     HELM_VALUES: infrastructure/helm/microcrm/values-production.yaml
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'
       when: manual
   allow_failure: false

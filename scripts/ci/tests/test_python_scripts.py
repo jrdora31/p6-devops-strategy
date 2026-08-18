@@ -45,7 +45,7 @@ def run_script(
     )
 
 
-def manifest_arguments(version: str = "v1.2.3") -> list[str]:
+def manifest_arguments(version: str = "v1.2.3-rc.1") -> list[str]:
     """Construit un jeu d'arguments valide réutilisé dans plusieurs tests."""
     return [
         "--version",
@@ -97,10 +97,43 @@ def test_release_manifest_is_written_and_traceable(tmp_path: Path) -> None:
     # Le message stderr est utilisé comme diagnostic si l'assertion échoue.
     assert result.returncode == 0, result.stderr
     manifest = json.loads(output.read_text(encoding="utf-8"))
-    assert manifest["version"] == "v1.2.3"
+    assert manifest["version"] == "v1.2.3-rc.1"
     assert manifest["commit"] == COMMIT_SHA
     assert manifest["images"]["frontend"] == FRONTEND_IMAGE
     assert manifest["images"]["backend"] == BACKEND_IMAGE
+    assert "promotion" not in manifest
+
+
+def test_final_release_records_promoted_rc(tmp_path: Path) -> None:
+    """Une finale doit conserver l'identité de la RC promue."""
+    output = tmp_path / ".ci" / "release" / "release-manifest.json"
+    arguments = manifest_arguments(version="v1.2.3") + [
+        "--source-version",
+        "v1.2.3-rc.1",
+        "--source-commit",
+        COMMIT_SHA,
+    ]
+
+    result = run_script(RELEASE_SCRIPT, *arguments, working_directory=tmp_path)
+
+    assert result.returncode == 0, result.stderr
+    manifest = json.loads(output.read_text(encoding="utf-8"))
+    assert manifest["promotion"] == {
+        "sourceVersion": "v1.2.3-rc.1",
+        "sourceCommit": COMMIT_SHA,
+    }
+
+
+def test_final_release_rejects_missing_promoted_rc(tmp_path: Path) -> None:
+    """Une finale sans provenance RC ne doit produire aucun manifeste."""
+    result = run_script(
+        RELEASE_SCRIPT,
+        *manifest_arguments(version="v1.2.3"),
+        working_directory=tmp_path,
+    )
+
+    assert result.returncode != 0
+    assert "identifier sa RC" in result.stderr
 
 
 def test_release_manifest_rejects_invalid_semver(tmp_path: Path) -> None:
