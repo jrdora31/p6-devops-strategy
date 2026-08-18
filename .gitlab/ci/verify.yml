@@ -44,6 +44,8 @@ verify:deployment:staging:
   extends: .verify:deployment:http
   needs:
     - job: deploy:helm:staging
+  environment:
+    name: aws-poc-staging
   variables:
     KUBE_NAMESPACE: microcrm-staging
   rules:
@@ -54,6 +56,8 @@ verify:deployment:production:
   extends: .verify:deployment:http
   needs:
     - job: deploy:helm:aws
+  environment:
+    name: aws-poc-production
   variables:
     KUBE_NAMESPACE: microcrm-prod
   rules:
