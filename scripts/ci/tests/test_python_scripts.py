@@ -68,6 +68,10 @@ def notification_arguments() -> list[str]:
     return [
         "--status",
         "success",
+        "--event",
+        "deployment",
+        "--job",
+        "deploy:helm:staging",
         "--pipeline-id",
         "12345",
         "--pipeline-url",
@@ -120,8 +124,10 @@ def test_notification_is_only_printed_by_default() -> None:
 
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
-    assert payload["status"] == "success"
-    assert payload["pipeline"]["id"] == "12345"
+    assert "Déploiement *success*" in payload["text"]
+    assert "deploy:helm:staging" in payload["text"]
+    assert "#12345" in payload["text"]
+    assert "a" * 8 in payload["text"]
 
 
 def test_notification_rejects_missing_webhook_variable() -> None:

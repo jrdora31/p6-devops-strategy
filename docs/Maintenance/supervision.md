@@ -50,6 +50,22 @@ Pour chacune :
 * seuil ;
 * action déclenchée.
 
+## Notifications Slack
+
+Le canal opérationnel prévu est `#microcrm-devops`. Les jobs Helm notifient les
+déploiements et les rollbacks, réussis ou échoués. Les jobs Trivy notifient un
+échec de contrôle de sécurité ; le rapport du job précise ensuite s'il s'agit
+d'une vulnérabilité, d'un secret détecté ou d'une erreur du scanner.
+
+L'envoi utilise `scripts/ci/notify.py` et un **Incoming Webhook** Slack conservé
+dans la variable GitLab `SLACK_WEBHOOK_URL`. Cette variable doit être masquée,
+protégée et non développée. Elle ne doit jamais être copiée dans le dépôt ou
+les logs. Une variable protégée n'est disponible que sur une branche ou un tag
+également protégé ; `dev` doit donc être protégé pour notifier le staging.
+
+TODO : ajouter une preuve observable (message Slack horodaté et pipeline liée)
+avant de déclarer cette notification validée en conditions réelles.
+
 ## État K3s / Pods
 
 TODO : commandes de vérification du cluster et des pods.
