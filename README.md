@@ -29,7 +29,6 @@ Une intégration basique avec Gitlab CI est définie via le fichier [`.gitlab-ci
 ##### Dépendances
 
 - [OpenJDK >= 17](https://openjdk.org/)
-- PostgreSQL 17, lancé localement ou dans un conteneur
 
 ##### Procédure
 
@@ -49,34 +48,9 @@ Une intégration basique avec Gitlab CI est définie via le fichier [`.gitlab-ci
    gradlew.bat build
    ```
 
-3. Démarrer PostgreSQL, puis fournir la connexion au backend. Exemple local avec Docker :
+3. Démarrer le service:
 
    ```shell
-   docker volume create microcrm-postgres
-   docker run --detach --name microcrm-postgres \
-     --publish 5432:5432 \
-     --env POSTGRES_DB=microcrm \
-     --env POSTGRES_USER=microcrm \
-     --env POSTGRES_PASSWORD=microcrm-local \
-     --volume microcrm-postgres:/var/lib/postgresql/data \
-     postgres:17.10-alpine3.23
-   ```
-
-4. Démarrer le service sous Linux :
-
-   ```shell
-   SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/microcrm \
-   SPRING_DATASOURCE_USERNAME=microcrm \
-   SPRING_DATASOURCE_PASSWORD=microcrm-local \
-   java -jar build/libs/microcrm-0.0.1-SNAPSHOT.jar
-   ```
-
-   Sous PowerShell :
-
-   ```powershell
-   $env:SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5432/microcrm'
-   $env:SPRING_DATASOURCE_USERNAME='microcrm'
-   $env:SPRING_DATASOURCE_PASSWORD='microcrm-local'
    java -jar build/libs/microcrm-0.0.1-SNAPSHOT.jar
    ```
 
@@ -134,56 +108,6 @@ cd back
 ./gradlew test
 ```
 
-#### Tests automatisés dans GitLab CI
-
-La pipeline exécute les tests du frontend, du backend et des scripts à chaque
-merge request ainsi que sur `dev`, `main`, les tags et les pipelines planifiés.
-
-L’exécution locale nécessite Bash, Python avec les dépendances de test,
-ShellCheck et Chrome ou Chromium. Si le navigateur n’est pas détecté,
-`CHROME_BIN` doit contenir le chemin de son exécutable.
-
-Depuis la racine du repository, les mêmes tests peuvent être lancés avec :
-
-```shell
-bash scripts/ci/test.sh --component frontend
-bash scripts/ci/test.sh --component backend
-bash scripts/ci/tests/test_scripts.sh
-python -m pip install -r scripts/ci/requirements-test.txt
-python -m pytest scripts/ci/tests/test_python_scripts.py
-shellcheck scripts/ci/*.sh scripts/ci/tests/*.sh
-```
-
-| Job GitLab | Vérification | Résultat conservé |
-|---|---|---|
-| `test:frontend` | Tests Angular, dont les échanges HTTP simulés, et couverture | Rapport de couverture HTML et LCOV |
-| `test:backend` | Tests JUnit du contexte, du repository et du CRUD HTTP | Rapport JUnit, rapport HTML et JaCoCo XML |
-| `test:scripts:bash` | Commandes Bash, erreurs et dry-run | Log du job |
-| `test:scripts:python` | Manifeste et notification | Rapport JUnit pytest |
-| `test:helm` | Structure, values et rendu du chart Helm | Log du job |
-| `quality:shellcheck` | Analyse statique des scripts Bash | Log du job |
-| `quality:sonarqube` | Qualité, sécurité et couverture du code | Dashboard SonarQube et quality gate |
-| `quality:trivy:repository` | Vulnérabilités des dépendances et secrets | Rapports Trivy JSON et texte |
-| `quality:trivy:kubernetes` | Mauvaises configurations Kubernetes/Helm | Rapports Trivy JSON et texte |
-| `release:scan:image:frontend` | Vulnérabilités de l’image frontend avant publication | Rapports Trivy JSON et texte |
-| `release:scan:image:backend` | Vulnérabilités de l’image backend avant publication | Rapports Trivy JSON et texte |
-| `release:manifest` | Traçabilité de la version, du commit, de la pipeline et des images | Manifeste JSON de release |
-| `release:create` | Publication d’un tag SemVer dans GitLab Releases | Release GitLab liée à sa pipeline |
-| `release:helm:package` | Création de l’archive du chart | Package Helm conservé comme artifact |
-| `deploy:helm:aws` | Deployment manuel et atomique sur K3s/AWS | Release Helm et environnement GitLab |
-
-Avec SonarQube Cloud Free, `quality:sonarqube` s’exécute sur les merge requests
-et sur `main`, mais pas sur les push directs vers `dev`.
-
-Les jobs Trivy conservent les vulnérabilités élevées et critiques dans leurs
-rapports. Une erreur du scanner, un secret détecté ou une vulnérabilité critique
-corrigible fait échouer le job ; les vulnérabilités élevées existantes restent
-visibles pour un traitement progressif.
-
-Le détail des scripts se trouve dans [`scripts/ci/README.md`](scripts/ci/README.md)
-et la matrice complète dans
-[`documentation/ci_cd/05_plan_tests_automatises.md`](documentation/ci_cd/05_plan_tests_automatises.md).
-
 ### Images Docker
 
 La CI construit deux images distinctes. Les builds applicatifs doivent être
@@ -199,8 +123,8 @@ Le frontend appelle l’API avec la route relative `/api`. Caddy transmet cette
 route au conteneur backend par son nom de service ; aucune adresse IP n’est
 intégrée au code.
 
-Le test suivant crée un réseau Docker temporaire, attend les deux healthchecks,
-vérifie le routage Caddy puis exécute un parcours de création et de lecture :
+Le smoke test local démarre les images avec PostgreSQL, vérifie les
+healthchecks et exécute un parcours de création et de lecture :
 
 ```shell
 sh scripts/ci/smoke.sh \
@@ -209,17 +133,31 @@ sh scripts/ci/smoke.sh \
   --database-image postgres:17.10-alpine3.23
 ```
 
-Le smoke test démarre PostgreSQL avec un volume temporaire, crée une donnée,
-recrée la base et le backend, puis confirme que cette donnée reste accessible.
-La CI utilise la même image PostgreSQL épinglée par digest.
+## Documentation
 
-### Orchestration Kubernetes
+Pour reprendre le projet depuis un clone et effectuer un premier déploiement
+sur AWS, consulter [`DOCS/GET-STARTED.md`](./DOCS/GET-STARTED.md).
 
-Le chart [`helm/microcrm`](helm/microcrm/README.md) décrit le frontend, le
-backend et PostgreSQL. Les fichiers de values séparent les paramètres Minikube
-et K3s, tandis que les credentials restent dans un Secret Kubernetes externe au
-repository. Il a été validé sur un profil Minikube isolé puis déployé sur K3s
-AWS par la pipeline [#2731910227](https://gitlab.com/project_6_group/microcrm/-/pipelines/2731910227).
-Cette pipeline a également vérifié les workloads Kubernetes et exécuté le
-`terraform destroy`. L'environnement AWS reste volontairement éphémère : il
-est recréé pour une session de preuve puis détruit à sa fin.
+### Architecture et infrastructure
+
+- [`DOCS/stack.md`](./DOCS/stack.md) — Stack technique du projet.
+- [`DOCS/schema_architecture_aws.md`](./DOCS/schema_architecture_aws.md) — Architecture AWS et interactions entre les composants.
+- [`DOCS/infrastructure/terraform.md`](./DOCS/infrastructure/terraform.md) — Provisionnement AWS avec Terraform.
+- [`DOCS/infrastructure/ansible.md`](./DOCS/infrastructure/ansible.md) — Configuration de l’instance et du cluster K3s.
+- [`DOCS/infrastructure/helm.md`](./DOCS/infrastructure/helm.md) — Déploiement de MicroCRM dans K3s.
+
+### CI/CD et maintenance
+
+- [`DOCS/ci-cd/pipeline.md`](./DOCS/ci-cd/pipeline.md) — Organisation de la pipeline GitLab CI/CD.
+- [`DOCS/ci-cd/deployment-strategy.md`](./DOCS/ci-cd/deployment-strategy.md) — Release, promotion et rollback.
+- [`DOCS/Maintenance/backup-recovery.md`](./DOCS/Maintenance/backup-recovery.md) — Sauvegarde et restauration.
+- [`DOCS/Maintenance/rollback.md`](./DOCS/Maintenance/rollback.md) — Retour à une version précédente.
+- [`DOCS/Maintenance/supervision.md`](./DOCS/Maintenance/supervision.md) — Supervision CloudWatch.
+
+### Qualité et scripts
+
+- [`DOCS/quality/testing.md`](./DOCS/quality/testing.md) — Stratégie de tests.
+- [`DOCS/quality/security.md`](./DOCS/quality/security.md) — Sécurité, secrets et scans.
+- [`DOCS/quality/performance.md`](./DOCS/quality/performance.md) — Performance et métriques DORA.
+- [`scripts/bootstrap/bootstrap.md`](./scripts/bootstrap/bootstrap.md) — Initialisation AWS et GitLab.
+- [`scripts/ci/scripts.md`](./scripts/ci/scripts.md) — Scripts utilisés par la pipeline.

@@ -24,10 +24,43 @@ stages:
   - quality
   - build
   - release
-  - deploy
+  - terraform
+  - ansible
+  - helm
   - verify
 
 variables:
+  # Interrupteur affiché dans le formulaire "Run pipeline". La valeur par
+  # défaut reste sûre ; `true` ne doit être choisi que pour une session AWS
+  # autorisée et détruite après collecte des preuves.
+  CLOUDWATCH_AGENT_ENABLED:
+    value: "false"
+    options:
+      - "false"
+      - "true"
+    description: >-
+      Active CloudWatch pour cette pipeline uniquement : crée les groupes de
+      logs Terraform et installe l'agent par Ansible.
+  ALERT_EMAIL:
+    value: ""
+    description: >-
+      Adresse e-mail abonnée via SNS aux passages en ALARM des trois alarmes
+      CloudWatch. Laisser vide pour désactiver les notifications.
+  TF_DESTROY_CONFIRM:
+    value: "false"
+    options:
+      - "false"
+      - "true"
+    description: >-
+      Autorise le job manuel de destruction Terraform uniquement si la valeur
+      est true ; le job reste manuel et doit être lancé séparément.
+  HELM_ROLLBACK_REVISION:
+    value: "1"
+    description: >-
+      Révision Helm staging ciblée par le job manuel : pour cette démonstration,
+      1 = version stable sans bandeau et 2 = version avec bandeau rollback.
+      Vérifier l'historique Helm avant exécution, car les numéros évoluent après
+      chaque déploiement et rollback.
   # Chaque image porte le SHA complet du commit : le tag technique permet de
   # retrouver sans ambiguïté le code qui a servi à sa construction.
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA"
@@ -47,3 +80,4 @@ include:
   - local: .gitlab/ci/release.yml
   - local: .gitlab/ci/deploy.yml
   - local: .gitlab/ci/verify.yml
+  - local: .gitlab/ci/dora.yml

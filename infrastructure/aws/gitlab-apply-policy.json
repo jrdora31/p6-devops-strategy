@@ -43,11 +43,14 @@
       "Effect": "Allow",
       "Action": [
         "iam:CreateRole",
+        "iam:DeleteRolePolicy",
         "iam:DeleteRole",
         "iam:GetRole",
+        "iam:GetRolePolicy",
         "iam:ListAttachedRolePolicies",
         "iam:ListInstanceProfilesForRole",
         "iam:ListRolePolicies",
+        "iam:PutRolePolicy",
         "iam:TagRole",
         "iam:UntagRole",
         "iam:UpdateAssumeRolePolicy"
@@ -143,6 +146,97 @@
         "ssm:StartSession",
         "ssm:TerminateSession"
       ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchLogGroupLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:DescribeLogGroups",
+        "logs:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchLogGroupScopedLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DeleteLogGroup",
+        "logs:DeleteMetricFilter",
+        "logs:PutMetricFilter",
+        "logs:PutRetentionPolicy",
+        "logs:TagResource",
+        "logs:UntagResource"
+      ],
+      "Resource": "arn:aws:logs:*:*:log-group:/microcrm/poc*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchMetricFilterRead",
+      "Effect": "Allow",
+      "Action": "logs:DescribeMetricFilters",
+      "Resource": "*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchAlarmLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DeleteAlarms",
+        "cloudwatch:PutMetricAlarm",
+        "cloudwatch:TagResource",
+        "cloudwatch:UntagResource"
+      ],
+      "Resource": "arn:aws:cloudwatch:*:*:alarm:microcrm-*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchAlarmRead",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "MicrocrmSnsAlertTopicLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "sns:CreateTopic",
+        "sns:DeleteTopic",
+        "sns:GetTopicAttributes",
+        "sns:ListTagsForResource",
+        "sns:SetTopicAttributes",
+        "sns:Subscribe",
+        "sns:TagResource",
+        "sns:Unsubscribe",
+        "sns:UntagResource"
+      ],
+      "Resource": "arn:aws:sns:*:*:microcrm-*-alerts"
+    },
+    {
+      "Sid": "MicrocrmSnsRead",
+      "Effect": "Allow",
+      "Action": [
+        "sns:GetSubscriptionAttributes",
+        "sns:ListSubscriptionsByTopic",
+        "sns:ListTopics"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchDashboardLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DeleteDashboards",
+        "cloudwatch:GetDashboard",
+        "cloudwatch:PutDashboard"
+      ],
+      "Resource": "arn:aws:cloudwatch::*:dashboard/microcrm-*-monitoring"
+    },
+    {
+      "Sid": "MicrocrmCloudWatchDashboardList",
+      "Effect": "Allow",
+      "Action": "cloudwatch:ListDashboards",
       "Resource": "*"
     }
   ]

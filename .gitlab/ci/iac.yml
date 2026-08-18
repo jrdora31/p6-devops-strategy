@@ -54,6 +54,14 @@ test:terraform:
     - mkdir -p "$TF_PLUGIN_CACHE_DIR" "$CI_PROJECT_DIR/.aws" "$CI_PROJECT_DIR/.ci/reports/terraform"
     - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - chmod 600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
+    - CLOUDWATCH_AGENT_ENABLED="${CLOUDWATCH_AGENT_ENABLED:-false}"
+    - >-
+      case "$CLOUDWATCH_AGENT_ENABLED" in
+        true|false) ;;
+        *) echo "CLOUDWATCH_AGENT_ENABLED doit valoir true ou false"; exit 1 ;;
+      esac
+    - export TF_VAR_cloudwatch_agent_enabled="$CLOUDWATCH_AGENT_ENABLED"
+    - export TF_VAR_alert_email="${ALERT_EMAIL:-}"
 
 # Produit un plan réel avec des credentials AWS temporaires obtenus par OIDC.
 # Le job ne possède aucun droit d'écriture et ne lance jamais terraform apply.
@@ -97,10 +105,26 @@ quality:terraform:plan:
 # qualité. Le rôle AWS d'écriture est distinct du rôle de lecture du plan.
 deploy:terraform:apply:
   extends: .terraform:aws-oidc
-  stage: deploy
+  stage: terraform
   needs:
-    - job: quality:terraform:plan
-      artifacts: true
+  - job: quality:terraform:plan
+    artifacts: true
+
+  # Le provisionnement AWS ne doit jamais devancer la chaîne d'images :
+  # GitLab attend donc la construction et les deux validations Trivy avant
+  # de pouvoir exécuter terraform apply.
+  - job: build:image:frontend
+    artifacts: false
+  - job: build:image:backend
+    artifacts: false
+  - job: release:trivy:image:frontend
+    artifacts: false
+  - job: release:trivy:image:backend
+    artifacts: false
+
+  # En mode DAG, cette dépendance empêche l'apply de démarrer avant le scan
+  # Trivy IaC, même si le plan Terraform est déjà disponible.
+  - job: quality:trivy:iac
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
   resource_group: aws-poc
@@ -127,11 +151,12 @@ deploy:terraform:apply:
       when: on_success
   allow_failure: false
 
-# Le destroy est une action séparée, manuelle et sérialisée. GitLab demande une
-# confirmation native au lancement : aucune variable temporaire n'est requise.
+# Le destroy est une action séparée, manuelle et sérialisée. La variable
+# TF_DESTROY_CONFIRM et la confirmation native GitLab constituent deux
+# garde-fous complémentaires avant la destruction de l'environnement.
 deploy:terraform:destroy:
   extends: .terraform:aws-oidc
-  stage: deploy
+  stage: terraform
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
   resource_group: aws-poc
@@ -140,6 +165,7 @@ deploy:terraform:destroy:
     action: stop
   manual_confirmation: "Confirmer la destruction complète de l'environnement AWS MicroCRM"
   script:
+    - test "$TF_DESTROY_CONFIRM" = "true"
     - terraform -chdir=infrastructure/terraform init -reconfigure
     - terraform -chdir=infrastructure/terraform plan -destroy -no-color -out="$CI_PROJECT_DIR/.terraform-destroy-plan"
     - terraform -chdir=infrastructure/terraform show -no-color "$CI_PROJECT_DIR/.terraform-destroy-plan" > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-plan.txt"
@@ -158,7 +184,9 @@ deploy:terraform:destroy:
     # `dev` conserve le cycle Web explicitement demandé pour les essais IaC.
     - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
       when: manual
-  allow_failure: false
+  # Le destroy reste protégé par son lancement manuel et
+  # TF_DESTROY_CONFIRM=true, mais son absence ne bloque pas le stage verify.
+  allow_failure: true
 
 # Les jobs runtime Ansible utilisent les outputs Terraform transmis par le
 # rapport dotenv et le même rôle AWS temporaire que le provisionnement.
@@ -168,7 +196,7 @@ deploy:terraform:destroy:
     GITLAB_OIDC_TOKEN:
       aud: https://gitlab.com
   variables:
-    ANSIBLE_CONFIG: "$CI_PROJECT_DIR/ansible/ansible.cfg"
+    ANSIBLE_CONFIG: "$CI_PROJECT_DIR/infrastructure/ansible/ansible.cfg"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
     AWS_WEB_IDENTITY_TOKEN_FILE: "$CI_PROJECT_DIR/.aws/gitlab-oidc-token"
@@ -176,8 +204,8 @@ deploy:terraform:destroy:
   cache:
     key:
       files:
-        - ansible/requirements-ci.txt
-        - ansible/requirements.yml
+        - infrastructure/ansible/requirements-ci.txt
+        - infrastructure/ansible/requirements.yml
       prefix: ansible
     paths:
       - .cache/pip/
@@ -190,21 +218,21 @@ deploy:terraform:destroy:
     - dpkg --install /tmp/session-manager-plugin.deb
     - session-manager-plugin --version
     - rm -f /tmp/session-manager-plugin.deb && rm -rf /var/lib/apt/lists/*
-    - python -m pip install --requirement ansible/requirements-ci.txt
-    - ansible-galaxy collection install --requirements-file ansible/requirements.yml
+    - python -m pip install --requirement infrastructure/ansible/requirements-ci.txt
+    - ansible-galaxy collection install --requirements-file infrastructure/ansible/requirements.yml
 
 # Le check mode s'exécute automatiquement après l'apply Terraform. Il prouve
 # la connexion SSM avant toute configuration réelle.
 deploy:ansible:check:
   extends: .ansible:aws-oidc
-  stage: deploy
+  stage: ansible
   needs:
     - job: deploy:terraform:apply
       artifacts: true
   resource_group: aws-poc
   script:
     - ansible-inventory --graph
-    - ansible-playbook --check --diff ansible/playbooks/site.yml
+    - ansible-playbook --check --diff infrastructure/ansible/playbooks/site.yml
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
@@ -215,7 +243,7 @@ deploy:ansible:check:
 # et le check mode Ansible ont réussi.
 deploy:ansible:apply:
   extends: .ansible:aws-oidc
-  stage: deploy
+  stage: ansible
   needs:
     - job: deploy:terraform:apply
       artifacts: true
@@ -224,7 +252,7 @@ deploy:ansible:apply:
   environment:
     name: aws-poc-infrastructure
   script:
-    - ansible-playbook --diff ansible/playbooks/site.yml
+    - ansible-playbook --diff infrastructure/ansible/playbooks/site.yml
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
@@ -237,23 +265,23 @@ test:ansible:
   image: python:3.12.11-slim-bookworm
   stage: test
   variables:
-    ANSIBLE_CONFIG: "$CI_PROJECT_DIR/ansible/ansible.cfg"
+    ANSIBLE_CONFIG: "$CI_PROJECT_DIR/infrastructure/ansible/ansible.cfg"
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   cache:
     key:
       files:
-        - ansible/requirements-ci.txt
-        - ansible/requirements.yml
+        - infrastructure/ansible/requirements-ci.txt
+        - infrastructure/ansible/requirements.yml
       prefix: ansible
     paths:
       - .cache/pip/
   before_script:
-    - python -m pip install --requirement ansible/requirements-ci.txt
-    - ansible-galaxy collection install --requirements-file ansible/requirements.yml
+    - python -m pip install --requirement infrastructure/ansible/requirements-ci.txt
+    - ansible-galaxy collection install --requirements-file infrastructure/ansible/requirements.yml
   script:
     # L'inventaire local évite tout appel AWS pendant le simple contrôle syntaxique.
-    - ansible-playbook --syntax-check --inventory localhost, ansible/playbooks/site.yml
-    - ansible-lint ansible/
+    - ansible-playbook --syntax-check --inventory localhost, infrastructure/ansible/playbooks/site.yml
+    - ansible-lint infrastructure/ansible/
 
 # Trivy conserve toutes les observations élevées mais bloque uniquement les
 # mauvaises configurations critiques, comme la politique de sécurité du projet.

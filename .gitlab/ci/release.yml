@@ -1,12 +1,15 @@
 # Charge l'archive de l'image frontend construite plus tôt et l'analyse avant
 # toute publication dans le registre.
-release:scan:image:frontend:
+release:trivy:image:frontend:
   extends: .trivy-job
   stage: release
   needs:
     - job: build:image:frontend
       # L'archive `.ci/images/frontend.tar` est nécessaire au scan hors registre.
       artifacts: true
+    # Le smoke local valide l'assemblage des trois conteneurs avant le scan.
+    - job: verify:images
+      artifacts: false
   script:
     - mkdir -p .ci/reports/security
     # Produit d'abord un rapport JSON unique sur les vulnérabilités de l'image.
@@ -54,16 +57,19 @@ release:scan:image:frontend:
     # principale. La regex refuse les tags qui ne suivent pas le format de release.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 # Équivalent du job précédent pour l'image Java backend.
-release:scan:image:backend:
+release:trivy:image:backend:
   extends: .trivy-job
   stage: release
   needs:
     - job: build:image:backend
       artifacts: true
+    - job: verify:images
+      artifacts: false
   script:
     - mkdir -p .ci/reports/security
     - >-
@@ -104,6 +110,7 @@ release:scan:image:backend:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
@@ -118,9 +125,12 @@ release:images:
     - job: build:image:backend
       artifacts: true
     # Les scans imposent une relation d'ordre, mais leurs rapports ne sont pas requis ici.
-    - job: release:scan:image:frontend
+    - job: release:trivy:image:frontend
       artifacts: false
-    - job: release:scan:image:backend
+    - job: release:trivy:image:backend
+      artifacts: false
+    # Garde explicite : les images ne sont publiées qu'après le smoke local.
+    - job: verify:images
       artifacts: false
   script:
     # Restaure dans le daemon dind les images transportées sous forme d'artifacts.
@@ -143,7 +153,9 @@ release:images:
     paths:
       - .ci/release/images.env
   rules:
-    # La publication est réservée aux releases SemVer et à la branche principale.
+    # La publication alimente staging depuis `dev`, puis les releases depuis
+    # `main` ou un tag SemVer.
+    - if: '$CI_COMMIT_BRANCH == "dev"'
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
@@ -213,7 +225,7 @@ release:helm:package:
       else
         CHART_VERSION="0.1.0-${CI_COMMIT_SHORT_SHA}";
       fi;
-      helm package helm/microcrm
+      helm package infrastructure/helm/microcrm
       --destination .ci/packages
       --version "$CHART_VERSION"
       --app-version "$CI_COMMIT_SHA"
@@ -223,4 +235,5 @@ release:helm:package:
       - .ci/packages/microcrm-*.tgz
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

@@ -1,0 +1,1 @@
+Quelle stratégie de release utilise-t-on : canary, promotion, rollback, sauvegarde ?

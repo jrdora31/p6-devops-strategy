@@ -53,7 +53,7 @@ test:scripts:python:
     - python -m pip install --disable-pip-version-check --no-cache-dir -r scripts/ci/requirements-test.txt
   script:
     - mkdir -p .ci/reports
-    - python -m pytest scripts/ci/tests/test_python_scripts.py --junitxml=.ci/reports/scripts-python.xml
+    - python -m pytest scripts/ci/tests/ --junitxml=.ci/reports/scripts-python.xml
   artifacts:
     when: always
     expire_in: 7 days
@@ -70,18 +70,22 @@ test:helm:
     entrypoint: [""]
   stage: test
   script:
-    # `lint` vérifie la structure du chart et le schéma des deux jeux de values.
-    - helm lint helm/microcrm --values helm/microcrm/values-minikube.yaml
-    - helm lint helm/microcrm --values helm/microcrm/values-k3s.yaml
+    # `lint` vérifie la structure du chart et chaque variante de values.
+    - helm lint infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-minikube.yaml
+    - helm lint infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-k3s.yaml
+    - helm lint infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-staging.yaml
+    - helm lint infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-production.yaml
     # `template` prouve que les ressources locales et AWS peuvent être générées.
-    - helm template microcrm helm/microcrm --namespace microcrm --values helm/microcrm/values-minikube.yaml > /dev/null
-    - helm template microcrm helm/microcrm --namespace microcrm --values helm/microcrm/values-k3s.yaml > /dev/null
+    - helm template microcrm infrastructure/helm/microcrm --namespace microcrm --values infrastructure/helm/microcrm/values-minikube.yaml > /dev/null
+    - helm template microcrm infrastructure/helm/microcrm --namespace microcrm --values infrastructure/helm/microcrm/values-k3s.yaml > /dev/null
+    - helm template microcrm infrastructure/helm/microcrm --namespace microcrm-staging --values infrastructure/helm/microcrm/values-staging.yaml > /dev/null
+    - helm template microcrm infrastructure/helm/microcrm --namespace microcrm-prod --values infrastructure/helm/microcrm/values-production.yaml > /dev/null
     # Couvre aussi le chemin réellement utilisé par le déploiement AWS, avec
     # uniquement de fausses valeurs encodées pour les deux Secrets gérés.
     - >-
-      helm template microcrm helm/microcrm
+      helm template microcrm infrastructure/helm/microcrm
       --namespace microcrm
-      --values helm/microcrm/values-k3s.yaml
+      --values infrastructure/helm/microcrm/values-k3s.yaml
       --set registrySecret.enabled=true
       --set-string registrySecret.server=registry.gitlab.com
       --set-string registrySecret.usernameBase64=Z2l0bGFi

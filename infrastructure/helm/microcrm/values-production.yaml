@@ -1,0 +1,13 @@
+# Environnement de production du POC, promu manuellement par un tag SemVer.
+# Il reste isolé de staging par son namespace et son nom de release Kubernetes.
+fullnameOverride: microcrm-prod
+
+database:
+  persistence:
+    size: 2Gi
+    storageClass: local-path
+
+ingress:
+  enabled: true
+  className: traefik
+  host: microcrm.example.invalid

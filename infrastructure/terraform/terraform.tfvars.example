@@ -4,6 +4,8 @@ aws_region         = "eu-west-3"
 project_name       = "microcrm"
 environment        = "poc"
 instance_type      = "m7i-flex.large"
+cloudwatch_agent_enabled = false
+cloudwatch_log_group_prefix = "/microcrm/poc"
 root_volume_size   = 20
 http_ingress_cidrs = ["0.0.0.0/0"]
 

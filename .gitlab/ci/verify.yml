@@ -1,21 +1,14 @@
-# Vérification finale : exécute ensemble les deux images réellement construites.
+# Smoke local : exécute ensemble les deux images réellement construites avant
+# leur scan et leur publication. Il ne vérifie pas le cluster Kubernetes.
 verify:images:
   extends: .docker-job
-  stage: verify
+  stage: release
   needs:
     # Les archives Docker sont obligatoires pour restaurer les images dans ce job.
     - job: build:image:frontend
       artifacts: true
     - job: build:image:backend
       artifacts: true
-    # Les jobs de scan ne sont pas toujours créés par leurs `rules`. `optional`
-    # évite alors une erreur de configuration tout en les attendant s'ils existent.
-    - job: release:scan:image:frontend
-      artifacts: false
-      optional: true
-    - job: release:scan:image:backend
-      artifacts: false
-      optional: true
   script:
     # Chaque job Docker possède un daemon isolé : il faut donc recharger les archives.
     - docker load --input .ci/images/frontend.tar
@@ -27,37 +20,36 @@ verify:images:
       --backend-image "$BACKEND_IMAGE"
       --database-image "$POSTGRES_IMAGE"
 
-# Vérifie l'application réellement déployée sur K3s après Helm. Ce contrôle est
-# distinct du smoke test Docker ci-dessus : il utilise le contexte du GitLab
-# Agent et les ressources présentes sur AWS.
-verify:kubernetes:aws:
+# Base commune aux contrôles HTTP exécutés dans le pod frontend réellement
+# déployé. Le contexte GitLab Agent évite toute adresse publique codée en dur.
+.verify:deployment:http:
   image:
-    name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
+    name: bitnami/kubectl:1.33.13
     entrypoint: [""]
   stage: verify
-  needs:
-    - job: deploy:helm:aws
-  environment:
-    name: aws-poc
+  resource_group: aws-poc
   variables:
     KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
-    KUBECTL_VERSION: "v1.30.14"
-    KUBECTL_AMD64_SHA256: "7ccac981ece0098284d8961973295f5124d78eab7b89ba5023f35591baa16271"
-  before_script:
-    - apk add --no-cache curl
-    - curl --fail --silent --show-error --location "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" --output /usr/local/bin/kubectl
-    # BusyBox fournit l'option POSIX courte `-c`, mais pas l'option GNU `--check`.
-    - echo "${KUBECTL_AMD64_SHA256}  /usr/local/bin/kubectl" | sha256sum -c
-    - chmod 0755 /usr/local/bin/kubectl
   script:
     - 'test -s "$KUBECONFIG"'
-    - >-
-      sh scripts/ci/verify_kubernetes.sh
-      --context "$KUBE_CONTEXT"
-      --namespace microcrm
-      --release microcrm
-      --expected-host microcrm.example.invalid
+    - bash scripts/ci/smoke_deployment.sh --namespace "$KUBE_NAMESPACE" --context "$KUBE_CONTEXT"
+
+# Staging est contrôlé uniquement après l'upgrade Helm de la pipeline Web dev.
+verify:deployment:staging:
+  extends: .verify:deployment:http
+  needs:
+    - job: deploy:helm:staging
+  variables:
+    KUBE_NAMESPACE: microcrm-staging
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
+
+# La production est contrôlée après la promotion Helm manuelle d'un tag SemVer.
+verify:deployment:production:
+  extends: .verify:deployment:http
+  needs:
+    - job: deploy:helm:aws
+  variables:
+    KUBE_NAMESPACE: microcrm-prod
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-  allow_failure: false

@@ -1,0 +1,1 @@
+Comment les EC2/K3s sont configurés ?
