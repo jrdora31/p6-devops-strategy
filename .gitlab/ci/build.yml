@@ -4,10 +4,23 @@ build:frontend:
   extends: .frontend-node
   stage: build
   needs:
-    # `needs` crée une dépendance explicite et peut raccourcir le pipeline.
-    - job: test:frontend
-      # Le build relance sa propre compilation et n'utilise pas les rapports du test.
+    # Les contrôles bloquants précèdent toute compilation afin d'échouer tôt.
+    - job: quality:shellcheck
       artifacts: false
+    - job: quality:trivy:repository
+      artifacts: false
+    - job: quality:trivy:kubernetes
+      artifacts: false
+    - job: quality:trivy:iac
+      artifacts: false
+    # Ces contrôles n'existent que dans certains parcours ; ils restent requis
+    # lorsqu'ils sont créés par leurs règles.
+    - job: quality:sonarqube
+      artifacts: false
+      optional: true
+    - job: quality:terraform:plan
+      artifacts: false
+      optional: true
   script:
     - bash scripts/ci/build.sh --component frontend
   artifacts:
@@ -21,8 +34,20 @@ build:backend:
   extends: .backend-java
   stage: build
   needs:
-    - job: test:backend
+    - job: quality:shellcheck
       artifacts: false
+    - job: quality:trivy:repository
+      artifacts: false
+    - job: quality:trivy:kubernetes
+      artifacts: false
+    - job: quality:trivy:iac
+      artifacts: false
+    - job: quality:sonarqube
+      artifacts: false
+      optional: true
+    - job: quality:terraform:plan
+      artifacts: false
+      optional: true
   script:
     - bash scripts/ci/build.sh --component backend
   artifacts:
