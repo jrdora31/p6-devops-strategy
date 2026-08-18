@@ -110,89 +110,54 @@ cd back
 
 ### Images Docker
 
-#### Client
-
-##### Construire l'image
-
-```shell
-docker build --target front -t orion-microcrm-front:latest .
-```
-
-##### Exécuter l'image
+La CI construit deux images distinctes. Les builds applicatifs doivent être
+produits avant les images :
 
 ```shell
-docker run -it --rm -p 80:80 -p 443:443 orion-microcrm-front:latest
+bash scripts/ci/build.sh --component all
+docker build --file misc/docker/frontend.Dockerfile --tag microcrm-frontend:local .
+docker build --file misc/docker/backend.Dockerfile --tag microcrm-backend:local .
 ```
 
-L'application sera disponible sur https://localhost.
+Le frontend appelle l’API avec la route relative `/api`. Caddy transmet cette
+route au conteneur backend par son nom de service ; aucune adresse IP n’est
+intégrée au code.
 
-#### Serveur
-
-##### Construire l'image
+Le smoke test local démarre les images avec PostgreSQL, vérifie les
+healthchecks et exécute un parcours de création et de lecture :
 
 ```shell
-docker build --target back -t orion-microcrm-back:latest .
+sh scripts/ci/smoke.sh \
+  --frontend-image microcrm-frontend:local \
+  --backend-image microcrm-backend:local \
+  --database-image postgres:17.10-alpine3.23
 ```
-
-##### Exécuter l'image
-
-```shell
-docker run -it --rm -p 8080:8080 orion-microcrm-back:latest
-```
-
-L'API sera disponible sur http://localhost:8080.
-
-#### Tout en un
-
-```shell
-docker build --target standalone -t orion-microcrm-standalone:latest .
-```
-
-##### Exécuter l'image
-
-```shell
-docker run -it --rm -p 8080:8080 -p 80:80 -p 443:443 orion-microcrm-standalone:latest
-```
-
-L'application sera disponible sur https://localhost et l'API sur http://localhost:8080.
-
 
 ## Documentation
 
-Pour reprendre le projet depuis un clone et effectuer un premier déploiement sur AWS :
-
-→ [`docs/GET_STARTED.md`](./docs/GET_STARTED.md)
-
-### Stack
-
-La stack technique complète du projet est documentée dans [`docs/stack.md`](./docs/stack.md).
+Pour reprendre le projet depuis un clone et effectuer un premier déploiement
+sur AWS, consulter [`DOCS/GET-STARTED.md`](./DOCS/GET-STARTED.md).
 
 ### Architecture et infrastructure
 
-- [`docs/schema_architecture_aws.md`](./docs/schema_architecture_aws.md) — Vue détaillée de l’architecture AWS et des interactions entre les composants.
-- [`docs/infrastructure/terraform.md`](./docs/infrastructure/terraform.md) — Provisionnement de l’infrastructure AWS avec Terraform.
-- [`docs/infrastructure/ansible.md`](./docs/infrastructure/ansible.md) — Configuration des instances et du cluster K3s avec Ansible.
-- [`docs/infrastructure/helm.md`](./docs/infrastructure/helm.md) — Déploiement et configuration de MicroCRM dans K3s avec Helm.
+- [`DOCS/stack.md`](./DOCS/stack.md) — Stack technique du projet.
+- [`DOCS/schema_architecture_aws.md`](./DOCS/schema_architecture_aws.md) — Architecture AWS et interactions entre les composants.
+- [`DOCS/infrastructure/terraform.md`](./DOCS/infrastructure/terraform.md) — Provisionnement AWS avec Terraform.
+- [`DOCS/infrastructure/ansible.md`](./DOCS/infrastructure/ansible.md) — Configuration de l’instance et du cluster K3s.
+- [`DOCS/infrastructure/helm.md`](./DOCS/infrastructure/helm.md) — Déploiement de MicroCRM dans K3s.
 
-### CI/CD
+### CI/CD et maintenance
 
-- [`docs/ci-cd/pipeline.md`](./docs/ci-cd/pipeline.md) — Fonctionnement et organisation de la pipeline GitLab CI/CD.
-- [`docs/ci-cd/deployment-strategy.md`](./docs/ci-cd/deployment-strategy.md) — Stratégie de release, canary, promotion et déclenchement du rollback.
+- [`DOCS/ci-cd/pipeline.md`](./DOCS/ci-cd/pipeline.md) — Organisation de la pipeline GitLab CI/CD.
+- [`DOCS/ci-cd/deployment-strategy.md`](./DOCS/ci-cd/deployment-strategy.md) — Release, promotion et rollback.
+- [`DOCS/Maintenance/backup-recovery.md`](./DOCS/Maintenance/backup-recovery.md) — Sauvegarde et restauration.
+- [`DOCS/Maintenance/rollback.md`](./DOCS/Maintenance/rollback.md) — Retour à une version précédente.
+- [`DOCS/Maintenance/supervision.md`](./DOCS/Maintenance/supervision.md) — Supervision CloudWatch.
 
-### Qualité
+### Qualité et scripts
 
-- [`docs/quality/testing.md`](./docs/quality/testing.md) — Stratégie de tests, couverture et critères de validation.
-- [`docs/quality/security.md`](./docs/quality/security.md) — Sécurité, gestion des secrets, scans et contrôles d’accès.
-- [`docs/quality/performance.md`](./docs/quality/performance.md) — Tests de performance, métriques DORA, résultats et optimisations.
-
-### Maintenance
-
-- [`docs/Maintenance/supervision.md`](./docs/Maintenance/supervision.md) — Supervision CloudWatch, métriques, logs et alertes.
-- [`docs/Maintenance/backup-recovery.md`](./docs/Maintenance/backup-recovery.md) — Stratégie de sauvegarde et procédure de restauration.
-- [`docs/Maintenance/rollback.md`](./docs/Maintenance/rollback.md) — Procédure opérationnelle de retour à une version précédente.
-- [`docs/Maintenance/dependency-updates.md`](./docs/Maintenance/dependency-updates.md) — Contrôle et mise à jour des dépendances.
-
-### Scripts d’automatisation
-
-- [`scripts/bootstrap/bootstrap.md`](./scripts/bootstrap/bootstrap.md) — Fonctionnement technique des scripts d’initialisation AWS et GitLab.
-- [`scripts/ci/scripts.md`](./scripts/ci/scripts.md) — Référence des scripts utilisés par la pipeline CI/CD.
+- [`DOCS/quality/testing.md`](./DOCS/quality/testing.md) — Stratégie de tests.
+- [`DOCS/quality/security.md`](./DOCS/quality/security.md) — Sécurité, secrets et scans.
+- [`DOCS/quality/performance.md`](./DOCS/quality/performance.md) — Performance et métriques DORA.
+- [`scripts/bootstrap/bootstrap.md`](./scripts/bootstrap/bootstrap.md) — Initialisation AWS et GitLab.
+- [`scripts/ci/scripts.md`](./scripts/ci/scripts.md) — Scripts utilisés par la pipeline.

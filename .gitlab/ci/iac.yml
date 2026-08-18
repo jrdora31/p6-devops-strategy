@@ -152,9 +152,8 @@ deploy:terraform:apply:
   allow_failure: false
 
 # Le destroy est une action séparée, manuelle et sérialisée. La variable
-# TF_DESTROY_CONFIRM est préremplie à false dans le formulaire de pipeline ;
-# elle doit être passée à true uniquement pour une session autorisée, puis le
-# job manuel doit encore être lancé explicitement.
+# TF_DESTROY_CONFIRM et la confirmation native GitLab constituent deux
+# garde-fous complémentaires avant la destruction de l'environnement.
 deploy:terraform:destroy:
   extends: .terraform:aws-oidc
   stage: terraform
@@ -164,6 +163,7 @@ deploy:terraform:destroy:
   environment:
     name: aws-poc-infrastructure
     action: stop
+  manual_confirmation: "Confirmer la destruction complète de l'environnement AWS MicroCRM"
   script:
     - test "$TF_DESTROY_CONFIRM" = "true"
     - terraform -chdir=infrastructure/terraform init -reconfigure
@@ -178,7 +178,11 @@ deploy:terraform:destroy:
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+    # Sur main, le job est disponible après chaque pipeline de déploiement.
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+    # `dev` conserve le cycle Web explicitement demandé pour les essais IaC.
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
       when: manual
   # Le destroy reste protégé par son lancement manuel et
   # TF_DESTROY_CONFIRM=true, mais son absence ne bloque pas le stage verify.
