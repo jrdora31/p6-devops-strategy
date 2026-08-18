@@ -2,7 +2,7 @@
 # même cluster K3s. Les namespaces et les values isolent staging et production.
 .deploy:helm:k3s:
   image:
-    name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
+    name: alpine/helm:3.18.6
     entrypoint: [""]
   stage: helm
   needs:
@@ -81,7 +81,7 @@ deploy:helm:staging:
 # reste séparé du déploiement normal afin qu'aucun rollback ne soit automatique.
 deploy:helm:rollback:staging:
   image:
-    name: alpine/helm:3.18.6@sha256:c6d8088ddb279625a2e1ca3b08b22c18c946d1f65c8b810f28f1597435a1134c
+    name: alpine/helm:3.18.6
     entrypoint: [""]
   stage: helm
   needs:
