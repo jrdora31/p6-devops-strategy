@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Prépare un résultat de pipeline et peut l'envoyer à un webhook.
+"""Prépare une notification CI et peut l'envoyer à Slack.
 
 Le comportement par défaut reste sans effet externe : le script construit un
 JSON et l'écrit sur stdout. L'appel réseau n'est activé que si l'utilisateur
@@ -17,6 +17,21 @@ from typing import Any
 # `choices` dans argparse refusera tout état hors de cette liste avant même
 # l'exécution de la logique métier.
 ALLOWED_STATUSES = ("success", "failed", "canceled", "running")
+ALLOWED_EVENTS = ("pipeline", "deployment", "vulnerability", "rollback")
+
+EVENT_LABELS = {
+    "pipeline": "Pipeline",
+    "deployment": "Déploiement",
+    "vulnerability": "Contrôle de vulnérabilités",
+    "rollback": "Rollback",
+}
+
+STATUS_ICONS = {
+    "success": ":white_check_mark:",
+    "failed": ":red_circle:",
+    "canceled": ":black_circle:",
+    "running": ":large_blue_circle:",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -29,6 +44,8 @@ def parse_args() -> argparse.Namespace:
         description="Normalise et transmet éventuellement un résultat de pipeline."
     )
     parser.add_argument("--status", required=True, choices=ALLOWED_STATUSES)
+    parser.add_argument("--event", default="pipeline", choices=ALLOWED_EVENTS)
+    parser.add_argument("--job", default="", help="Nom du job GitLab concerné.")
     parser.add_argument("--pipeline-id", required=True)
     parser.add_argument("--pipeline-url", required=True)
     parser.add_argument("--ref", required=True)
@@ -41,25 +58,24 @@ def parse_args() -> argparse.Namespace:
 
 
 def build_payload(args: argparse.Namespace) -> dict[str, Any]:
-    """Construire un message indépendant du futur canal de notification.
+    """Construire le JSON attendu par un Incoming Webhook Slack.
 
-    La structure reste générique : un futur adaptateur Slack, Teams ou email
-    pourra convertir ce même dictionnaire sans modifier sa construction.
+    Slack utilise le champ ``text`` comme message principal et comme texte de
+    remplacement pour les lecteurs d'écran. Les détails restent volontairement
+    courts : le lien GitLab donne accès aux logs complets sans les recopier dans
+    le canal.
     """
+    event_label = EVENT_LABELS[args.event]
+    job_suffix = f" — job `{args.job}`" if args.job else ""
+    text = (
+        f"{STATUS_ICONS[args.status]} {event_label} *{args.status}*{job_suffix}\n"
+        f"Pipeline <{args.pipeline_url}|#{args.pipeline_id}> sur `{args.ref}` "
+        f"(`{args.commit[:8]}`)"
+    )
     return {
-        "status": args.status,
-        "pipeline": {
-            "id": args.pipeline_id,
-            "url": args.pipeline_url,
-        },
-        "ref": args.ref,
-        "commit": args.commit,
-        # Les huit premiers caractères suffisent pour une lecture humaine, tandis
-        # que le champ `commit` ci-dessus conserve le SHA complet pour la preuve.
-        "text": (
-            f"Pipeline {args.pipeline_id} {args.status} "
-            f"sur {args.ref} ({args.commit[:8]})"
-        ),
+        # Ne jamais ajouter le webhook à ce dictionnaire : ce contenu est affiché
+        # dans les logs CI avant l'envoi et ne doit contenir aucun secret.
+        "text": text,
     }
 
 
