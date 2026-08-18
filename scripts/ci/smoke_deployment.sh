@@ -47,9 +47,14 @@ frontend_deployment="$(kubectl --context "$kube_context" --namespace "$namespace
   --output=jsonpath='{.items[0].metadata.name}')"
 [[ -n "$frontend_deployment" ]] || { echo "Deployment frontend introuvable" >&2; exit 1; }
 
-# La requête passe par le reverse proxy de l'image réellement servie par Helm.
+# La première requête confirme que le frontend Caddy sert bien sa page.
 kubectl --context "$kube_context" --namespace "$namespace" \
   exec "deployment/$frontend_deployment" --container frontend -- \
-  wget --quiet --output-document=- http://127.0.0.1/api/persons >/dev/null
+  wget --quiet --output-document=/dev/null http://127.0.0.1/
+
+# La seconde traverse Caddy vers le backend déployé et vérifie l'API.
+kubectl --context "$kube_context" --namespace "$namespace" \
+  exec "deployment/$frontend_deployment" --container frontend -- \
+  wget --quiet --output-document=/dev/null http://127.0.0.1/api/persons
 
 echo "Smoke HTTP du déploiement Kubernetes réussi dans $namespace"
