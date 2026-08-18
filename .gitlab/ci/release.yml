@@ -307,10 +307,7 @@ release:bundle:
       ".ci/release/release-manifest.json"
       ".ci/release/images.env"
       ".ci/packages/$CHART_FILE"; do
-        curl --fail --silent --show-error
-        --header "JOB-TOKEN: $CI_JOB_TOKEN"
-        --upload-file "$FILE"
-        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/$RELEASE_PACKAGE_NAME/$RELEASE_VERSION/$(basename "$FILE")";
+        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "$FILE" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/$RELEASE_PACKAGE_NAME/$RELEASE_VERSION/$(basename "$FILE")";
       done
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-rc\.[1-9][0-9]*)?$/'
