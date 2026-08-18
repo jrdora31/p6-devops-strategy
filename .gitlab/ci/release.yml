@@ -62,13 +62,11 @@ release:trivy:image:frontend:
         --commit "$CI_COMMIT_SHA" --send-webhook-env SLACK_WEBHOOK_URL;
       fi
   rules:
-    # Les scans d'image sont exécutés sur MR, planification, tag SemVer et branche
-    # principale. La regex refuse les tags qui ne suivent pas le format de release.
+    # Les scans portent sur l'image construite dans cette pipeline. Un tag ne
+    # reconstruit pas : il réutilise les images SHA déjà scannées et publiées.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_COMMIT_BRANCH == "dev"'
-    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 # Équivalent du job précédent pour l'image Java backend.
 release:trivy:image:backend:
@@ -129,10 +127,9 @@ release:trivy:image:backend:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
     - if: '$CI_COMMIT_BRANCH == "dev"'
-    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
-# Publie les deux images seulement après construction et réussite des deux scans.
+# Publie les images SHA de `dev`. Une RC résout ces images sans rebuild ; une
+# finale reprend exclusivement les digests du manifeste RC désigné par son tag.
 release:images:
   extends: .docker-job
   stage: release
@@ -140,42 +137,68 @@ release:images:
     # Les deux archives Docker sont téléchargées.
     - job: build:image:frontend
       artifacts: true
+      optional: true
     - job: build:image:backend
       artifacts: true
+      optional: true
     # Les scans imposent une relation d'ordre, mais leurs rapports ne sont pas requis ici.
     - job: release:trivy:image:frontend
       artifacts: false
+      optional: true
     - job: release:trivy:image:backend
       artifacts: false
+      optional: true
     # Garde explicite : les images ne sont publiées qu'après le smoke local.
     - job: verify:images
       artifacts: false
+      optional: true
   script:
-    # Restaure dans le daemon dind les images transportées sous forme d'artifacts.
-    - docker load --input .ci/images/frontend.tar
-    - docker load --input .ci/images/backend.tar
     # Le mot de passe passe sur l'entrée standard et n'apparaît pas dans la commande.
     - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
-    - docker push "$FRONTEND_IMAGE"
-    - docker push "$BACKEND_IMAGE"
+    - >-
+      if printf '%s' "$CI_COMMIT_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[1-9][0-9]*$'; then
+        docker pull "$FRONTEND_IMAGE";
+        docker pull "$BACKEND_IMAGE";
+      elif printf '%s' "$CI_COMMIT_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+        apk add --no-cache curl git python3;
+        PROMOTED_FROM_TAG="$(printf '%s\n' "${CI_COMMIT_TAG_MESSAGE:-}" | sed -n 's/^Promote-From: \(v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*-rc\.[1-9][0-9]*\)$/\1/p' | head -n 1)";
+        test -n "$PROMOTED_FROM_TAG" || { echo "Tag final annoté requis avec Promote-From: vX.Y.Z-rc.N" >&2; exit 1; };
+        RELEASE_BASE_URL="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/microcrm-release/$PROMOTED_FROM_TAG";
+        mkdir -p .ci/release;
+        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/release-manifest.json" --output .ci/release/source-manifest.json;
+        python3 -c 'import json,re,sys; p=json.load(open(sys.argv[1], encoding="utf-8")); expected=sys.argv[2]; final=sys.argv[3]; rc=re.fullmatch(r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.([1-9][0-9]*)", p.get("version", "")); stable=re.fullmatch(r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", final); digest=re.compile(r"^.+@sha256:[0-9a-f]{64}$"); commit=p.get("commit", ""); images=p.get("images", {}); ok=p.get("version")==expected and rc and stable and rc.groups()[:3]==stable.groups() and re.fullmatch(r"[0-9a-f]{40}", commit) and all(digest.fullmatch(images.get(k, "")) for k in ("frontend", "backend")); ok or sys.exit("Manifeste RC incompatible ou invalide"); content="FRONTEND_IMAGE_DIGEST={}\nBACKEND_IMAGE_DIGEST={}\nPROMOTED_FROM_TAG={}\nPROMOTED_FROM_COMMIT={}\n".format(images["frontend"], images["backend"], expected, commit); open(".ci/release/images.env", "w", encoding="utf-8").write(content)' .ci/release/source-manifest.json "$PROMOTED_FROM_TAG" "$CI_COMMIT_TAG";
+        . .ci/release/images.env;
+        git fetch --quiet origin "refs/tags/$PROMOTED_FROM_TAG:refs/tags/$PROMOTED_FROM_TAG";
+        test "$(git rev-list -n 1 "$PROMOTED_FROM_TAG")" = "$PROMOTED_FROM_COMMIT" || { echo "Le tag RC ne correspond pas au manifeste" >&2; exit 1; };
+        git diff --quiet "$PROMOTED_FROM_COMMIT" "$CI_COMMIT_SHA" -- front back misc/docker .dockerignore scripts/ci/build.sh scripts/ci/common.sh scripts/ci/dependencies.sh .gitlab/ci/build.yml .gitlab/ci/common.yml || { echo "Des fichiers influençant les images ont changé depuis la RC" >&2; exit 1; };
+        docker pull "$FRONTEND_IMAGE_DIGEST";
+        docker pull "$BACKEND_IMAGE_DIGEST";
+      else
+        docker load --input .ci/images/frontend.tar;
+        docker load --input .ci/images/backend.tar;
+        docker push "$FRONTEND_IMAGE";
+        docker push "$BACKEND_IMAGE";
+      fi
     - mkdir -p .ci/release
     # Après le push, Docker connaît les digests immuables attribués par le registre.
-    # Le premier `>` crée le fichier ; le second `>>` ajoute la ligne backend.
-    - docker image inspect "$FRONTEND_IMAGE" --format 'FRONTEND_IMAGE_DIGEST={{index .RepoDigests 0}}' > .ci/release/images.env
-    - docker image inspect "$BACKEND_IMAGE" --format 'BACKEND_IMAGE_DIGEST={{index .RepoDigests 0}}' >> .ci/release/images.env
+    # Une finale possède déjà le fichier issu du manifeste RC.
+    - >-
+      if [ ! -s .ci/release/images.env ]; then
+        docker image inspect "$FRONTEND_IMAGE" --format 'FRONTEND_IMAGE_DIGEST={{index .RepoDigests 0}}' > .ci/release/images.env;
+        docker image inspect "$BACKEND_IMAGE" --format 'BACKEND_IMAGE_DIGEST={{index .RepoDigests 0}}' >> .ci/release/images.env;
+      fi
   artifacts:
     expire_in: 30 days
     reports:
       # Un rapport dotenv réinjecte ces deux variables dans les jobs dépendants.
       dotenv: .ci/release/images.env
     paths:
-      - .ci/release/images.env
+      - .ci/release/
   rules:
-    # La publication alimente staging depuis `dev`, puis les releases depuis
-    # `main` ou un tag SemVer.
+    # `dev` construit/publie. Les tags RC/finales ne font que résoudre ou
+    # promouvoir des digests immuables déjà présents dans le registre.
     - if: '$CI_COMMIT_BRANCH == "dev"'
-    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-rc\.[1-9][0-9]*)?$/'
 
 # Génère la preuve JSON reliant version, commit, pipeline et digests publiés.
 release:manifest:
@@ -195,13 +218,15 @@ release:manifest:
       --pipeline-url "$CI_PIPELINE_URL"
       --frontend-image "$FRONTEND_IMAGE_DIGEST"
       --backend-image "$BACKEND_IMAGE_DIGEST"
+      --source-version "${PROMOTED_FROM_TAG:-}"
+      --source-commit "${PROMOTED_FROM_COMMIT:-}"
   artifacts:
     expire_in: 30 days
     paths:
       - .ci/release/release-manifest.json
   rules:
     # Un manifeste de release n'a de sens que pour un tag SemVer.
-    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-rc\.[1-9][0-9]*)?$/'
 
 # Crée l'objet visible dans GitLab > Deploy > Releases après validation du
 # manifeste. Le tag reste créé volontairement par le maintainer : ce job
@@ -210,24 +235,26 @@ release:create:
   image: registry.gitlab.com/gitlab-org/cli:v1.109.0
   stage: release
   needs:
-    - job: release:manifest
-      artifacts: true
+    - job: release:bundle
+      artifacts: false
   script:
     # Empêche la création d'une release si la preuve reliant version, commit,
     # pipeline et digests n'a pas été produite correctement.
-    - test -s .ci/release/release-manifest.json
     - echo "Création de la release GitLab $CI_COMMIT_TAG"
   release:
     tag_name: '$CI_COMMIT_TAG'
     name: 'MicroCRM $CI_COMMIT_TAG'
-    description: 'Release automatisée de MicroCRM. Le pipeline $CI_PIPELINE_ID conserve le manifeste et les digests des images.'
+    description: 'Release Build Once, Promote Many. Le manifeste relie ce tag au commit, au pipeline et aux digests immuables déployables sans rebuild.'
     assets:
       links:
         - name: 'Pipeline de release'
           url: '$CI_PIPELINE_URL'
           link_type: other
+        - name: 'Manifeste de release'
+          url: '$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/microcrm-release/$CI_COMMIT_TAG/release-manifest.json'
+          link_type: other
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-rc\.[1-9][0-9]*)?$/'
 
 # Produit une archive Helm versionnée, réutilisable par le job de deployment.
 release:helm:package:
@@ -252,6 +279,38 @@ release:helm:package:
     paths:
       - .ci/packages/microcrm-*.tgz
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-rc\.[1-9][0-9]*)?$/'
     - if: '$CI_COMMIT_BRANCH == "dev"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# Archive durablement les preuves et le chart dans le Generic Package Registry.
+# Ces fichiers restent téléchargeables lors du retry d'un ancien job de tag,
+# indépendamment de l'expiration des artifacts de sa pipeline.
+release:bundle:
+  image: curlimages/curl:8.16.0
+  stage: release
+  needs:
+    - job: release:manifest
+      artifacts: true
+    - job: release:images
+      artifacts: true
+    - job: release:helm:package
+      artifacts: true
+  variables:
+    RELEASE_PACKAGE_NAME: microcrm-release
+  script:
+    - RELEASE_VERSION="$CI_COMMIT_TAG"
+    - CHART_FILE="microcrm-${CI_COMMIT_TAG#v}.tgz"
+    - test -s ".ci/packages/$CHART_FILE"
+    - >-
+      for FILE in
+      ".ci/release/release-manifest.json"
+      ".ci/release/images.env"
+      ".ci/packages/$CHART_FILE"; do
+        curl --fail --silent --show-error
+        --header "JOB-TOKEN: $CI_JOB_TOKEN"
+        --upload-file "$FILE"
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/$RELEASE_PACKAGE_NAME/$RELEASE_VERSION/$(basename "$FILE")";
+      done
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-rc\.[1-9][0-9]*)?$/'

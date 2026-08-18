@@ -25,6 +25,10 @@ SEMVER_PATTERN = re.compile(
 COMMIT_PATTERN = re.compile(r"^[0-9a-f]{7,40}$")
 # Une image déployable doit inclure son registre/nom puis un digest SHA-256 complet.
 DIGEST_PATTERN = re.compile(r"^.+@sha256:[0-9a-f]{64}$")
+FINAL_VERSION_PATTERN = re.compile(r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
+RC_VERSION_PATTERN = re.compile(
+    r"^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)-rc\.([1-9]\d*)$"
+)
 # Le chemin fixe évite qu'un argument utilisateur choisisse une destination sensible.
 OUTPUT_PATH = Path(".ci/release/release-manifest.json")
 
@@ -40,6 +44,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--pipeline-url", required=True)
     parser.add_argument("--frontend-image", required=True, help="Image avec digest")
     parser.add_argument("--backend-image", required=True, help="Image avec digest")
+    parser.add_argument("--source-version", default="", help="RC promue")
+    parser.add_argument("--source-commit", default="", help="Commit de la RC promue")
     return parser.parse_args()
 
 
@@ -53,6 +59,19 @@ def validate(args: argparse.Namespace) -> None:
     for image in (args.frontend_image, args.backend_image):
         if not DIGEST_PATTERN.fullmatch(image):
             raise ValueError(f"Référence d'image sans digest valide : {image}")
+    is_final = FINAL_VERSION_PATTERN.fullmatch(args.version) is not None
+    is_rc = RC_VERSION_PATTERN.fullmatch(args.version) is not None
+    if not (is_final or is_rc):
+        raise ValueError("Seules les RC -rc.N et les versions finales sont publiables")
+    if is_final:
+        source_match = RC_VERSION_PATTERN.fullmatch(args.source_version)
+        final_match = FINAL_VERSION_PATTERN.fullmatch(args.version)
+        if not source_match or not COMMIT_PATTERN.fullmatch(args.source_commit):
+            raise ValueError("Une release finale doit identifier sa RC et son commit source")
+        if source_match.groups()[:3] != final_match.groups():
+            raise ValueError("La RC source ne correspond pas à la version finale")
+    elif args.source_version or args.source_commit:
+        raise ValueError("Une RC ne peut pas promouvoir une autre release")
 
 
 def safe_path(path: Path) -> str:
@@ -96,6 +115,11 @@ def main() -> int:
             "backend": args.backend_image,
         },
     }
+    if args.source_version:
+        manifest["promotion"] = {
+            "sourceVersion": args.source_version,
+            "sourceCommit": args.source_commit,
+        }
 
     # Le chemin est fixe, puis canonicalisé et contrôlé avant tout accès disque.
     try:
