@@ -27,12 +27,9 @@
         CHART_VERSION="${CI_COMMIT_TAG#v}";
         RELEASE_BASE_URL="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/microcrm-release/$RELEASE_VERSION";
         mkdir -p .ci/release .ci/packages;
-        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN"
-        "$RELEASE_BASE_URL/images.env" --output .ci/release/images.env;
-        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN"
-        "$RELEASE_BASE_URL/release-manifest.json" --output .ci/release/release-manifest.json;
-        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN"
-        "$RELEASE_BASE_URL/microcrm-$CHART_VERSION.tgz" --output ".ci/packages/microcrm-$CHART_VERSION.tgz";
+        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/images.env" --output .ci/release/images.env;
+        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/release-manifest.json" --output .ci/release/release-manifest.json;
+        curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/microcrm-$CHART_VERSION.tgz" --output ".ci/packages/microcrm-$CHART_VERSION.tgz";
         . .ci/release/images.env;
         export FRONTEND_IMAGE_DIGEST BACKEND_IMAGE_DIGEST;
         test -s .ci/release/release-manifest.json;
@@ -77,15 +74,7 @@
     - >-
       if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
         apk add --no-cache python3 >/dev/null &&
-        python3 scripts/ci/notify.py
-        --event deployment
-        --status "$CI_JOB_STATUS"
-        --job "$CI_JOB_NAME"
-        --pipeline-id "$CI_PIPELINE_ID"
-        --pipeline-url "$CI_PIPELINE_URL"
-        --ref "$CI_COMMIT_REF_NAME"
-        --commit "$CI_COMMIT_SHA"
-        --send-webhook-env SLACK_WEBHOOK_URL;
+        python3 scripts/ci/notify.py --event deployment --status "$CI_JOB_STATUS" --job "$CI_JOB_NAME" --pipeline-id "$CI_PIPELINE_ID" --pipeline-url "$CI_PIPELINE_URL" --ref "$CI_COMMIT_REF_NAME" --commit "$CI_COMMIT_SHA" --send-webhook-env SLACK_WEBHOOK_URL;
       else
         echo "Notification Slack ignorée : SLACK_WEBHOOK_URL indisponible.";
       fi
