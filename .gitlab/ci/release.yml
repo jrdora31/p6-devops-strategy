@@ -7,9 +7,6 @@ release:trivy:image:frontend:
     - job: build:image:frontend
       # L'archive `.ci/images/frontend.tar` est nécessaire au scan hors registre.
       artifacts: true
-    # Le smoke local valide l'assemblage des trois conteneurs avant le scan.
-    - job: verify:images
-      artifacts: false
   script:
     - mkdir -p .ci/reports/security
     - 'if [ -s .ci/images/frontend.tar ]; then FRONTEND_SCAN_SOURCE="--input .ci/images/frontend.tar"; else FRONTEND_SCAN_SOURCE="$FRONTEND_IMAGE"; export TRIVY_USERNAME="$CI_REGISTRY_USER" TRIVY_PASSWORD="$CI_REGISTRY_PASSWORD"; fi'
@@ -79,8 +76,6 @@ release:trivy:image:backend:
   needs:
     - job: build:image:backend
       artifacts: true
-    - job: verify:images
-      artifacts: false
   script:
     - mkdir -p .ci/reports/security
     - 'if [ -s .ci/images/backend.tar ]; then BACKEND_SCAN_SOURCE="--input .ci/images/backend.tar"; else BACKEND_SCAN_SOURCE="$BACKEND_IMAGE"; export TRIVY_USERNAME="$CI_REGISTRY_USER" TRIVY_PASSWORD="$CI_REGISTRY_PASSWORD"; fi'
