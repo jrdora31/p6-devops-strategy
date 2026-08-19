@@ -15,6 +15,11 @@ test:frontend:
     expire_in: 7 days
     paths:
       - front/coverage/
+  rules:
+    # Un tag SemVer promeut une image SHA déjà testée sur sa branche source.
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-rc\.[1-9][0-9]*)?$/'
+      when: never
+    - when: on_success
 
 # Exécute les tests JUnit et prépare les données de couverture/analyse Java.
 test:backend:
@@ -36,6 +41,11 @@ test:backend:
       - back/build/classes/java/main/
       - back/build/classes/java/test/
       - back/build/sonar-libraries/
+  rules:
+    # Un tag SemVer promeut une image SHA déjà testée sur sa branche source.
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-rc\.[1-9][0-9]*)?$/'
+      when: never
+    - when: on_success
 
 # Vérifie rapidement les interfaces et garde-fous des scripts Bash.
 test:scripts:bash:
