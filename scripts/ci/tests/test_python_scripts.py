@@ -71,7 +71,7 @@ def notification_arguments() -> list[str]:
         "--event",
         "deployment",
         "--job",
-        "deploy:helm:staging",
+        "deploy:helm:staging:web",
         "--pipeline-id",
         "12345",
         "--pipeline-url",
@@ -158,7 +158,7 @@ def test_notification_is_only_printed_by_default() -> None:
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert "Déploiement *success*" in payload["text"]
-    assert "deploy:helm:staging" in payload["text"]
+    assert "deploy:helm:staging:web" in payload["text"]
     assert "#12345" in payload["text"]
     assert "a" * 8 in payload["text"]
 

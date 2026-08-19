@@ -4,15 +4,14 @@ verify:images:
   extends: .docker-job
   stage: release
   needs:
-    # Les archives Docker sont obligatoires pour restaurer les images dans ce job.
     - job: build:image:frontend
       artifacts: true
     - job: build:image:backend
       artifacts: true
   script:
-    # Chaque job Docker possède un daemon isolé : il faut donc recharger les archives.
-    - docker load --input .ci/images/frontend.tar
-    - docker load --input .ci/images/backend.tar
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
+    - 'if [ -s .ci/images/frontend.tar ]; then docker load --input .ci/images/frontend.tar; else docker pull "$FRONTEND_IMAGE"; fi'
+    - 'if [ -s .ci/images/backend.tar ]; then docker load --input .ci/images/backend.tar; else docker pull "$BACKEND_IMAGE"; fi'
     # Le script crée un réseau temporaire, attend les healthchecks puis teste `/api`.
     - >-
       sh scripts/ci/smoke.sh
@@ -20,11 +19,14 @@ verify:images:
       --backend-image "$BACKEND_IMAGE"
       --database-image "$POSTGRES_IMAGE"
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'
       when: never
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.[1-9][0-9]*$/'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: never
-    - when: on_success
 
 # Base commune aux contrôles HTTP exécutés dans le pod frontend réellement
 # déployé. Le contexte GitLab Agent évite toute adresse publique codée en dur.
@@ -49,7 +51,7 @@ verify:images:
 verify:deployment:staging:
   extends: .verify:deployment:http
   needs:
-    - job: deploy:helm:staging
+    - job: deploy:helm:staging:web
   environment:
     name: aws-poc-staging
   variables:
@@ -61,7 +63,7 @@ verify:deployment:staging:
 verify:deployment:release:staging:
   extends: .verify:deployment:http
   needs:
-    - job: deploy:helm:release:staging
+    - job: deploy:helm:staging:release-or-rollback
   environment:
     name: aws-poc-staging
   variables:
@@ -73,7 +75,7 @@ verify:deployment:release:staging:
 verify:deployment:production:
   extends: .verify:deployment:http
   needs:
-    - job: deploy:helm:aws
+    - job: deploy:helm:production:release-or-rollback
   environment:
     name: aws-poc-production
   variables:

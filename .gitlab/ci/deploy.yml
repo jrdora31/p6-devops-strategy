@@ -82,12 +82,12 @@
 # `dev` constitue l'environnement d'intégration : les pipelines publient les
 # images contrôlées. Le déploiement staging s'exécute uniquement dans une
 # pipeline Web autorisée à provisionner l'infrastructure AWS éphémère.
-deploy:helm:staging:
+deploy:helm:staging:web:
   extends: .deploy:helm:k3s
   needs:
     - job: release:images
       artifacts: true
-    - job: release:helm:package
+    - job: package:helm:chart
       artifacts: true
     - job: deploy:ansible:apply
       optional: true
@@ -105,7 +105,7 @@ deploy:helm:staging:
 
 # Promotion ou rollback de staging par release : ce job ne dépend que du
 # bundle durable du tag, jamais d'artifacts de build temporaires.
-deploy:helm:release:staging:
+deploy:helm:staging:release-or-rollback:
   extends: .deploy:helm:k3s
   needs:
     - job: release:bundle
@@ -123,7 +123,7 @@ deploy:helm:release:staging:
 # La production est une promotion explicite d'un tag SemVer. Le job manuel
 # recharge les images et le chart archivés pour ce tag. Relancer le job d'une
 # ancienne pipeline constitue le rollback vers cette release exacte.
-deploy:helm:aws:
+deploy:helm:production:release-or-rollback:
   extends: .deploy:helm:k3s
   needs:
     - job: release:bundle

@@ -1,9 +1,71 @@
+# Vérifie une seule fois les deux tags SHA dans le Registry. Une erreur réseau
+# ou d'authentification bloque le job au lieu d'être confondue avec une absence.
+check:registry:images:
+  extends: .docker-job
+  stage: build
+  needs:
+    - job: quality:shellcheck
+      artifacts: false
+    - job: quality:trivy:repository
+      artifacts: false
+    - job: quality:trivy:kubernetes
+      artifacts: false
+    - job: quality:trivy:iac
+      artifacts: false
+    - job: quality:sonarqube
+      artifacts: false
+      optional: true
+    - job: quality:terraform:plan
+      artifacts: false
+      optional: true
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
+    - mkdir -p .ci/images
+    - >-
+      check_image() {
+        IMAGE="$1";
+        VARIABLE="$2";
+        ERROR_FILE=".ci/images/${VARIABLE}.error";
+        if docker manifest inspect "$IMAGE" > /dev/null 2> "$ERROR_FILE"; then
+          VALUE=true;
+        elif grep -Eqi 'manifest unknown|no such manifest|not found' "$ERROR_FILE"; then
+          VALUE=false;
+        else
+          echo "Impossible de vérifier $IMAGE dans le Registry" >&2;
+          cat "$ERROR_FILE" >&2;
+          return 1;
+        fi;
+        printf '%s=%s\n' "$VARIABLE" "$VALUE" >> .ci/images/registry.env;
+        echo "$IMAGE existe : $VALUE";
+        rm -f "$ERROR_FILE";
+      };
+      check_image "$FRONTEND_IMAGE" FRONTEND_IMAGE_EXISTS;
+      check_image "$BACKEND_IMAGE" BACKEND_IMAGE_EXISTS
+  artifacts:
+    expire_in: 1 day
+    reports:
+      dotenv: .ci/images/registry.env
+    paths:
+      - .ci/images/registry.env
+  rules: &image_build_rules
+    # Une finale et ses rollbacks utilisent exclusivement le bundle de la RC.
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'
+      when: never
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.[1-9][0-9]*$/'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
 # Construit les fichiers statiques Angular après la réussite des tests frontend.
 build:frontend:
   # Hérite de l'image Node, du cache npm et de l'installation des dépendances.
   extends: .frontend-node
   stage: build
   needs:
+    - job: check:registry:images
+      artifacts: true
     # Les contrôles bloquants précèdent toute compilation afin d'échouer tôt.
     - job: quality:shellcheck
       artifacts: false
@@ -21,26 +83,25 @@ build:frontend:
     - job: quality:terraform:plan
       artifacts: false
       optional: true
+  before_script:
+    - cd "$CI_PROJECT_DIR"
+    - 'if [ "$FRONTEND_IMAGE_EXISTS" = "false" ]; then bash scripts/ci/dependencies.sh --component frontend --action install; else echo "Frontend : dépendances et compilation ignorées, image SHA présente"; fi'
   script:
-    - bash scripts/ci/build.sh --component frontend
+    - 'if [ "$FRONTEND_IMAGE_EXISTS" = "false" ]; then bash scripts/ci/build.sh --component frontend; else echo "Frontend : build Angular ignoré"; fi'
   artifacts:
     # Ces fichiers servent seulement aux jobs suivants, pas à un archivage durable.
     expire_in: 1 day
     paths:
       - front/dist/microcrm/browser/
-  rules:
-    # Un tag promeut les images SHA déjà publiées par sa branche source.
-    - if: '$CI_COMMIT_TAG'
-      when: never
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: never
-    - when: on_success
+  rules: *image_build_rules
 
 # Produit le JAR Spring Boot utilisé ensuite pour fabriquer l'image backend.
 build:backend:
   extends: .backend-java
   stage: build
   needs:
+    - job: check:registry:images
+      artifacts: true
     - job: quality:shellcheck
       artifacts: false
     - job: quality:trivy:repository
@@ -55,63 +116,78 @@ build:backend:
     - job: quality:terraform:plan
       artifacts: false
       optional: true
+  before_script:
+    - cd "$CI_PROJECT_DIR"
+    - 'if [ "$BACKEND_IMAGE_EXISTS" = "false" ]; then chmod +x back/gradlew && bash scripts/ci/dependencies.sh --component backend --action check; else echo "Backend : préparation Gradle ignorée, image SHA présente"; fi'
   script:
-    - bash scripts/ci/build.sh --component backend
+    - 'if [ "$BACKEND_IMAGE_EXISTS" = "false" ]; then bash scripts/ci/build.sh --component backend; else echo "Backend : build Gradle/JAR ignoré"; fi'
   artifacts:
     expire_in: 1 day
     paths:
       - back/build/libs/microcrm-0.0.1-SNAPSHOT.jar
-  rules:
-    - if: '$CI_COMMIT_TAG'
-      when: never
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: never
-    - when: on_success
+  rules: *image_build_rules
 
 # Transforme l'artifact Angular en image Caddy sans recompiler le frontend.
 build:image:frontend:
   extends: .docker-job
   stage: build
   needs:
+    - job: check:registry:images
+      artifacts: true
     - job: build:frontend
       # Télécharge automatiquement `front/dist/...` depuis le job précédent.
       artifacts: true
   script:
-    # `--pull` vérifie l'image de base ; le Dockerfile spécialisé contient
-    # uniquement le runtime frontend déjà compilé.
-    - docker build --pull --file misc/docker/frontend.Dockerfile --tag "$FRONTEND_IMAGE" .
     - mkdir -p .ci/images
-    # Sauvegarde l'image en archive pour la transmettre sans registre entre stages.
-    - docker save --output .ci/images/frontend.tar "$FRONTEND_IMAGE"
+    - >-
+      if [ "$FRONTEND_IMAGE_EXISTS" = "true" ]; then
+        echo "Frontend : image $CI_COMMIT_SHA présente, réutilisation";
+        printf 'FRONTEND_IMAGE_SOURCE=reuse\n' > .ci/images/frontend.env;
+      else
+        test "$FRONTEND_IMAGE_EXISTS" = "false";
+        test -d front/dist/microcrm/browser;
+        echo "Frontend : image $CI_COMMIT_SHA absente, construction";
+        docker build --pull --file misc/docker/frontend.Dockerfile --tag "$FRONTEND_IMAGE" .;
+        docker save --output .ci/images/frontend.tar "$FRONTEND_IMAGE";
+        printf 'FRONTEND_IMAGE_SOURCE=build\n' > .ci/images/frontend.env;
+      fi
   artifacts:
     expire_in: 1 day
     paths:
       - .ci/images/frontend.tar
-  rules:
-    - if: '$CI_COMMIT_TAG'
-      when: never
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: never
-    - when: on_success
+      - .ci/images/frontend.env
+    reports:
+      dotenv: .ci/images/frontend.env
+  rules: *image_build_rules
 
 # Même chaîne pour le JAR backend et son image Java d'exécution.
 build:image:backend:
   extends: .docker-job
   stage: build
   needs:
+    - job: check:registry:images
+      artifacts: true
     - job: build:backend
       artifacts: true
   script:
-    - docker build --pull --file misc/docker/backend.Dockerfile --tag "$BACKEND_IMAGE" .
     - mkdir -p .ci/images
-    - docker save --output .ci/images/backend.tar "$BACKEND_IMAGE"
+    - >-
+      if [ "$BACKEND_IMAGE_EXISTS" = "true" ]; then
+        echo "Backend : image $CI_COMMIT_SHA présente, réutilisation";
+        printf 'BACKEND_IMAGE_SOURCE=reuse\n' > .ci/images/backend.env;
+      else
+        test "$BACKEND_IMAGE_EXISTS" = "false";
+        test -s back/build/libs/microcrm-0.0.1-SNAPSHOT.jar;
+        echo "Backend : image $CI_COMMIT_SHA absente, construction";
+        docker build --pull --file misc/docker/backend.Dockerfile --tag "$BACKEND_IMAGE" .;
+        docker save --output .ci/images/backend.tar "$BACKEND_IMAGE";
+        printf 'BACKEND_IMAGE_SOURCE=build\n' > .ci/images/backend.env;
+      fi
   artifacts:
     expire_in: 1 day
     paths:
       - .ci/images/backend.tar
-  rules:
-    - if: '$CI_COMMIT_TAG'
-      when: never
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: never
-    - when: on_success
+      - .ci/images/backend.env
+    reports:
+      dotenv: .ci/images/backend.env
+  rules: *image_build_rules
