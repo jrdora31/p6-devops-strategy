@@ -178,11 +178,8 @@ deploy:terraform:destroy:
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
-    # Sur main, le job est disponible après chaque pipeline de déploiement.
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      when: manual
-    # `dev` conserve le cycle Web explicitement demandé pour les essais IaC.
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
+    # Uniquement pour une pipeline Web sur les branches de déploiement autorisées.
+    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
       when: manual
   # Le destroy reste protégé par son lancement manuel et
   # TF_DESTROY_CONFIRM=true, mais son absence ne bloque pas le stage verify.
