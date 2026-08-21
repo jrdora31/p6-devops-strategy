@@ -66,11 +66,4 @@ variables:
 # `local` signifie que GitLab lit ces fichiers dans le même dépôt et au même commit.
 include:
   - local: .gitlab/ci/common.yml
-  - local: .gitlab/ci/iac.yml
-  - local: .gitlab/ci/test.yml
-  - local: .gitlab/ci/quality.yml
-  - local: .gitlab/ci/build.yml
-  - local: .gitlab/ci/release.yml
-  - local: .gitlab/ci/deploy.yml
-  - local: .gitlab/ci/verify.yml
   - local: .gitlab/ci/dora.yml
