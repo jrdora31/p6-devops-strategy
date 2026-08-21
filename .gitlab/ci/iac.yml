@@ -35,9 +35,9 @@ test:terraform:
     TF_IN_AUTOMATION: "true"
     TF_INPUT: "false"
     TF_PLUGIN_CACHE_DIR: "$CI_PROJECT_DIR/.cache/terraform/providers"
-    TF_HTTP_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/microcrm-poc"
-    TF_HTTP_LOCK_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/microcrm-poc/lock"
-    TF_HTTP_UNLOCK_ADDRESS: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/microcrm-poc/lock"
+    # Point d'extension pour le futur découpage staging/production. Tant que le
+    # POC utilise une seule EC2, les deux pipelines Web conservent ce state.
+    TF_STATE_NAME: "microcrm-poc"
     TF_HTTP_LOCK_METHOD: "POST"
     TF_HTTP_UNLOCK_METHOD: "DELETE"
     TF_HTTP_USERNAME: "gitlab-ci-token"
@@ -52,6 +52,13 @@ test:terraform:
       - .cache/terraform/providers/
   before_script:
     - mkdir -p "$TF_PLUGIN_CACHE_DIR" "$CI_PROJECT_DIR/.aws" "$CI_PROJECT_DIR/.ci/reports/terraform"
+    - >-
+      case "$TF_STATE_NAME" in
+        ""|*[!a-z0-9-]*) echo "TF_STATE_NAME doit contenir uniquement des minuscules, chiffres ou tirets"; exit 1 ;;
+      esac
+    - export TF_HTTP_ADDRESS="$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/$TF_STATE_NAME"
+    - export TF_HTTP_LOCK_ADDRESS="$TF_HTTP_ADDRESS/lock"
+    - export TF_HTTP_UNLOCK_ADDRESS="$TF_HTTP_ADDRESS/lock"
     - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - chmod 600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - CLOUDWATCH_AGENT_ENABLED="${CLOUDWATCH_AGENT_ENABLED:-false}"
@@ -76,6 +83,7 @@ quality:terraform:plan:
     - terraform -chdir=infrastructure/terraform init -reconfigure
     - terraform -chdir=infrastructure/terraform plan -no-color -out="$CI_PROJECT_DIR/.terraform-plan"
     - terraform -chdir=infrastructure/terraform show -no-color "$CI_PROJECT_DIR/.terraform-plan" > "$CI_PROJECT_DIR/.ci/reports/terraform/plan.txt"
+    - printf 'TF_PLANNED_STATE_NAME=%s\n' "$TF_STATE_NAME" > "$CI_PROJECT_DIR/.ci/reports/terraform/state.env"
   artifacts:
     when: always
     # Le plan binaire est conservé brièvement : il peut contenir des valeurs
@@ -84,6 +92,8 @@ quality:terraform:plan:
     paths:
       - .terraform-plan
       - .ci/reports/terraform/plan.txt
+    reports:
+      dotenv: .ci/reports/terraform/state.env
   rules:
     - if: '$AWS_PLAN_ROLE_ARN == null || $AWS_PLAN_ROLE_ARN == ""'
       when: never
@@ -110,20 +120,8 @@ deploy:terraform:apply:
   - job: quality:terraform:plan
     artifacts: true
 
-  # Le provisionnement AWS ne doit jamais devancer la chaîne d'images :
-  # GitLab attend donc la construction et les deux validations Trivy avant
-  # de pouvoir exécuter terraform apply.
-  - job: build:image:frontend
-    artifacts: false
-  - job: build:image:backend
-    artifacts: false
-  - job: release:trivy:image:frontend
-    artifacts: false
-  - job: release:trivy:image:backend
-    artifacts: false
-
   # En mode DAG, cette dépendance empêche l'apply de démarrer avant le scan
-  # Trivy IaC, même si le plan Terraform est déjà disponible.
+  # Trivy IaC, sans le coupler aux builds ou releases applicatives.
   - job: quality:trivy:iac
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
@@ -133,6 +131,7 @@ deploy:terraform:apply:
     on_stop: deploy:terraform:destroy
   script:
     - test -f "$CI_PROJECT_DIR/.terraform-plan"
+    - test "$TF_STATE_NAME" = "$TF_PLANNED_STATE_NAME"
     - terraform -chdir=infrastructure/terraform init -reconfigure
     - terraform -chdir=infrastructure/terraform apply -auto-approve "$CI_PROJECT_DIR/.terraform-plan"
     - terraform -chdir=infrastructure/terraform output -json > "$CI_PROJECT_DIR/.ci/reports/terraform/outputs.json"
@@ -167,13 +166,19 @@ deploy:terraform:destroy:
   script:
     - test "$TF_DESTROY_CONFIRM" = "true"
     - terraform -chdir=infrastructure/terraform init -reconfigure
+    # Ces preuves permettront de vérifier que le futur destroy staging ou
+    # production utilise exclusivement le state associé à son EC2.
+    - printf 'TF_STATE_NAME=%s\nCI_COMMIT_BRANCH=%s\n' "$TF_STATE_NAME" "$CI_COMMIT_BRANCH" > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-scope.txt"
     - terraform -chdir=infrastructure/terraform plan -destroy -no-color -out="$CI_PROJECT_DIR/.terraform-destroy-plan"
+    - terraform -chdir=infrastructure/terraform state list > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-resources.txt" || printf 'State vide : aucune ressource suivie.\n' > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-resources.txt"
     - terraform -chdir=infrastructure/terraform show -no-color "$CI_PROJECT_DIR/.terraform-destroy-plan" > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-plan.txt"
     - terraform -chdir=infrastructure/terraform apply -auto-approve "$CI_PROJECT_DIR/.terraform-destroy-plan"
   artifacts:
     when: always
     expire_in: 30 days
     paths:
+      - .ci/reports/terraform/destroy-scope.txt
+      - .ci/reports/terraform/destroy-resources.txt
       - .ci/reports/terraform/destroy-plan.txt
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'

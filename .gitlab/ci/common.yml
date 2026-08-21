@@ -7,17 +7,23 @@ include:
         when: never
       - when: always
   - local: .gitlab/ci/test.yml
-    rules: *exclude_schedules
+    rules: &exclude_schedules_and_web
+      - if: '$CI_PIPELINE_SOURCE == "schedule"'
+        when: never
+      # Les pipelines Web reconstruisent uniquement le POC AWS/K3s.
+      - if: '$CI_PIPELINE_SOURCE == "web"'
+        when: never
+      - when: always
   - local: .gitlab/ci/quality.yml
-    rules: *exclude_schedules
+    rules: *exclude_schedules_and_web
   - local: .gitlab/ci/build.yml
-    rules: *exclude_schedules
+    rules: *exclude_schedules_and_web
   - local: .gitlab/ci/release.yml
-    rules: *exclude_schedules
+    rules: *exclude_schedules_and_web
   - local: .gitlab/ci/deploy.yml
-    rules: *exclude_schedules
+    rules: *exclude_schedules_and_web
   - local: .gitlab/ci/verify.yml
-    rules: *exclude_schedules
+    rules: *exclude_schedules_and_web
 
 # Tous les jobs utilisent par défaut le runner Docker privé du projet.
 # Les exceptions déclarent explicitement leur propre tag.

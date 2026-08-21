@@ -24,7 +24,6 @@ verify:images:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.[1-9][0-9]*$/'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
     - if: '$CI_COMMIT_BRANCH == "dev"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
@@ -46,18 +45,6 @@ verify:images:
   script:
     - 'test -s "$KUBECONFIG"'
     - bash scripts/ci/smoke_deployment.sh --namespace "$KUBE_NAMESPACE" --context "$KUBE_CONTEXT"
-
-# Staging est contrôlé uniquement après l'upgrade Helm de la pipeline Web dev.
-verify:deployment:staging:
-  extends: .verify:deployment:http
-  needs:
-    - job: deploy:helm:staging:web
-  environment:
-    name: aws-poc-staging
-  variables:
-    KUBE_NAMESPACE: microcrm-staging
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
 
 # Même contrôle HTTP après promotion ou rollback d'un tag en staging.
 verify:deployment:release:staging:

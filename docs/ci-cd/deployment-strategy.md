@@ -30,9 +30,10 @@ les sources influençant les images ont changé. Aucune ne reconstruit d'image.
 
 ## Promotion et rollback
 
-- Le Web pipeline `dev` conserve le déploiement staging courant après build.
-- `deploy:helm:release:staging` accepte uniquement une RC et la déploie en staging.
-- `deploy:helm:aws` accepte uniquement une version finale et la déploie en production.
+- Les pipelines Web `dev` et `main` reconstruisent uniquement l'infrastructure
+  partagée du POC avec Terraform puis Ansible ; elles ne déploient aucune application.
+- `deploy:helm:staging:release-or-rollback` accepte uniquement une RC et la déploie en staging.
+- `deploy:helm:production:release-or-rollback` accepte uniquement une version finale et la déploie en production.
 - Les deux jobs téléchargent le bundle du tag et passent à Helm les digests
   frontend/backend. Le chart produit donc des images `repository@sha256`.
 - Une ancienne RC se redéploie en staging depuis sa pipeline. Une ancienne
@@ -40,3 +41,26 @@ les sources influençant les images ont changé. Aucune ne reconstruit d'image.
 
 Cette procédure restaure la release applicative. Elle ne restaure pas les
 données PostgreSQL et ne remplace pas une procédure de restauration de base.
+
+## Préparation du futur découpage de l'infrastructure
+
+Le POC actuel conserve une seule EC2 et un seul state Terraform GitLab nommé
+`microcrm-poc`. Les pipelines Web `dev` et `main` ciblent donc encore la même
+infrastructure ; lancer `deploy:terraform:destroy` détruit actuellement le POC
+partagé et interrompt les deux namespaces.
+
+Le nom du state est désormais centralisé dans `TF_STATE_NAME`. Le plan transmet
+également `TF_PLANNED_STATE_NAME` à l'apply, qui refuse de continuer si les deux
+states diffèrent. Le job destroy archive `destroy-scope.txt` et
+`destroy-resources.txt`, qui indiquent le state, la branche et les ressources
+visées avant la destruction.
+
+Lors du passage réel à deux EC2, il faudra d'abord séparer le root module et
+migrer les ressources : un state partagé pour le réseau et les ressources
+communes, puis un state de calcul `microcrm-staging` et un state de calcul
+`microcrm-production`. Le premier sera associé à la pipeline Web `dev` et le
+second à la pipeline Web `main`. Leur destroy ne touchera alors que la pile de
+calcul correspondante et conservera les ressources partagées. Modifier
+uniquement `TF_STATE_NAME` sans cette séparation et cette migration est
+interdit : cela créerait un state vide au lieu d'isoler correctement l'EC2
+existante.

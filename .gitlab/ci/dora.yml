@@ -22,5 +22,7 @@ pages:dora:
   rules:
     # La MR valide le script avec pytest ; elle ne publie pas une page de test.
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH == "dev"'
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
+    # Une pipeline Web est réservée à Terraform et Ansible.
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == "dev"'

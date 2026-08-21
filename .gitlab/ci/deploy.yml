@@ -79,30 +79,6 @@
         echo "Notification Slack ignorée : SLACK_WEBHOOK_URL indisponible.";
       fi
 
-# `dev` constitue l'environnement d'intégration : les pipelines publient les
-# images contrôlées. Le déploiement staging s'exécute uniquement dans une
-# pipeline Web autorisée à provisionner l'infrastructure AWS éphémère.
-deploy:helm:staging:web:
-  extends: .deploy:helm:k3s
-  needs:
-    - job: release:images
-      artifacts: true
-    - job: package:helm:chart
-      artifacts: true
-    - job: deploy:ansible:apply
-      optional: true
-  environment:
-    name: aws-poc-staging
-  variables:
-    KUBE_NAMESPACE: microcrm-staging
-    HELM_VALUES: infrastructure/helm/microcrm/values-staging.yaml
-  rules:
-    - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
-      when: never
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
-      when: on_success
-  allow_failure: false
-
 # Promotion ou rollback de staging par release : ce job ne dépend que du
 # bundle durable du tag, jamais d'artifacts de build temporaires.
 deploy:helm:staging:release-or-rollback:
