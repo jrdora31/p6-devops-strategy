@@ -2,6 +2,9 @@
 # Ce job ne contacte ni Terraform, ni AWS, ni le cluster K3s.
 pages:dora:
   image: python:3.12.11-slim
+  # Reste exécutable lorsque le runner Docker privé et le PC sont arrêtés.
+  tags:
+    - saas-linux-small-amd64
   stage: verify
   allow_failure: true
   variables:

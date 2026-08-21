@@ -1,3 +1,30 @@
+# Les pipelines planifiés ne chargent pas les jobs CI généraux : seul
+# `pages:dora`, inclus séparément à la racine, reste disponible.
+include:
+  - local: .gitlab/ci/iac.yml
+    rules: &exclude_schedules
+      - if: '$CI_PIPELINE_SOURCE == "schedule"'
+        when: never
+      - when: always
+  - local: .gitlab/ci/test.yml
+    rules: *exclude_schedules
+  - local: .gitlab/ci/quality.yml
+    rules: *exclude_schedules
+  - local: .gitlab/ci/build.yml
+    rules: *exclude_schedules
+  - local: .gitlab/ci/release.yml
+    rules: *exclude_schedules
+  - local: .gitlab/ci/deploy.yml
+    rules: *exclude_schedules
+  - local: .gitlab/ci/verify.yml
+    rules: *exclude_schedules
+
+# Tous les jobs utilisent par défaut le runner Docker privé du projet.
+# Les exceptions déclarent explicitement leur propre tag.
+default:
+  tags:
+    - local-docker
+
 # Les noms commençant par un point sont des jobs cachés : GitLab ne les exécute
 # pas directement. Les jobs concrets héritent de leur configuration avec `extends`.
 .frontend-node:
