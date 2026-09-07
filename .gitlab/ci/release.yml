@@ -138,6 +138,9 @@ release:images:
   extends: .docker-job
   stage: release
   needs:
+    # Le contrôle de l'historique Git reste bloquant, y compris pour un tag final.
+    - job: quality:gitleaks
+      artifacts: false
     # Les deux archives Docker sont téléchargées.
     - job: build:image:frontend
       artifacts: true

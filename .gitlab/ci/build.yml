@@ -6,6 +6,8 @@ check:registry:images:
   needs:
     - job: quality:shellcheck
       artifacts: false
+    - job: quality:gitleaks
+      artifacts: false
     - job: quality:trivy:repository
       artifacts: false
     - job: quality:trivy:kubernetes
@@ -68,6 +70,8 @@ build:frontend:
     # Les contrôles bloquants précèdent toute compilation afin d'échouer tôt.
     - job: quality:shellcheck
       artifacts: false
+    - job: quality:gitleaks
+      artifacts: false
     - job: quality:trivy:repository
       artifacts: false
     - job: quality:trivy:kubernetes
@@ -102,6 +106,8 @@ build:backend:
     - job: check:registry:images
       artifacts: true
     - job: quality:shellcheck
+      artifacts: false
+    - job: quality:gitleaks
       artifacts: false
     - job: quality:trivy:repository
       artifacts: false
