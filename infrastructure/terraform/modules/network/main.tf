@@ -78,11 +78,9 @@ resource "aws_vpc_security_group_ingress_rule" "https" {
   ip_protocol       = "tcp"
 }
 
-# Le POC sans NAT Gateway ni VPC endpoints doit joindre les dépôts Ubuntu,
-# registries, GitLab et AWS SSM. Le risque d'une destination Internet non
-# restreinte est accepté temporairement, mais limité à HTTP/HTTPS et réévalué
-# après le projet.
-#trivy:ignore:AWS-0104:exp:2026-09-01
+# POC : sans NAT Gateway ni VPC endpoints, HTTP est requis pour les dépôts
+# Ubuntu. Cette exception temporaire doit être remplacée avant la production.
+#trivy:ignore:AWS-0104:exp:2026-12-31
 resource "aws_vpc_security_group_egress_rule" "http" {
   security_group_id = aws_security_group.k3s.id
   description       = "HTTP for Ubuntu package repositories"
@@ -92,7 +90,9 @@ resource "aws_vpc_security_group_egress_rule" "http" {
   ip_protocol       = "tcp"
 }
 
-#trivy:ignore:AWS-0104:exp:2026-09-01
+# POC : sans NAT Gateway ni VPC endpoints, HTTPS est requis pour AWS SSM,
+# les registries et le GitLab Agent. Cette exception expire avant la production.
+#trivy:ignore:AWS-0104:exp:2026-12-31
 resource "aws_vpc_security_group_egress_rule" "https" {
   security_group_id = aws_security_group.k3s.id
   description       = "HTTPS for SSM, registries and GitLab Agent"
