@@ -170,7 +170,7 @@ deploy:terraform:destroy:
     # production utilise exclusivement le state associé à son EC2.
     - printf 'TF_STATE_NAME=%s\nCI_COMMIT_BRANCH=%s\n' "$TF_STATE_NAME" "$CI_COMMIT_BRANCH" > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-scope.txt"
     - terraform -chdir=infrastructure/terraform plan -destroy -no-color -out="$CI_PROJECT_DIR/.terraform-destroy-plan"
-    - terraform -chdir=infrastructure/terraform state list > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-resources.txt" || printf 'State vide : aucune ressource suivie.\n' > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-resources.txt"
+    - 'terraform -chdir=infrastructure/terraform state list > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-resources.txt" || printf "State vide : aucune ressource suivie.\n" > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-resources.txt"'
     - terraform -chdir=infrastructure/terraform show -no-color "$CI_PROJECT_DIR/.terraform-destroy-plan" > "$CI_PROJECT_DIR/.ci/reports/terraform/destroy-plan.txt"
     - terraform -chdir=infrastructure/terraform apply -auto-approve "$CI_PROJECT_DIR/.terraform-destroy-plan"
   artifacts:
