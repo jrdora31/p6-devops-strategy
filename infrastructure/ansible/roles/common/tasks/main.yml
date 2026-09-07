@@ -2,9 +2,10 @@
 - name: Vérifier le système attendu par le rôle
   ansible.builtin.assert:
     that:
-      - ansible_facts.distribution == 'Ubuntu'
+      - ansible_facts.distribution == 'Debian'
+      - ansible_facts.distribution_major_version == '12'
       - ansible_facts.architecture == 'x86_64'
-    fail_msg: "Le POC attend Ubuntu amd64 ; aucun autre système n'est configuré automatiquement."
+    fail_msg: "Le POC attend Debian 12 amd64 ; aucun autre système n'est configuré automatiquement."
 
 - name: Installer les prérequis communs
   ansible.builtin.apt:

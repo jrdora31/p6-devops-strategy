@@ -11,6 +11,7 @@ Vue exhaustive et concise des technologies utilisées dans MicroCRM.
 | Conteneurisation | Docker |
 | CI/CD | GitLab CI/CD |
 | IaC | Terraform, Ansible |
+| Système EC2 | Debian 12 (Bookworm) amd64 |
 | Orchestration | K3s, Helm |
 | Cloud | AWS |
 | Observabilité | CloudWatch |
@@ -30,7 +31,7 @@ Vue exhaustive et concise des technologies utilisées dans MicroCRM.
 ## Infrastructure
 
 - Terraform : provisionnement AWS
-- Ansible : configuration des instances et de K3s
+- Ansible : configuration de l'instance Debian 12 et de K3s
 - Helm : déploiement applicatif dans K3s
 - Emplacement : `infrastructure/`
 

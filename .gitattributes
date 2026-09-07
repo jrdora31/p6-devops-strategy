@@ -2,3 +2,4 @@
 # même lorsque le repository est modifié depuis Windows.
 scripts/ci/*.sh text eol=lf
 scripts/ci/tests/*.sh text eol=lf
+infrastructure/terraform/templates/*.sh text eol=lf

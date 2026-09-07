@@ -5,10 +5,20 @@
       - ca-certificates
       - curl
       - gnupg
+      - rsyslog
     state: present
     update_cache: true
     cache_valid_time: 3600
   when: cloudwatch_agent_enabled | bool
+
+- name: Garantir le journal système collecté par CloudWatch Agent
+  ansible.builtin.systemd_service:
+    name: rsyslog
+    state: started
+    enabled: true
+  when:
+    - cloudwatch_agent_enabled | bool
+    - not ansible_check_mode
 
 - name: Préparer le trousseau temporaire de vérification CloudWatch Agent
   ansible.builtin.file:

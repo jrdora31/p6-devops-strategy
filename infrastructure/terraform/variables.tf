@@ -94,7 +94,7 @@ variable "root_volume_size" {
 }
 
 variable "ami_id" {
-  description = "AMI Ubuntu 24.04 explicitement validée. Null sélectionne l'AMI Canonical amd64 la plus récente au moment du plan."
+  description = "AMI Debian 12 officielle explicitement validée. Null sélectionne la plus récente en amd64 au moment du plan."
   type        = string
   default     = null
   nullable    = true

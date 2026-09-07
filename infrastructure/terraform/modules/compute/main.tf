@@ -1,12 +1,12 @@
-data "aws_ami" "ubuntu" {
+data "aws_ami" "debian" {
   count = var.ami_id == null ? 1 : 0
 
   most_recent = true
-  owners      = ["099720109477"]
+  owners      = ["136693071363"]
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+    values = ["debian-12-amd64-*"]
   }
 
   filter {
@@ -27,7 +27,7 @@ data "aws_ec2_instance_type" "selected" {
 }
 
 locals {
-  selected_ami_id = coalesce(var.ami_id, try(data.aws_ami.ubuntu[0].id, null))
+  selected_ami_id = coalesce(var.ami_id, try(data.aws_ami.debian[0].id, null))
 }
 
 data "aws_iam_policy_document" "ec2_assume_role" {
@@ -145,7 +145,7 @@ resource "aws_instance" "k3s" {
 
     precondition {
       condition     = contains(data.aws_ec2_instance_type.selected.supported_architectures, "x86_64")
-      error_message = "Le type EC2 sélectionné doit prendre en charge x86_64 pour l'AMI Ubuntu amd64 du POC."
+      error_message = "Le type EC2 sélectionné doit prendre en charge x86_64 pour l'AMI Debian amd64 du POC."
     }
 
     precondition {

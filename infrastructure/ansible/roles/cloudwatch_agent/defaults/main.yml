@@ -1,8 +1,8 @@
 ---
 cloudwatch_agent_package_url: >-
-  https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+  https://amazoncloudwatch-agent.s3.amazonaws.com/debian/amd64/latest/amazon-cloudwatch-agent.deb
 cloudwatch_agent_signature_url: >-
-  https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb.sig
+  https://amazoncloudwatch-agent.s3.amazonaws.com/debian/amd64/latest/amazon-cloudwatch-agent.deb.sig
 cloudwatch_agent_signing_key_url: >-
   https://amazoncloudwatch-agent.s3.amazonaws.com/assets/amazon-cloudwatch-agent.gpg
 cloudwatch_agent_expected_fingerprint: "937616F3450B7D806CBD9725D58167303B789C72"

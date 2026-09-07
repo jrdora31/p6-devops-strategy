@@ -216,6 +216,7 @@ deploy:terraform:destroy:
     - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - chmod 600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - apt-get update && apt-get install --yes --no-install-recommends curl
+    # AWS publie un paquet commun Debian/Ubuntu sous ce chemin officiel.
     - curl --fail --silent --show-error "https://s3.amazonaws.com/session-manager-downloads/plugin/${SESSION_MANAGER_PLUGIN_VERSION}/ubuntu_64bit/session-manager-plugin.deb" --output /tmp/session-manager-plugin.deb
     - dpkg --install /tmp/session-manager-plugin.deb
     - session-manager-plugin --version

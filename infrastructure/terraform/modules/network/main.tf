@@ -78,12 +78,12 @@ resource "aws_vpc_security_group_ingress_rule" "https" {
   ip_protocol       = "tcp"
 }
 
-# POC : sans NAT Gateway ni VPC endpoints, HTTP est requis pour les dépôts
-# Ubuntu. Cette exception temporaire doit être remplacée avant la production.
+# POC : sans NAT Gateway ni VPC endpoints, HTTP est requis pour les dépôts de
+# paquets. Cette exception temporaire doit être remplacée avant la production.
 #trivy:ignore:AWS-0104:exp:2026-12-31
 resource "aws_vpc_security_group_egress_rule" "http" {
   security_group_id = aws_security_group.k3s.id
-  description       = "HTTP for Ubuntu package repositories"
+  description       = "HTTP for package repositories"
   cidr_ipv4         = "0.0.0.0/0"
   from_port         = 80
   to_port           = 80
