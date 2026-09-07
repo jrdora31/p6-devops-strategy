@@ -308,12 +308,12 @@ quality:trivy:iac:
       --output .ci/reports/security/trivy-iac.txt
       .ci/reports/security/trivy-iac.json
     - >-
-      trivy convert
+      trivy config
       --severity CRITICAL
       --exit-code 1
       --format table
       --output /dev/null
-      .ci/reports/security/trivy-iac.json
+      infrastructure/terraform
   artifacts:
     when: always
     expire_in: 30 days
