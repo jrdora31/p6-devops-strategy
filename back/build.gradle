@@ -17,6 +17,10 @@ repositories {
 	mavenCentral()
 }
 
+// Corrige les CVE critiques de Tomcat 10.1.55 tout en conservant la gestion
+// cohérente de la famille Tomcat par le BOM Spring Boot.
+ext['tomcat.version'] = '10.1.59'
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'

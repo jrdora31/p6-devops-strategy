@@ -1,0 +1,4 @@
+# POC : Caddy sert uniquement les fichiers statiques et le reverse proxy HTTP ;
+# aucune fonctionnalité SSH utilisant la restriction d'adresse source n'est exposée.
+# Supprimer cette exception dès qu'une image Caddy officielle corrigée est disponible.
+CVE-2026-56854 exp:2026-12-31

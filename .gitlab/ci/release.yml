@@ -17,6 +17,7 @@ release:trivy:image:frontend:
       --scanners vuln
       --severity HIGH,CRITICAL
       --ignore-unfixed
+      --ignorefile .trivyignore-frontend
       --format json
       --output .ci/reports/security/trivy-image-frontend-vulnerabilities.json
     # Crée une version texte lisible à partir du rapport JSON précédent.
