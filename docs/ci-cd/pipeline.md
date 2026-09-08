@@ -17,15 +17,18 @@ Comment une version passe du code source à une release déployée ?
 
 ### Étapes de livraison
 
-1. valider le code puis construire, tester, scanner et publier les images SHA
+1. lancer manuellement `release:version:semantic` sur une pipeline de push
+   `dev` pour obtenir le prochain numéro RC calculé depuis les Conventional
+   Commits ; le job est un dry-run et ne crée aucun tag ;
+2. valider le code puis construire, tester, scanner et publier les images SHA
    sur `dev` ;
-2. créer une RC `vX.Y.Z-rc.N` et la valider en staging ;
-3. après merge vers `main`, créer le tag final annoté avec
+3. créer manuellement la RC proposée `vX.Y.Z-rc.N` et la valider en staging ;
+4. après merge vers `main`, créer manuellement le tag final proposé, annoté avec
    `Promote-From: vX.Y.Z-rc.N` ;
-4. vérifier les sources puis reprendre les digests de la RC, sans rebuild ;
-5. archiver le manifeste, les digests et le chart dans le Generic Package
+5. vérifier les sources puis reprendre les digests de la RC, sans rebuild ;
+6. archiver le manifeste, les digests et le chart dans le Generic Package
    Registry ;
-6. promouvoir manuellement puis exécuter le contrôle HTTP post-déploiement.
+7. promouvoir manuellement puis exécuter le contrôle HTTP post-déploiement.
 
 Voir aussi [`deployment-strategy.md`](./deployment-strategy.md).
 
@@ -42,6 +45,12 @@ La procédure détaillée est décrite dans [`../Maintenance/rollback.md`](../Ma
 Les RC utilisent `vMAJOR.MINOR.PATCH-rc.N` et les finales
 `vMAJOR.MINOR.PATCH`. Le manifeste final relie aussi la RC promue et son commit
 source aux digests frontend/backend conservés.
+
+Semantic Release ne publie rien dans ce workflow. Son plugin officiel
+`commit-analyzer` calcule uniquement le prochain numéro : `fix` incrémente le
+patch, `feat` la minor et un changement incompatible la major. La création des
+tags RC/final, la mention `Promote-From`, les déploiements et les rollbacks
+restent des décisions manuelles.
 
 ## Traçabilité des versions et déploiements
 

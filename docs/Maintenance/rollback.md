@@ -6,8 +6,9 @@ local à un cluster et ne constitue pas une identité de release traçable.
 
 1. Ouvrir **Deploy > Releases** dans GitLab et choisir le tag stable cible.
 2. Suivre le lien vers la pipeline de cette release.
-3. Relancer `deploy:helm:release:staging` depuis une ancienne RC pour staging,
-   ou `deploy:helm:aws` depuis une ancienne finale pour la production.
+3. Relancer `deploy:helm:staging:release-or-rollback` depuis une ancienne RC
+   pour staging, ou `deploy:helm:production:release-or-rollback` depuis une
+   ancienne finale pour la production.
 4. Attendre le job de vérification HTTP associé et contrôler l'environnement
    GitLab.
 

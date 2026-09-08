@@ -1,3 +1,33 @@
+# Calcule le prochain numéro RC à partir des commits conventionnels. Ce job
+# manuel ne crée aucun tag et ne publie aucune release : le dépôt local nu sert
+# uniquement à satisfaire la vérification Git de Semantic Release en dry-run.
+release:version:semantic:
+  image: node:24.20.0-bookworm
+  stage: release
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - mkdir -p .ci/release
+    - git fetch --quiet origin main
+    - MAIN_SHA="$(git rev-parse FETCH_HEAD)"
+    - SEMANTIC_RELEASE_REMOTE="$(mktemp -d)/repository.git"
+    - git clone --bare "$CI_PROJECT_DIR" "$SEMANTIC_RELEASE_REMOTE"
+    - git --git-dir="$SEMANTIC_RELEASE_REMOTE" update-ref refs/heads/main "$MAIN_SHA"
+    - git --git-dir="$SEMANTIC_RELEASE_REMOTE" update-ref refs/heads/dev "$CI_COMMIT_SHA"
+    - npm exec --yes --package=semantic-release@25.0.9 --package=conventional-changelog-conventionalcommits@10.4.0 -- semantic-release --dry-run --no-ci --repository-url "file://$SEMANTIC_RELEASE_REMOTE"
+    - test -s .ci/release/semantic-version.env
+    - cat .ci/release/semantic-version.env
+  artifacts:
+    expire_in: 7 days
+    reports:
+      dotenv: .ci/release/semantic-version.env
+    paths:
+      - .ci/release/semantic-version.env
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE == "push"'
+      when: manual
+  allow_failure: true
+
 # Charge l'archive de l'image frontend construite plus tôt et l'analyse avant
 # toute publication dans le registre.
 release:trivy:image:frontend:

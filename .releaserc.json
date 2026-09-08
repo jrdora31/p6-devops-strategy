@@ -1,0 +1,21 @@
+{
+  "branches": [
+    "main",
+    {
+      "name": "dev",
+      "prerelease": "rc"
+    }
+  ],
+  "tagFormat": "v${version}",
+  "dryRun": true,
+  "ci": false,
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits"
+      }
+    ],
+    "./scripts/ci/semantic_version.mjs"
+  ]
+}

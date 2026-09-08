@@ -14,6 +14,7 @@ Référence technique des scripts utilisés par la chaîne CI/CD de MicroCRM.
 | `dependencies.sh`     | Contrôle des dépendances                                  | CI/CD               |
 | `backup.sh`           | Sauvegarde liée au processus de déploiement / maintenance | CI/CD / maintenance |
 | `dora_metrics.py`     | Collecte ou calcul des métriques DORA                     | CI/CD               |
+| `semantic_version.mjs` | Écriture du numéro proposé par Semantic Release           | CI/CD               |
 | `release_manifest.py` | Gestion des informations de release                       | CI/CD               |
 | `notify.py`           | Notifications liées à la pipeline                         | CI/CD               |
 | `common.sh`           | Fonctions communes aux scripts shell                      | Scripts CI          |
@@ -200,6 +201,19 @@ TODO
 
 ---
 
+## `semantic_version.mjs`
+
+### Rôle
+
+Valide la version RC calculée par Semantic Release et écrit les variables
+`NEXT_RELEASE_VERSION`, `NEXT_RC_VERSION`, `NEXT_RC_TAG` et `NEXT_FINAL_TAG`
+dans le rapport dotenv du job manuel `release:version:semantic`.
+
+Le script ne crée aucun tag. Semantic Release est configuré en `dry-run` et la
+création manuelle de la RC puis de la finale reste obligatoire.
+
+---
+
 ## `release_manifest.py`
 
 ### Rôle
@@ -291,6 +305,7 @@ scripts/ci/tests/
 | `tests/test_dora_metrics.py`   | Tests automatisés de `dora_metrics.py`                 |
 | `tests/test_python_scripts.py` | Tests des scripts Python de la CI/CD                   |
 | `tests/test_scripts.sh`        | Tests des scripts shell de la CI/CD                    |
+| `tests/test_semantic_version.mjs` | Tests du rapport de version Semantic Release        |
 | `requirements-test.txt`        | Dépendances Python nécessaires à l'exécution des tests |
 
 ---
