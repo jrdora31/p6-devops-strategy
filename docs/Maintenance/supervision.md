@@ -60,6 +60,18 @@ protégée et non développée. Elle ne doit jamais être copiée dans le dépô
 les logs. Une variable protégée n'est disponible que sur une branche ou un tag
 également protégé ; `dev` doit donc être protégé pour notifier le staging.
 
+Créer l'Incoming Webhook dans Slack, récupérer son URL puis l'ajouter dans
+**Settings > CI/CD > Variables** sous le nom `SLACK_WEBHOOK_URL`. Le message
+contient uniquement le type d'événement, le statut, le job lorsqu'il est fourni,
+le lien et l'identifiant du pipeline, la branche ou le tag et les huit premiers
+caractères du commit.
+
+Les appels actuels proviennent des jobs Helm
+`deploy:helm:staging:release-or-rollback` et
+`deploy:helm:production:release-or-rollback`, ainsi que des contrôles Trivy
+`quality:trivy:repository`, `quality:trivy:kubernetes`,
+`release:trivy:image:frontend` et `release:trivy:image:backend` en cas d'échec.
+
 TODO : ajouter une preuve observable (message Slack horodaté et pipeline liée)
 avant de déclarer cette notification validée en conditions réelles.
 

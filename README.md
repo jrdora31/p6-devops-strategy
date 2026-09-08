@@ -138,6 +138,11 @@ sh scripts/ci/smoke.sh \
 Pour reprendre le projet depuis un clone et effectuer un premier déploiement
 sur AWS, consulter [`DOCS/GET-STARTED.md`](./DOCS/GET-STARTED.md).
 
+La documentation peut être adaptée aux besoins de l'équipe : information
+jamais transmise par la couleur seule et diagrammes légendés, titres Markdown
+cohérents et textes alternatifs pour les lecteurs d'écran, procédures
+utilisables au clavier avec des commandes copiables.
+
 ### Architecture et infrastructure
 
 - [`DOCS/stack.md`](./DOCS/stack.md) — Stack technique du projet.

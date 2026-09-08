@@ -2,7 +2,10 @@
 
 Référence technique des scripts utilisés pour initialiser les accès AWS et la configuration GitLab nécessaires à MicroCRM.
 
-> Pour la procédure complète d'initialisation du projet, voir `docs/GET_STARTED.md`.
+> Ces scripts sont des squelettes non exécutés dans le cadre du POC. Ils
+> décrivent une piste d'automatisation et ne configurent actuellement aucune
+> ressource ni variable. Pour la procédure d'initialisation, voir
+> `docs/GET-STARTED.md`.
 
 ## Vue d'ensemble
 
@@ -37,13 +40,11 @@ Orchestre successivement l'initialisation AWS puis la configuration GitLab.
 * authentification AWS valide ;
 * accès au projet GitLab ;
 * Python et dépendances nécessaires installés ;
-* TODO : autres prérequis réels.
+* mécanisme d'authentification GitLab à définir sans stocker le token dans le dépôt.
 
 ### Entrées
 
-* TODO : arguments CLI ;
-* TODO : variables d'environnement ;
-* TODO : fichiers de configuration éventuels.
+À définir lors de l'implémentation. Le squelette ne lit encore aucune entrée.
 
 ### Fonctionnement
 
@@ -59,10 +60,7 @@ bootstrap-gitlab.py
 
 ### Sorties
 
-* permissions et rôles AWS nécessaires disponibles ;
-* valeurs AWS nécessaires récupérées ;
-* variables CI/CD GitLab configurées ;
-* TODO : autres sorties.
+Aucune actuellement : le script s'arrête explicitement comme non implémenté.
 
 ---
 
@@ -75,25 +73,28 @@ Provisionne les permissions, rôles ou ressources IAM nécessaires au fonctionne
 ### Dépendances
 
 * authentification AWS ;
-* TODO : Terraform bootstrap / AWS CLI / bibliothèques Python réellement utilisées.
+* méthode d'appel AWS à choisir lors de l'implémentation.
 
 ### Entrées
 
-* TODO : compte / région AWS ;
-* TODO : arguments ;
-* TODO : variables d'environnement.
+Compte et région AWS à fournir sans credentials en dur.
 
 ### Fonctionnement
 
-TODO : décrire brièvement les étapes réellement exécutées par le script.
+Le futur script devrait préparer les rôles OIDC référencés par
+`AWS_PLAN_ROLE_ARN` et `AWS_APPLY_ROLE_ARN`, avec des droits distincts de
+lecture/plan et d'application. Terraform crée ensuite le rôle d'instance EC2,
+son profil, la policy `AmazonSSMManagedInstanceCore` et, si activée, la policy
+CloudWatch du projet.
 
 ### Ressources créées
 
-TODO : lister les rôles, policies ou autres ressources réellement provisionnés.
+Aucune actuellement. Les noms des rôles OIDC ne sont pas imposés par le dépôt ;
+seuls leurs ARN sont consommés par la CI.
 
 ### Sorties
 
-TODO : ARN, identifiants ou valeurs transmises au bootstrap GitLab.
+À terme : les ARN des rôles OIDC de plan et d'application.
 
 ---
 
@@ -111,18 +112,29 @@ Configure les variables CI/CD nécessaires au projet GitLab à partir des inform
 
 ### Entrées
 
-* TODO : URL / identifiant du projet GitLab ;
-* TODO : token GitLab ;
-* TODO : ARN et autres valeurs AWS ;
-* TODO : arguments ou variables d'environnement.
+URL et identifiant du projet, moyen d'authentification à l'API GitLab, puis ARN
+AWS et secrets fournis hors dépôt.
 
 ### Fonctionnement
 
-TODO : décrire brièvement les appels réalisés et leur ordre.
+Le futur script devrait créer ou vérifier les variables sans afficher leur
+valeur, puis contrôler leur protection et leur masquage.
 
 ### Variables GitLab créées
 
-TODO : lister uniquement les variables réellement créées par le script.
+Le squelette cible uniquement les variables consommées par le dépôt :
+
+* `AWS_PLAN_ROLE_ARN` et `AWS_APPLY_ROLE_ARN` : ARN des rôles OIDC, protégés ;
+* `GITLAB_AGENT_TOKEN` : secret protégé et masqué ;
+* `SLACK_WEBHOOK_URL` : secret protégé et masqué ;
+* `SONAR_TOKEN` et `DORA_GITLAB_TOKEN` : tokens masqués, avec protection
+  adaptée aux pipelines visés ;
+* `KUBERNETES_DATABASE_PASSWORD` : secret protégé et masqué ;
+* `CI_DEPLOY_USER` et `CI_DEPLOY_PASSWORD` : identifiants du deploy token
+  Registry, créés par GitLab puis exposés à la CI.
+
+Les variables prédéfinies GitLab et les options non secrètes déclarées dans
+`.gitlab-ci.yml` ne sont pas créées par ce bootstrap.
 
 ### Protection des releases
 
@@ -145,24 +157,28 @@ et que le commit destiné à la production appartient à la branche `main`.
 
 ### Sorties
 
-* variables CI/CD créées ou mises à jour ;
-* protection des tags de release créée ou vérifiée ;
-* TODO : résultat / journal de validation éventuel.
+Aucune actuellement. À terme : variables créées ou vérifiées et protection des
+tags `v*` contrôlée.
 
 ---
 
 ## Rejouer le bootstrap
 
-TODO : préciser :
-
-* si les scripts sont idempotents ;
-* dans quels cas ils peuvent être rejoués ;
-* dans quels cas il ne faut pas les rejouer ;
-* comportement lorsqu'une ressource ou variable existe déjà.
+Les scripts ne sont pas rejouables tant qu'ils restent des squelettes. Une
+implémentation future devra être idempotente et signaler les écarts sans
+écraser automatiquement une ressource ou une protection existante.
 
 ## Sécurité
 
 * aucun secret ne doit être écrit dans les logs ;
 * aucun token ou credential ne doit être versionné ;
 * les permissions AWS doivent rester limitées aux besoins du projet ;
-* TODO : règles réellement appliquées par les scripts.
+* les secrets GitLab doivent être masqués et protégés lorsque leur format et
+  leur périmètre le permettent.
+
+## Séquence théorique
+
+1. Préparer les rôles et permissions AWS.
+2. Préparer le projet et les protections GitLab.
+3. Renseigner les ARN, tokens et secrets dans les variables CI/CD.
+4. Lancer puis valider la CI.
