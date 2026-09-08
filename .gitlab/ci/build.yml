@@ -17,7 +17,7 @@ check:registry:images:
     - job: quality:sonarqube
       artifacts: false
       optional: true
-    - job: quality:terraform:plan
+    - job: quality:terraform:network:plan
       artifacts: false
       optional: true
   script:
@@ -83,7 +83,7 @@ build:frontend:
     - job: quality:sonarqube
       artifacts: false
       optional: true
-    - job: quality:terraform:plan
+    - job: quality:terraform:network:plan
       artifacts: false
       optional: true
   before_script:
@@ -118,7 +118,7 @@ build:backend:
     - job: quality:sonarqube
       artifacts: false
       optional: true
-    - job: quality:terraform:plan
+    - job: quality:terraform:network:plan
       artifacts: false
       optional: true
   before_script:
