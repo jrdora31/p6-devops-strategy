@@ -2,18 +2,8 @@
 # Cette sélection globale est évaluée avant les règles propres à chaque job.
 workflow:
   rules:
-    # Une MR prépare le plan de l'environnement correspondant à sa branche cible.
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"'
-      variables:
-        DEPLOYMENT_ENVIRONMENT: staging
-        TF_STATE_NAME: microcrm-staging
-        INFRASTRUCTURE_ENVIRONMENT: aws-poc-staging
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH'
-      variables:
-        DEPLOYMENT_ENVIRONMENT: production
-        TF_STATE_NAME: microcrm-production
-        INFRASTRUCTURE_ENVIRONMENT: aws-poc-production
-    # Conserve les contrôles généraux des MR visant une autre branche.
+    # Une MR exécute les contrôles statiques et le plan du réseau partagé ; le
+    # plan d'un environnement reste réservé aux pipelines Web après merge.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     # Autorise les pipelines périodiques créés dans l'interface GitLab.
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
@@ -53,6 +43,8 @@ stages:
   - quality
   - build
   - release
+  - terraform-network
+  - terraform-plan
   - terraform
   - ansible
   - helm

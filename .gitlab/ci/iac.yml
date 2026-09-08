@@ -120,9 +120,14 @@ quality:terraform:network:plan:
 # Produit un plan réel de l'environnement strictement associé à la branche.
 quality:terraform:plan:
   extends: .terraform:aws-oidc
-  stage: quality
+  stage: terraform-plan
   needs:
     - test:terraform
+    # Présent et bloquant sur une pipeline Web `dev`. Il est absent sur `main`,
+    # où la production réutilise le réseau partagé déjà géré depuis `dev`.
+    - job: deploy:terraform:network:apply
+      artifacts: false
+      optional: true
   variables:
     AWS_ROLE_ARN: "$AWS_PLAN_ROLE_ARN"
   script:
@@ -150,25 +155,14 @@ quality:terraform:plan:
   rules:
     - if: '$AWS_PLAN_ROLE_ARN == null || $AWS_PLAN_ROLE_ARN == ""'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH)'
-      changes:
-        - infrastructure/terraform/**/*
-        - .gitlab/ci/iac.yml
-    - if: '$CI_COMMIT_BRANCH == "dev"'
-      changes:
-        - infrastructure/terraform/**/*
-        - .gitlab/ci/iac.yml
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      changes:
-        - infrastructure/terraform/**/*
-        - .gitlab/ci/iac.yml
+    # Aucun plan environnement en MR : il dépend du state microcrm-network.
     - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
 
 # L'initialisation du réseau partagé est manuelle, limitée à une pipeline Web
 # `dev` et ne possède volontairement aucun job destroy.
 deploy:terraform:network:apply:
   extends: .terraform:aws-oidc
-  stage: terraform
+  stage: terraform-network
   needs:
     - job: quality:terraform:network:plan
       artifacts: true
@@ -193,9 +187,6 @@ deploy:terraform:network:apply:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
       when: manual
-  # Le réseau est initialisé séparément si nécessaire ; son job manuel ne
-  # bloque pas les cycles courants des environnements déjà provisionnés.
-  allow_failure: true
 
 # Applique exclusivement le plan binaire de l'environnement associé à la
 # branche. Le rôle AWS d'écriture est distinct du rôle de lecture du plan.
@@ -244,7 +235,6 @@ deploy:terraform:apply:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
       when: on_success
-  allow_failure: false
 
 # Le destroy est une action séparée, manuelle et sérialisée. La variable
 # TF_DESTROY_CONFIRM et la confirmation native GitLab constituent deux
@@ -285,12 +275,10 @@ deploy:terraform:destroy:
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
-    # Uniquement pour une pipeline Web sur les branches de déploiement autorisées.
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+    # Le job est absent d'un cycle de création normal. Il n'apparaît que dans
+    # une pipeline Web explicitement lancée pour détruire un environnement.
+    - if: '$CI_PIPELINE_SOURCE == "web" && $TF_DESTROY_CONFIRM == "true" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
       when: manual
-  # Le destroy reste protégé par son lancement manuel et
-  # TF_DESTROY_CONFIRM=true, mais son absence ne bloque pas le stage verify.
-  allow_failure: true
 
 # Les jobs runtime Ansible utilisent les outputs Terraform transmis par le
 # rapport dotenv et le même rôle AWS temporaire que le provisionnement.
@@ -355,7 +343,6 @@ deploy:ansible:check:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
-  allow_failure: false
 
 # La configuration réelle s'enchaîne automatiquement uniquement si Terraform
 # et le check mode Ansible ont réussi.
@@ -376,7 +363,6 @@ deploy:ansible:apply:
       when: never
     - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
       when: on_success
-  allow_failure: false
 
 # Vérifie la syntaxe, l'idempotence déclarative et les conventions Ansible.
 test:ansible:
