@@ -4,7 +4,7 @@ output "instance_id" {
 }
 
 output "public_ip" {
-  description = "IPv4 publique dynamique du POC."
+  description = "IPv4 publique dynamique du nœud K3s."
   value       = aws_instance.k3s.public_ip
 }
 

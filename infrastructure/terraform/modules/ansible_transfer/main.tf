@@ -2,7 +2,7 @@ resource "aws_s3_bucket" "this" {
   bucket_prefix = "${var.name_prefix}-ansible-"
 
   # Ce bucket ne contient que les fichiers temporaires créés par la connexion
-  # SSM. force_destroy permet de retirer proprement le POC après les tests.
+  # SSM. force_destroy permet de retirer proprement l'environnement après les tests.
   force_destroy = true
 
   tags = {

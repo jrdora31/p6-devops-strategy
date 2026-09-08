@@ -1,5 +1,20 @@
 ---
-- name: Configurer le serveur K3s du POC MicroCRM
+- name: Vérifier le ciblage de l'environnement K3s
+  hosts: localhost
+  gather_facts: false
+  vars:
+    deployment_environment: "{{ lookup('ansible.builtin.env', 'DEPLOYMENT_ENVIRONMENT') }}"
+  tasks:
+    - name: Garantir un environnement autorisé et une seule EC2 cible
+      ansible.builtin.assert:
+        that:
+          - deployment_environment in ['staging', 'production']
+          - groups.get('k3s_servers', []) | length == 1
+        fail_msg: >-
+          L'inventaire doit contenir exactement une EC2 K3s pour
+          DEPLOYMENT_ENVIRONMENT=staging ou production.
+
+- name: Configurer le serveur K3s MicroCRM de l'environnement sélectionné
   hosts: k3s_servers
   gather_facts: false
   become: true
@@ -12,8 +27,17 @@
     cloudwatch_agent_enabled: >-
       {{ lookup('ansible.builtin.env', 'CLOUDWATCH_AGENT_ENABLED')
          | default('false', true) | bool }}
+    deployment_environment: >-
+      {{ lookup('ansible.builtin.env', 'DEPLOYMENT_ENVIRONMENT') }}
 
   pre_tasks:
+    - name: Vérifier le tag de l'EC2 ciblée
+      ansible.builtin.assert:
+        that:
+          - ec2_tags.Environment == deployment_environment
+        fail_msg: >-
+          L'EC2 ciblée par Ansible n'appartient pas à l'environnement demandé.
+
     - name: Vérifier la variable du bucket temporaire SSM
       ansible.builtin.assert:
         that:

@@ -49,5 +49,4 @@ variable "cloudwatch_agent_enabled" {
 variable "cloudwatch_log_group_prefix" {
   description = "Préfixe des groupes de logs autorisés à l'agent CloudWatch."
   type        = string
-  default     = "/microcrm/poc"
 }

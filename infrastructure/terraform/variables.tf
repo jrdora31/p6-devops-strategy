@@ -1,5 +1,5 @@
 variable "aws_region" {
-  description = "Région AWS du POC."
+  description = "Région AWS de l'environnement."
   type        = string
   default     = "eu-west-3"
 
@@ -7,13 +7,6 @@ variable "aws_region" {
     condition     = can(regex("^[a-z]{2}-[a-z]+-[0-9]+$", var.aws_region))
     error_message = "aws_region doit être un identifiant de région AWS valide."
   }
-}
-
-variable "availability_zone" {
-  description = "Availability Zone optionnelle. La première AZ disponible est utilisée si la valeur est nulle."
-  type        = string
-  default     = null
-  nullable    = true
 }
 
 variable "project_name" {
@@ -28,46 +21,23 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "Environnement associé aux ressources."
+  description = "Environnement isolé associé à cette EC2 et à son cluster K3s."
   type        = string
-  default     = "poc"
+  default     = "staging"
 
   validation {
-    condition     = contains(["poc", "test"], var.environment)
-    error_message = "Seuls les environnements poc et test sont autorisés par ce root module."
+    condition     = contains(["staging", "production"], var.environment)
+    error_message = "Seuls les environnements staging et production sont autorisés par ce root module."
   }
 }
 
-variable "vpc_cidr" {
-  description = "CIDR du VPC."
+variable "network_state_address" {
+  description = "Adresse HTTP du state GitLab microcrm-network partagé."
   type        = string
-  default     = "10.20.0.0/16"
 
   validation {
-    condition     = can(cidrnetmask(var.vpc_cidr))
-    error_message = "vpc_cidr doit être un CIDR IPv4 valide."
-  }
-}
-
-variable "public_subnet_cidr" {
-  description = "CIDR de la subnet publique du POC."
-  type        = string
-  default     = "10.20.1.0/24"
-
-  validation {
-    condition     = can(cidrnetmask(var.public_subnet_cidr))
-    error_message = "public_subnet_cidr doit être un CIDR IPv4 valide."
-  }
-}
-
-variable "http_ingress_cidrs" {
-  description = "CIDR autorisés à joindre Traefik en HTTP(S)."
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-
-  validation {
-    condition     = length(var.http_ingress_cidrs) > 0 && alltrue([for cidr in var.http_ingress_cidrs : can(cidrnetmask(cidr))])
-    error_message = "Chaque valeur de http_ingress_cidrs doit être un CIDR IPv4 valide."
+    condition     = can(regex("^https?://.+/terraform/state/microcrm-network$", var.network_state_address))
+    error_message = "network_state_address doit être l'adresse HTTP(S) du state GitLab microcrm-network."
   }
 }
 
@@ -78,7 +48,7 @@ variable "instance_type" {
 
   validation {
     condition     = contains(["c7i-flex.large", "m7i-flex.large"], var.instance_type)
-    error_message = "Le POC autorise uniquement c7i-flex.large ou m7i-flex.large, types x86_64 Free Tier adaptés à K3s."
+    error_message = "Seuls c7i-flex.large et m7i-flex.large, types x86_64 Free Tier adaptés à K3s, sont autorisés."
   }
 }
 
@@ -118,7 +88,7 @@ variable "cloudwatch_agent_enabled" {
 }
 
 variable "alert_email" {
-  description = "Adresse e-mail optionnelle abonnée aux alarmes CloudWatch du POC."
+  description = "Adresse e-mail optionnelle abonnée aux alarmes CloudWatch de l'environnement."
   type        = string
   default     = ""
   sensitive   = true
@@ -126,16 +96,5 @@ variable "alert_email" {
   validation {
     condition     = var.alert_email == "" || can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", var.alert_email))
     error_message = "alert_email doit être vide ou contenir une adresse e-mail valide."
-  }
-}
-
-variable "cloudwatch_log_group_prefix" {
-  description = "Préfixe des groupes de logs CloudWatch du POC."
-  type        = string
-  default     = "/microcrm/poc"
-
-  validation {
-    condition     = can(regex("^/[a-zA-Z0-9/_-]+$", var.cloudwatch_log_group_prefix))
-    error_message = "cloudwatch_log_group_prefix doit commencer par / et contenir uniquement des caractères de nom de groupe valides."
   }
 }

@@ -11,7 +11,8 @@ cloudwatch_agent_signature_path: /var/tmp/amazon-cloudwatch-agent.deb.sig
 cloudwatch_agent_signing_key_path: /var/tmp/amazon-cloudwatch-agent.gpg
 cloudwatch_agent_gpg_home: /var/lib/amazon-cloudwatch-agent-verify
 cloudwatch_agent_config_path: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-cloudwatch_agent_log_group_prefix: /microcrm/poc
+cloudwatch_agent_log_group_prefix: "/microcrm/{{ deployment_environment }}"
+cloudwatch_agent_metrics_namespace: "MicroCRM/{{ deployment_environment | title }}"
 cloudwatch_agent_collect_kubernetes_logs: false
 cloudwatch_agent_metrics_interval: 60
 cloudwatch_agent_log_flush_interval: 5

@@ -1,0 +1,6 @@
+# Valeurs non sensibles du state réseau GitLab microcrm-network.
+aws_region         = "eu-west-3"
+project_name       = "microcrm"
+vpc_cidr           = "10.20.0.0/16"
+public_subnet_cidr = "10.20.1.0/24"
+http_ingress_cidrs = ["0.0.0.0/0"]

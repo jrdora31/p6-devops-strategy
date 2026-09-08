@@ -34,9 +34,7 @@ verify:images:
     name: alpine/helm:3.18.6
     entrypoint: [""]
   stage: verify
-  resource_group: aws-poc
   variables:
-    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
     KUBECTL_VERSION: "v1.33.13"
   before_script:
     - apk add --no-cache bash curl
@@ -44,16 +42,27 @@ verify:images:
     - chmod 0755 /usr/local/bin/kubectl
   script:
     - 'test -s "$KUBECONFIG"'
+    - >-
+      case "$CI_ENVIRONMENT_NAME:$DEPLOYMENT_ENVIRONMENT:$KUBE_CONTEXT:$KUBE_NAMESPACE" in
+        "aws-poc-staging:staging:project_6_group/microcrm:microcrm-poc:microcrm-staging") ;;
+        "aws-poc-production:production:project_6_group/microcrm:microcrm-production:microcrm-prod") ;;
+        *) echo "Ciblage du smoke test incohérent avec l'environnement GitLab" >&2; exit 1 ;;
+      esac
+    - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --output=name | wc -l | tr -d "[:space:]")" = "1"'
+    - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --selector "microcrm-environment=$DEPLOYMENT_ENVIRONMENT" --output=name | wc -l | tr -d "[:space:]")" = "1"'
     - bash scripts/ci/smoke_deployment.sh --namespace "$KUBE_NAMESPACE" --context "$KUBE_CONTEXT"
 
 # Même contrôle HTTP après promotion ou rollback d'un tag en staging.
 verify:deployment:release:staging:
   extends: .verify:deployment:http
+  resource_group: aws-poc-staging
   needs:
     - job: deploy:helm:staging:release-or-rollback
   environment:
     name: aws-poc-staging
   variables:
+    DEPLOYMENT_ENVIRONMENT: staging
+    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
     KUBE_NAMESPACE: microcrm-staging
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.[1-9][0-9]*$/'
@@ -61,11 +70,14 @@ verify:deployment:release:staging:
 # La production est contrôlée après la promotion Helm manuelle d'un tag SemVer.
 verify:deployment:production:
   extends: .verify:deployment:http
+  resource_group: aws-poc-production
   needs:
     - job: deploy:helm:production:release-or-rollback
   environment:
     name: aws-poc-production
   variables:
+    DEPLOYMENT_ENVIRONMENT: production
+    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-production"
     KUBE_NAMESPACE: microcrm-prod
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'

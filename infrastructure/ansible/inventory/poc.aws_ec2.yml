@@ -7,7 +7,7 @@ regions:
 filters:
   instance-state-name: running
   tag:Project: MicroCRM
-  tag:Environment: poc
+  tag:Environment: "{{ lookup('ansible.builtin.env', 'DEPLOYMENT_ENVIRONMENT') }}"
   tag:Ansible: k3s-server
 
 # L'identifiant EC2 est stable et directement compris par la connexion SSM.

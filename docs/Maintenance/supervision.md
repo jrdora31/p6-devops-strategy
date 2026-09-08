@@ -4,29 +4,26 @@ Comment surveiller MicroCRM une fois déployé et diagnostiquer son état.
 
 ## Dashboard CloudWatch
 
-TODO :
-
-* emplacement du dashboard ;
-* métriques affichées ;
-* disponibilité, performance et sécurité ;
-* widget **Échecs d'authentification système**.
+Lorsque CloudWatch est activé, Terraform crée un dashboard distinct par state :
+`microcrm-staging-monitoring` et `microcrm-production-monitoring`. Chacun cible
+uniquement l'instance, les métriques et les logs de son environnement.
 
 ## Métriques
 
 ### EC2
 
-TODO : CPU, mémoire, disque, disponibilité.
+Chaque dashboard affiche la disponibilité, le CPU, la mémoire et le disque de
+sa propre EC2.
 
-### Load Balancer
+### Exposition HTTP
 
-TODO : métriques et health checks.
+Chaque EC2 expose son Traefik sur sa propre IPv4 publique. Aucun ALB n'est
+déclaré dans cette architecture.
 
 ## Logs applicatifs
 
-TODO :
-
-* où consulter les logs ;
-* quels logs sont collectés.
+Les groupes `/microcrm/staging/{system,kubernetes}` et
+`/microcrm/production/{system,kubernetes}` empêchent le mélange des journaux.
 
 ## CloudWatch Logs Insights
 
@@ -68,7 +65,9 @@ avant de déclarer cette notification validée en conditions réelles.
 
 ## État K3s / Pods
 
-TODO : commandes de vérification du cluster et des pods.
+Les deux contextes GitLab Agent sont distincts. Les jobs de vérification
+contrôlent le label `microcrm-environment=staging|production` avant le smoke
+HTTP dans le pod frontend.
 
 ## Diagnostic rapide
 
@@ -77,7 +76,7 @@ TODO : commandes utiles pour diagnostiquer :
 * EC2 ;
 * K3s / pods ;
 * application ;
-* Load Balancer.
+* contexte GitLab Agent et Traefik.
 
 ## Exploitation des données
 

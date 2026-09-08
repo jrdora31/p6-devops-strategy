@@ -1,17 +1,24 @@
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 locals {
-  selected_availability_zone = coalesce(var.availability_zone, data.aws_availability_zones.available.names[0])
-
   common_tags = {
     Project     = "MicroCRM"
     Environment = var.environment
     ManagedBy   = "Terraform"
     Owner       = var.owner
   }
-  alarm_actions = var.cloudwatch_agent_enabled && var.alert_email != "" ? [aws_sns_topic.poc_alerts[0].arn] : []
+  cloudwatch_log_group_prefix = "/microcrm/${var.environment}"
+  metrics_namespace           = "MicroCRM/${title(var.environment)}"
+  security_metrics_namespace  = "${local.metrics_namespace}/Security"
+  alarm_actions               = var.cloudwatch_agent_enabled && var.alert_email != "" ? [aws_sns_topic.poc_alerts[0].arn] : []
+}
+
+# Les credentials restent fournis par TF_HTTP_USERNAME et TF_HTTP_PASSWORD.
+# Seule l'adresse non sensible du state réseau est transmise comme variable.
+data "terraform_remote_state" "network" {
+  backend = "http"
+
+  config = {
+    address = var.network_state_address
+  }
 }
 
 resource "aws_sns_topic" "poc_alerts" {
@@ -28,16 +35,6 @@ resource "aws_sns_topic_subscription" "poc_alert_email" {
   endpoint  = var.alert_email
 }
 
-module "network" {
-  source = "./modules/network"
-
-  name_prefix        = "${var.project_name}-${var.environment}"
-  vpc_cidr           = var.vpc_cidr
-  public_subnet_cidr = var.public_subnet_cidr
-  availability_zone  = local.selected_availability_zone
-  http_ingress_cidrs = var.http_ingress_cidrs
-}
-
 module "ansible_transfer" {
   source = "./modules/ansible_transfer"
 
@@ -48,21 +45,21 @@ module "compute" {
   source = "./modules/compute"
 
   name_prefix                 = "${var.project_name}-${var.environment}"
-  subnet_id                   = module.network.public_subnet_id
-  security_group_id           = module.network.k3s_security_group_id
+  subnet_id                   = data.terraform_remote_state.network.outputs.public_subnet_id
+  security_group_id           = data.terraform_remote_state.network.outputs.k3s_security_group_id
   instance_type               = var.instance_type
   root_volume_size            = var.root_volume_size
   ami_id                      = var.ami_id
   bootstrap_script            = file("${path.module}/templates/bootstrap.sh")
   aws_region                  = var.aws_region
   cloudwatch_agent_enabled    = var.cloudwatch_agent_enabled
-  cloudwatch_log_group_prefix = var.cloudwatch_log_group_prefix
+  cloudwatch_log_group_prefix = local.cloudwatch_log_group_prefix
 }
 
 locals {
   cloudwatch_log_groups = {
-    system     = "${var.cloudwatch_log_group_prefix}/system"
-    kubernetes = "${var.cloudwatch_log_group_prefix}/kubernetes"
+    system     = "${local.cloudwatch_log_group_prefix}/system"
+    kubernetes = "${local.cloudwatch_log_group_prefix}/kubernetes"
   }
 }
 
@@ -82,7 +79,7 @@ resource "aws_cloudwatch_log_metric_filter" "authentication_failures" {
 
   metric_transformation {
     name          = "AuthenticationFailureCount"
-    namespace     = "MicroCRM/Poc/Security"
+    namespace     = local.security_metrics_namespace
     value         = "1"
     default_value = "0"
   }
@@ -135,7 +132,7 @@ resource "aws_cloudwatch_metric_alarm" "authentication_failures" {
   count               = var.cloudwatch_agent_enabled ? 1 : 0
   alarm_name          = "${var.project_name}-${var.environment}-authentication-failures"
   alarm_description   = "[HIGH] Échec d'authentification détecté dans les logs système. Responsable: Ops. Action: vérifier la source et sécuriser l'accès. Canal: état CloudWatch."
-  namespace           = "MicroCRM/Poc/Security"
+  namespace           = local.security_metrics_namespace
   metric_name         = "AuthenticationFailureCount"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = 1
@@ -196,8 +193,8 @@ resource "aws_cloudwatch_dashboard" "poc" {
           stat   = "Average"
           period = 300
           metrics = [
-            ["MicroCRM/Poc", "cpu_usage_user", "cpu", "cpu-total", "host", module.compute.metric_hostname, { label = "CPU user (%)" }],
-            ["MicroCRM/Poc", "cpu_usage_system", "cpu", "cpu-total", "host", module.compute.metric_hostname, { label = "CPU system (%)" }]
+            [local.metrics_namespace, "cpu_usage_user", "cpu", "cpu-total", "host", module.compute.metric_hostname, { label = "CPU user (%)" }],
+            [local.metrics_namespace, "cpu_usage_system", "cpu", "cpu-total", "host", module.compute.metric_hostname, { label = "CPU system (%)" }]
           ]
         }
       },
@@ -214,9 +211,9 @@ resource "aws_cloudwatch_dashboard" "poc" {
           stat   = "Average"
           period = 300
           metrics = [
-            ["MicroCRM/Poc", "mem_used_percent", "host", module.compute.metric_hostname, { label = "Mémoire utilisée (%)" }],
+            [local.metrics_namespace, "mem_used_percent", "host", module.compute.metric_hostname, { label = "Mémoire utilisée (%)" }],
             [{
-              expression = "SEARCH('{MicroCRM/Poc,device,fstype,host,path} MetricName=\"disk_used_percent\" host=\"${module.compute.metric_hostname}\" path=\"/\"', 'Average', 300)"
+              expression = "SEARCH('{${local.metrics_namespace},device,fstype,host,path} MetricName=\"disk_used_percent\" host=\"${module.compute.metric_hostname}\" path=\"/\"', 'Average', 300)"
               id         = "disk"
               label      = "Disque utilisé (%)"
             }]
@@ -232,7 +229,7 @@ resource "aws_cloudwatch_dashboard" "poc" {
         properties = {
           title  = "Erreurs et avertissements MicroCRM"
           region = var.aws_region
-          query  = "SOURCE '${var.cloudwatch_log_group_prefix}/kubernetes' | fields @timestamp, @message | filter @message like /ERROR/ or @message like /WARN/ | sort @timestamp desc | limit 50"
+          query  = "SOURCE '${local.cloudwatch_log_group_prefix}/kubernetes' | fields @timestamp, @message | filter @message like /ERROR/ or @message like /WARN/ | sort @timestamp desc | limit 50"
           view   = "table"
         }
       },
@@ -245,7 +242,7 @@ resource "aws_cloudwatch_dashboard" "poc" {
         properties = {
           title  = "Déploiements — démarrages et migrations"
           region = var.aws_region
-          query  = "SOURCE '${var.cloudwatch_log_group_prefix}/kubernetes' | fields @timestamp, @message | filter @message like /MicroCRMApplication/ or @message like /Liquibase/ or @message like /liquibase/ | sort @timestamp desc | limit 50"
+          query  = "SOURCE '${local.cloudwatch_log_group_prefix}/kubernetes' | fields @timestamp, @message | filter @message like /MicroCRMApplication/ or @message like /Liquibase/ or @message like /liquibase/ | sort @timestamp desc | limit 50"
           view   = "table"
         }
       }

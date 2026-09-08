@@ -54,8 +54,11 @@ relancer sa pipeline existante plutôt que créer un nouveau tag.
 
 ## Promotion et rollback
 
-- Les pipelines Web `dev` et `main` reconstruisent uniquement l'infrastructure
-  partagée du POC avec Terraform puis Ansible ; elles ne déploient aucune application.
+- Une pipeline Web `dev` gère uniquement le state `microcrm-staging`, l'EC2
+  staging et son cluster K3s.
+- Une pipeline Web `main` gère uniquement le state `microcrm-production`,
+  l'EC2 production et son cluster K3s.
+- Ces pipelines d'infrastructure ne déploient aucune application.
 - `deploy:helm:staging:release-or-rollback` accepte uniquement une RC et la déploie en staging.
 - `deploy:helm:production:release-or-rollback` accepte uniquement une version finale et la déploie en production.
 - Les deux jobs téléchargent le bundle du tag et passent à Helm les digests
@@ -66,25 +69,26 @@ relancer sa pipeline existante plutôt que créer un nouveau tag.
 Cette procédure restaure la release applicative. Elle ne restaure pas les
 données PostgreSQL et ne remplace pas une procédure de restauration de base.
 
-## Préparation du futur découpage de l'infrastructure
+## Séparation de l'infrastructure
 
-Le POC actuel conserve une seule EC2 et un seul state Terraform GitLab nommé
-`microcrm-poc`. Les pipelines Web `dev` et `main` ciblent donc encore la même
-infrastructure ; lancer `deploy:terraform:destroy` détruit actuellement le POC
-partagé et interrompt les deux namespaces.
+L'infrastructure est déclarée dans trois states GitLab distincts :
 
-Le nom du state est désormais centralisé dans `TF_STATE_NAME`. Le plan transmet
-également `TF_PLANNED_STATE_NAME` à l'apply, qui refuse de continuer si les deux
-states diffèrent. Le job destroy archive `destroy-scope.txt` et
-`destroy-resources.txt`, qui indiquent le state, la branche et les ressources
-visées avant la destruction.
+- `microcrm-network` contient le VPC, le subnet public, la route Internet et le
+  Security Group commun ;
+- `microcrm-staging` contient l'EC2/K3s staging, son IAM, son bucket temporaire
+  Ansible/SSM et son monitoring ;
+- `microcrm-production` contient les mêmes ressources, exclusivement pour la
+  production.
 
-Lors du passage réel à deux EC2, il faudra d'abord séparer le root module et
-migrer les ressources : un state partagé pour le réseau et les ressources
-communes, puis un state de calcul `microcrm-staging` et un state de calcul
-`microcrm-production`. Le premier sera associé à la pipeline Web `dev` et le
-second à la pipeline Web `main`. Leur destroy ne touchera alors que la pile de
-calcul correspondante et conservera les ressources partagées. Modifier
-uniquement `TF_STATE_NAME` sans cette séparation et cette migration est
-interdit : cela créerait un state vide au lieu d'isoler correctement l'EC2
-existante.
+Le root réseau reste séparé du root environnement générique. Le plan transmet
+le state et l'environnement prévus à l'apply, qui refuse toute combinaison
+autre que `dev/staging/microcrm-staging` ou
+`main/production/microcrm-production`. Le destroy d'un environnement conserve
+ainsi le réseau partagé et l'autre EC2. Aucun job de destroy réseau n'est
+fourni dans la pipeline courante.
+
+Avant le premier apply de cette version, les ressources du state historique
+`microcrm-poc` doivent être réparties dans les trois states. Copier une même
+ressource dans plusieurs states ou changer seulement `TF_STATE_NAME` est
+interdit : Terraform pourrait recréer ou détruire une ressource appartenant à
+l'autre environnement. Cette migration de state n'est pas exécutée par la CI.

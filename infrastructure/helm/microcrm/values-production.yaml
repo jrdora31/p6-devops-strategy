@@ -1,5 +1,5 @@
 # Environnement de production du POC, promu manuellement par un tag SemVer.
-# Il reste isolé de staging par son namespace et son nom de release Kubernetes.
+# Il est déployé uniquement sur le cluster K3s production.
 fullnameOverride: microcrm-prod
 
 database:

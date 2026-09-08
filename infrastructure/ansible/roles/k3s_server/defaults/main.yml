@@ -17,11 +17,12 @@ k3s_server_node_ready_retries: 2
 # Le chart et l'image agentk restent figés par cette version. L'installation
 # est confiée au Helm Controller déjà fourni par K3s.
 k3s_server_gitlab_agent_chart_version: "2.29.0"
-k3s_server_gitlab_agent_release_name: microcrm-poc
-k3s_server_gitlab_agent_namespace: gitlab-agent-microcrm-poc
-k3s_server_gitlab_agent_secret_name: microcrm-poc-gitlab-agent-token
+k3s_server_gitlab_agent_name: microcrm-poc
+k3s_server_gitlab_agent_release_name: "{{ k3s_server_gitlab_agent_name }}"
+k3s_server_gitlab_agent_namespace: "gitlab-agent-{{ k3s_server_gitlab_agent_name }}"
+k3s_server_gitlab_agent_secret_name: "{{ k3s_server_gitlab_agent_name }}-gitlab-agent-token"
 k3s_server_gitlab_agent_kas_address: wss://kas.gitlab.com
 k3s_server_gitlab_agent_manifest_path: >-
-  /var/lib/rancher/k3s/server/manifests/microcrm-poc-gitlab-agent.yaml
+  /var/lib/rancher/k3s/server/manifests/{{ k3s_server_gitlab_agent_name }}-gitlab-agent.yaml
 k3s_server_gitlab_agent_token: >-
   {{ lookup('ansible.builtin.env', 'GITLAB_AGENT_TOKEN') }}

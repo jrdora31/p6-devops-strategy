@@ -55,7 +55,11 @@
         "iam:UntagRole",
         "iam:UpdateAssumeRolePolicy"
       ],
-      "Resource": "arn:aws:iam::*:role/microcrm-poc-*"
+      "Resource": [
+        "arn:aws:iam::*:role/microcrm-poc-*",
+        "arn:aws:iam::*:role/microcrm-staging-*",
+        "arn:aws:iam::*:role/microcrm-production-*"
+      ]
     },
     {
       "Sid": "AttachOnlySsmManagedPolicy",
@@ -64,7 +68,11 @@
         "iam:AttachRolePolicy",
         "iam:DetachRolePolicy"
       ],
-      "Resource": "arn:aws:iam::*:role/microcrm-poc-*",
+      "Resource": [
+        "arn:aws:iam::*:role/microcrm-poc-*",
+        "arn:aws:iam::*:role/microcrm-staging-*",
+        "arn:aws:iam::*:role/microcrm-production-*"
+      ],
       "Condition": {
         "ArnEquals": {
           "iam:PolicyARN": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -83,13 +91,21 @@
         "iam:TagInstanceProfile",
         "iam:UntagInstanceProfile"
       ],
-      "Resource": "arn:aws:iam::*:instance-profile/microcrm-poc-*"
+      "Resource": [
+        "arn:aws:iam::*:instance-profile/microcrm-poc-*",
+        "arn:aws:iam::*:instance-profile/microcrm-staging-*",
+        "arn:aws:iam::*:instance-profile/microcrm-production-*"
+      ]
     },
     {
       "Sid": "PassOnlyMicrocrmRoleToEc2",
       "Effect": "Allow",
       "Action": "iam:PassRole",
-      "Resource": "arn:aws:iam::*:role/microcrm-poc-*",
+      "Resource": [
+        "arn:aws:iam::*:role/microcrm-poc-*",
+        "arn:aws:iam::*:role/microcrm-staging-*",
+        "arn:aws:iam::*:role/microcrm-production-*"
+      ],
       "Condition": {
         "StringEquals": {
           "iam:PassedToService": "ec2.amazonaws.com"
@@ -134,7 +150,11 @@
       ],
       "Resource": [
         "arn:aws:s3:::microcrm-poc-ansible-*",
-        "arn:aws:s3:::microcrm-poc-ansible-*/*"
+        "arn:aws:s3:::microcrm-poc-ansible-*/*",
+        "arn:aws:s3:::microcrm-staging-ansible-*",
+        "arn:aws:s3:::microcrm-staging-ansible-*/*",
+        "arn:aws:s3:::microcrm-production-ansible-*",
+        "arn:aws:s3:::microcrm-production-ansible-*/*"
       ]
     },
     {
@@ -169,7 +189,11 @@
         "logs:TagResource",
         "logs:UntagResource"
       ],
-      "Resource": "arn:aws:logs:*:*:log-group:/microcrm/poc*"
+      "Resource": [
+        "arn:aws:logs:*:*:log-group:/microcrm/poc*",
+        "arn:aws:logs:*:*:log-group:/microcrm/staging*",
+        "arn:aws:logs:*:*:log-group:/microcrm/production*"
+      ]
     },
     {
       "Sid": "MicrocrmCloudWatchMetricFilterRead",

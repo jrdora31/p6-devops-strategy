@@ -150,7 +150,7 @@ resource "aws_instance" "k3s" {
 
     precondition {
       condition     = data.aws_ec2_instance_type.selected.default_vcpus >= 2 && data.aws_ec2_instance_type.selected.memory_size >= 4096
-      error_message = "Le nœud K3s du POC nécessite au minimum 2 vCPU et 4 Gio de RAM."
+      error_message = "Le nœud K3s nécessite au minimum 2 vCPU et 4 Gio de RAM."
     }
   }
 

@@ -1,11 +1,11 @@
 output "aws_region" {
-  description = "Région du POC."
+  description = "Région de l'environnement."
   value       = var.aws_region
 }
 
-output "availability_zone" {
-  description = "Availability Zone du nœud K3s."
-  value       = local.selected_availability_zone
+output "environment" {
+  description = "Environnement isolé géré par ce state."
+  value       = var.environment
 }
 
 output "instance_id" {
@@ -35,6 +35,16 @@ output "cloudwatch_alarm_names" {
 output "cloudwatch_alert_topic_arn" {
   description = "ARN du topic SNS utilisé par les alarmes lorsque ALERT_EMAIL est renseigné."
   value       = try(aws_sns_topic.poc_alerts[0].arn, null)
+}
+
+output "cloudwatch_log_group_prefix" {
+  description = "Préfixe des groupes de logs propres à l'environnement."
+  value       = local.cloudwatch_log_group_prefix
+}
+
+output "metrics_namespace" {
+  description = "Namespace CloudWatch propre à l'environnement."
+  value       = local.metrics_namespace
 }
 
 output "ansible_transfer_bucket" {
