@@ -1,0 +1,287 @@
+{{- if .Values.canary.enabled }}
+{{- $version := required "canary.version est obligatoire lorsque le Canary est actif" .Values.canary.version }}
+{{- $frontendDigest := required "canary.frontend.image.digest est obligatoire lorsque le Canary est actif" .Values.canary.frontend.image.digest }}
+{{- $backendDigest := required "canary.backend.image.digest est obligatoire lorsque le Canary est actif" .Values.canary.backend.image.digest }}
+{{- if or (not (regexMatch "^sha256:[0-9a-f]{64}$" $frontendDigest)) (not (regexMatch "^sha256:[0-9a-f]{64}$" $backendDigest)) }}
+{{- fail "les images Canary doivent utiliser des digests sha256 immuables" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "microcrm.fullname" . }}-canary-frontend
+  labels:
+    {{- include "microcrm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    {{- include "microcrm.releaseLabels" (dict "track" "canary" "version" $version) | nindent 4 }}
+spec:
+  replicas: {{ .Values.canary.frontend.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "microcrm.name" . }}
+      app.kubernetes.io/instance: {{ printf "%s-canary" .Release.Name }}
+      app.kubernetes.io/component: frontend
+      microcrm.io/track: canary
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "microcrm.name" . }}
+        app.kubernetes.io/instance: {{ printf "%s-canary" .Release.Name }}
+        app.kubernetes.io/component: frontend
+        {{- include "microcrm.releaseLabels" (dict "track" "canary" "version" $version) | nindent 8 }}
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: frontend
+          image: {{ include "microcrm.image" .Values.canary.frontend.image | quote }}
+          imagePullPolicy: {{ .Values.canary.frontend.image.pullPolicy }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            runAsGroup: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+              add: ["NET_BIND_SERVICE"]
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: BACKEND_ADDRESS
+              value: {{ printf "%s-canary-backend:8080" (include "microcrm.fullname" .) | quote }}
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          volumeMounts:
+            - name: caddy-data
+              mountPath: /data
+            - name: caddy-config
+              mountPath: /config
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: caddy-data
+          emptyDir: {}
+        - name: caddy-config
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "microcrm.fullname" . }}-canary-frontend
+  labels:
+    {{- include "microcrm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    microcrm.io/track: canary
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: {{ include "microcrm.name" . }}
+    app.kubernetes.io/instance: {{ printf "%s-canary" .Release.Name }}
+    app.kubernetes.io/component: frontend
+    microcrm.io/track: canary
+  ports:
+    - name: http
+      port: {{ .Values.frontend.service.port }}
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "microcrm.fullname" . }}-canary-backend
+  labels:
+    {{- include "microcrm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+    {{- include "microcrm.releaseLabels" (dict "track" "canary" "version" $version) | nindent 4 }}
+spec:
+  replicas: {{ .Values.canary.backend.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "microcrm.name" . }}
+      app.kubernetes.io/instance: {{ printf "%s-canary" .Release.Name }}
+      app.kubernetes.io/component: backend
+      microcrm.io/track: canary
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "microcrm.name" . }}
+        app.kubernetes.io/instance: {{ printf "%s-canary" .Release.Name }}
+        app.kubernetes.io/component: backend
+        {{- include "microcrm.releaseLabels" (dict "track" "canary" "version" $version) | nindent 8 }}
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: backend
+          image: {{ include "microcrm.image" .Values.canary.backend.image | quote }}
+          imagePullPolicy: {{ .Values.canary.backend.image.pullPolicy }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            runAsGroup: 101
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "microcrm.fullname" . }}-backend
+          env:
+            - name: MICROCRM_DEPLOYMENT_ENVIRONMENT
+              value: {{ .Values.release.environment | quote }}
+            - name: MICROCRM_DEPLOYMENT_TRACK
+              value: canary
+            - name: MICROCRM_RELEASE_VERSION
+              value: {{ $version | quote }}
+            - name: MICROCRM_STATSD_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: MICROCRM_MONITORING_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "monitoringAuth.existingSecret est obligatoire" .Values.monitoringAuth.existingSecret }}
+                  key: {{ .Values.monitoringAuth.usernameKey }}
+                  optional: true
+            - name: MICROCRM_MONITORING_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "monitoringAuth.existingSecret est obligatoire" .Values.monitoringAuth.existingSecret }}
+                  key: {{ .Values.monitoringAuth.passwordKey }}
+                  optional: true
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "database.existingSecret est obligatoire" .Values.database.existingSecret }}
+                  key: {{ .Values.database.usernameKey }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "database.existingSecret est obligatoire" .Values.database.existingSecret }}
+                  key: {{ .Values.database.passwordKey }}
+          ports:
+            - name: http
+              containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "microcrm.fullname" . }}-canary-backend
+  labels:
+    {{- include "microcrm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+    microcrm.io/track: canary
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: {{ include "microcrm.name" . }}
+    app.kubernetes.io/instance: {{ printf "%s-canary" .Release.Name }}
+    app.kubernetes.io/component: backend
+    microcrm.io/track: canary
+  ports:
+    - name: http
+      port: {{ .Values.backend.service.port }}
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "microcrm.fullname" . }}-canary-backend
+  labels:
+    {{- include "microcrm.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "microcrm.name" . }}
+      app.kubernetes.io/instance: {{ printf "%s-canary" .Release.Name }}
+      app.kubernetes.io/component: backend
+      microcrm.io/track: canary
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "microcrm.name" . }}
+              app.kubernetes.io/instance: {{ printf "%s-canary" .Release.Name }}
+              app.kubernetes.io/component: frontend
+              microcrm.io/track: canary
+      ports:
+        - protocol: TCP
+          port: 8080
+{{- end }}

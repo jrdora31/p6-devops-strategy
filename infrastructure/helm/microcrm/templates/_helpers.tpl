@@ -17,6 +17,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
+{{- define "microcrm.releaseLabels" -}}
+microcrm.io/track: {{ .track | quote }}
+app.kubernetes.io/version: {{ .version | quote }}
+{{- end }}
+
 {{- define "microcrm.image" -}}
 {{- if .digest -}}
 {{ printf "%s@%s" .repository .digest }}

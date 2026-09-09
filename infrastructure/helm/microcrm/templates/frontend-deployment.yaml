@@ -5,6 +5,7 @@ metadata:
   labels:
     {{- include "microcrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: frontend
+    {{- include "microcrm.releaseLabels" (dict "track" "stable" "version" .Values.release.version) | nindent 4 }}
 spec:
   replicas: {{ .Values.frontend.replicaCount }}
   strategy:
@@ -23,7 +24,12 @@ spec:
         app.kubernetes.io/name: {{ include "microcrm.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: frontend
+        {{- include "microcrm.releaseLabels" (dict "track" "stable" "version" .Values.release.version) | nindent 8 }}
     spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       automountServiceAccountToken: false
       securityContext:
         seccompProfile:

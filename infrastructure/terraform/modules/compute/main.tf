@@ -138,10 +138,11 @@ resource "aws_instance" "k3s" {
   }
 
   tags = {
-    Name       = "${var.name_prefix}-k3s-${count.index == 0 ? "server" : "agent"}"
-    Ansible    = count.index == 0 ? "k3s-server" : "k3s-agent"
-    Kubernetes = "k3s"
-    K3sRole    = count.index == 0 ? "server" : "agent"
+    Name            = "${var.name_prefix}-${count.index == 0 ? "staging" : "production"}"
+    Ansible         = count.index == 0 ? "k3s-server" : "k3s-agent"
+    Kubernetes      = "k3s"
+    K3sRole         = count.index == 0 ? "server" : "agent"
+    EnvironmentRole = count.index == 0 ? "staging" : "production"
   }
 
   lifecycle {

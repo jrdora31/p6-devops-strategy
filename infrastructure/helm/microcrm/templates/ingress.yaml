@@ -1,4 +1,45 @@
-{{- if .Values.ingress.enabled }}
+{{- if and .Values.ingress.enabled .Values.canary.enabled }}
+{{- if ne (add (int .Values.canary.stableWeight) (int .Values.canary.canaryWeight)) 100 }}
+{{- fail "la somme de canary.stableWeight et canary.canaryWeight doit être égale à 100" }}
+{{- end }}
+apiVersion: traefik.io/v1alpha1
+kind: TraefikService
+metadata:
+  name: {{ include "microcrm.fullname" . }}-frontend-weighted
+  labels:
+    {{- include "microcrm.labels" . | nindent 4 }}
+spec:
+  weighted:
+    services:
+      {{- if gt (int .Values.canary.stableWeight) 0 }}
+      - name: {{ include "microcrm.fullname" . }}-frontend
+        kind: Service
+        port: http
+        weight: {{ .Values.canary.stableWeight }}
+      {{- end }}
+      {{- if gt (int .Values.canary.canaryWeight) 0 }}
+      - name: {{ include "microcrm.fullname" . }}-canary-frontend
+        kind: Service
+        port: http
+        weight: {{ .Values.canary.canaryWeight }}
+      {{- end }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "microcrm.fullname" . }}
+  labels:
+    {{- include "microcrm.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: {{ printf "Host(`%s`)" .Values.ingress.host | quote }}
+      services:
+        - name: {{ include "microcrm.fullname" . }}-frontend-weighted
+          kind: TraefikService
+{{- else if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

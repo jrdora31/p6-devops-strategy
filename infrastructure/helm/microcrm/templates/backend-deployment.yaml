@@ -5,6 +5,7 @@ metadata:
   labels:
     {{- include "microcrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
+    {{- include "microcrm.releaseLabels" (dict "track" "stable" "version" .Values.release.version) | nindent 4 }}
 spec:
   replicas: {{ .Values.backend.replicaCount }}
   strategy:
@@ -23,7 +24,12 @@ spec:
         app.kubernetes.io/name: {{ include "microcrm.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: backend
+        {{- include "microcrm.releaseLabels" (dict "track" "stable" "version" .Values.release.version) | nindent 8 }}
     spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       automountServiceAccountToken: false
       securityContext:
         seccompProfile:
@@ -61,6 +67,28 @@ spec:
             - configMapRef:
                 name: {{ include "microcrm.fullname" . }}-backend
           env:
+            - name: MICROCRM_DEPLOYMENT_ENVIRONMENT
+              value: {{ .Values.release.environment | quote }}
+            - name: MICROCRM_DEPLOYMENT_TRACK
+              value: stable
+            - name: MICROCRM_RELEASE_VERSION
+              value: {{ .Values.release.version | quote }}
+            - name: MICROCRM_STATSD_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: MICROCRM_MONITORING_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "monitoringAuth.existingSecret est obligatoire" .Values.monitoringAuth.existingSecret }}
+                  key: {{ .Values.monitoringAuth.usernameKey }}
+                  optional: true
+            - name: MICROCRM_MONITORING_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "monitoringAuth.existingSecret est obligatoire" .Values.monitoringAuth.existingSecret }}
+                  key: {{ .Values.monitoringAuth.passwordKey }}
+                  optional: true
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:

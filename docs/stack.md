@@ -12,7 +12,7 @@ Vue exhaustive et concise des technologies utilisées dans MicroCRM.
 | CI/CD | GitLab CI/CD |
 | IaC | Terraform, Ansible |
 | Système EC2 | 2 × Debian 12 (Bookworm) amd64 |
-| Orchestration | 2 clusters K3s isolés, Helm |
+| Orchestration | 1 cluster K3s partagé (1 server + 1 agent), Helm |
 | Cloud | AWS |
 | Observabilité | CloudWatch |
 
@@ -31,8 +31,8 @@ Vue exhaustive et concise des technologies utilisées dans MicroCRM.
 ## Infrastructure
 
 - Terraform : provisionnement AWS
-- Ansible : configuration des deux instances Debian 12 et de leur K3s
-- Helm : staging sur l'EC2 staging, production sur l'EC2 production
+- Ansible : nœud serveur dédié aux workloads staging et nœud agent dédié à production
+- Helm : staging normal et stable/Canary production dans deux namespaces du cluster partagé
 - Emplacement : `infrastructure/`
 
 ## CI/CD

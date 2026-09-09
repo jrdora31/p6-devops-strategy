@@ -5,6 +5,7 @@ metadata:
   labels:
     {{- include "microcrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: backend
+    microcrm.io/track: stable
 spec:
   type: ClusterIP
   selector:

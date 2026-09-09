@@ -62,6 +62,8 @@ verify:images:
     - kubectl --context "$KUBE_CONTEXT" wait --for=condition=Ready node --all --timeout=180s
     - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --output=name | wc -l | tr -d "[:space:]")" = "2"'
     - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --selector "microcrm-environment=poc" --output=name | wc -l | tr -d "[:space:]")" = "2"'
+    - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --selector "microcrm.io/environment-role=staging" --output=name | wc -l | tr -d "[:space:]")" = "1"'
+    - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --selector "microcrm.io/environment-role=production" --output=name | wc -l | tr -d "[:space:]")" = "1"'
     - kubectl --context "$KUBE_CONTEXT" --namespace kube-system rollout status deployment/traefik --timeout=180s
     - >-
       test "$(kubectl --context "$KUBE_CONTEXT" --namespace kube-system get deployment traefik
@@ -104,18 +106,56 @@ verify:deployment:release:staging:
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.[1-9][0-9]*$/'
 
-# La production est contrôlée après la promotion Helm manuelle d'un tag SemVer.
-verify:deployment:production:
-  extends: .verify:deployment:http
+# Après le clic de déploiement, ce contrôle part automatiquement. Il cible le
+# Canary par son Service ClusterIP, puis vérifie aussi la route publique 90/10.
+verify:production:canary:
+  extends: .canary:production
+  stage: verify
   resource_group: aws-poc-production
   needs:
-    - job: deploy:helm:production:release-or-rollback
+    - job: deploy:helm:production:canary
   environment:
     name: aws-poc-production
-  variables:
-    DEPLOYMENT_ENVIRONMENT: production
-    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
-    KUBE_NAMESPACE: microcrm-prod
-    INGRESS_HOST: microcrm.example.invalid
+    action: verify
+  script:
+    - bash scripts/ci/canary.sh verify
+    - bash scripts/ci/smoke_production.sh
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'
+
+# Ces deux décisions sont optionnelles pour le statut global : la pipeline est
+# déjà SUCCESS après verify. Si l'une est lancée, ses erreurs restent visibles
+# dans le statut et les logs du job sans immobiliser indéfiniment la pipeline.
+promote:helm:production:canary:
+  extends: .canary:production
+  stage: canary-decision
+  resource_group: aws-poc-production
+  needs:
+    - job: verify:production:canary
+  environment:
+    name: aws-poc-production
+  script:
+    - bash scripts/ci/canary.sh promote
+    - bash scripts/ci/smoke_production.sh
+  manual_confirmation: "Promouvoir exactement ce Canary comme stable production ?"
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'
+      when: manual
+      allow_failure: true
+
+abort:helm:production:canary:
+  extends: .canary:production
+  stage: canary-decision
+  resource_group: aws-poc-production
+  needs:
+    - job: verify:production:canary
+  environment:
+    name: aws-poc-production
+  script:
+    - bash scripts/ci/canary.sh abort
+    - bash scripts/ci/smoke_production.sh
+  manual_confirmation: "Abandonner ce Canary et restaurer la stable à 100 % ?"
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'
+      when: manual
+      allow_failure: true

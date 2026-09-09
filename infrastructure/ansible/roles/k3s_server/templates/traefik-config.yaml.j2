@@ -6,6 +6,14 @@ metadata:
   namespace: kube-system
 spec:
   valuesContent: |-
+    accessLog:
+      enabled: true
+      format: json
+      fields:
+        headers:
+          defaultMode: drop
+        queryParameters:
+          defaultMode: drop
     deployment:
       replicas: 2
     affinity:

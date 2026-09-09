@@ -42,6 +42,14 @@ spec:
               app.kubernetes.io/name: {{ include "microcrm.name" . }}
               app.kubernetes.io/instance: {{ .Release.Name }}
               app.kubernetes.io/component: backend
+        {{- if .Values.canary.enabled }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "microcrm.name" . }}
+              app.kubernetes.io/instance: {{ printf "%s-canary" .Release.Name }}
+              app.kubernetes.io/component: backend
+              microcrm.io/track: canary
+        {{- end }}
       ports:
         - protocol: TCP
           port: 5432

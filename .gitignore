@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.cache/
 
 # Fichiers de travail Terraform. Le lockfile reste versionné afin de verrouiller
 # les providers réellement validés par la CI.

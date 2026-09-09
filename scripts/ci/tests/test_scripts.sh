@@ -82,6 +82,14 @@ assert_success \
   bash "${REPOSITORY_ROOT}/scripts/ci/smoke_deployment.sh" --help
 
 assert_success \
+  "Aide du script de cycle Canary" \
+  bash "${REPOSITORY_ROOT}/scripts/ci/canary.sh" --help
+
+assert_success \
+  "Aide du smoke de production" \
+  bash "${REPOSITORY_ROOT}/scripts/ci/smoke_production.sh" --help
+
+assert_success \
   "Contrôle des dépendances verrouillées" \
   bash "${REPOSITORY_ROOT}/scripts/ci/dependencies.sh" \
   --component all --action check

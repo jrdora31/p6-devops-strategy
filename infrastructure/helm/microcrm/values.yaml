@@ -3,6 +3,12 @@ fullnameOverride: ""
 
 imagePullSecrets: []
 
+release:
+  environment: development
+  version: unreleased
+
+nodeSelector: {}
+
 registrySecret:
   enabled: false
   name: microcrm-registry
@@ -51,6 +57,35 @@ backend:
     limits:
       cpu: 500m
       memory: 512Mi
+
+monitoringAuth:
+  existingSecret: microcrm-monitoring
+  usernameKey: username
+  passwordKey: password
+  managedSecret:
+    enabled: false
+    username: monitoring
+    passwordBase64: ""
+
+canary:
+  enabled: false
+  stableWeight: 100
+  canaryWeight: 0
+  version: ""
+  frontend:
+    replicaCount: 1
+    image:
+      repository: registry.gitlab.com/project_6_group/microcrm/frontend
+      tag: replace-me
+      digest: ""
+      pullPolicy: IfNotPresent
+  backend:
+    replicaCount: 1
+    image:
+      repository: registry.gitlab.com/project_6_group/microcrm/backend
+      tag: replace-me
+      digest: ""
+      pullPolicy: IfNotPresent
 
 database:
   image:

@@ -85,11 +85,52 @@ test:helm:
     - helm lint infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-k3s.yaml
     - helm lint infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-staging.yaml
     - helm lint infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-production.yaml
+    - >-
+      helm lint infrastructure/helm/microcrm
+      --values infrastructure/helm/microcrm/values-production.yaml
+      --set canary.enabled=true
+      --set-string canary.version=v1.3.0
+      --set-string canary.frontend.image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      --set-string canary.backend.image.digest=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
     # `template` prouve que les ressources locales et AWS peuvent être générées.
     - helm template microcrm infrastructure/helm/microcrm --namespace microcrm --values infrastructure/helm/microcrm/values-minikube.yaml > /dev/null
     - helm template microcrm infrastructure/helm/microcrm --namespace microcrm --values infrastructure/helm/microcrm/values-k3s.yaml > /dev/null
     - helm template microcrm infrastructure/helm/microcrm --namespace microcrm-staging --values infrastructure/helm/microcrm/values-staging.yaml > /dev/null
     - helm template microcrm infrastructure/helm/microcrm --namespace microcrm-prod --values infrastructure/helm/microcrm/values-production.yaml > /dev/null
+    - >-
+      helm template microcrm infrastructure/helm/microcrm
+      --namespace microcrm-prod
+      --values infrastructure/helm/microcrm/values-production.yaml
+      --set-string release.version=v1.2.0
+      --set canary.enabled=true
+      --set-string canary.version=v1.3.0
+      --set-string canary.frontend.image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      --set-string canary.backend.image.digest=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      > /tmp/microcrm-canary.yaml
+    - 'test "$(grep -c "^kind: Deployment$" /tmp/microcrm-canary.yaml)" = "4"'
+    - 'test "$(grep -c "microcrm.io/track: \"canary\"" /tmp/microcrm-canary.yaml)" -ge "4"'
+    - 'grep -q "kind: TraefikService" /tmp/microcrm-canary.yaml'
+    - 'grep -q "weight: 90" /tmp/microcrm-canary.yaml'
+    - 'grep -q "weight: 10" /tmp/microcrm-canary.yaml'
+    - >-
+      ! helm template microcrm infrastructure/helm/microcrm
+      --namespace microcrm-prod
+      --values infrastructure/helm/microcrm/values-production.yaml
+      --set canary.enabled=true
+      --set-string canary.version=v1.3.0
+      > /dev/null
+    - >-
+      ! helm template microcrm infrastructure/helm/microcrm
+      --namespace microcrm-prod
+      --values infrastructure/helm/microcrm/values-production.yaml
+      --set canary.enabled=true
+      --set canary.stableWeight=90
+      --set canary.canaryWeight=20
+      --set-string canary.version=v1.3.0
+      --set-string canary.frontend.image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      --set-string canary.backend.image.digest=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+      > /dev/null
+    - '! helm template microcrm infrastructure/helm/microcrm --namespace microcrm-prod --values infrastructure/helm/microcrm/values-production.yaml | grep -q "microcrm-prod-canary"'
     # Deux occurrences sont attendues : une pour frontend et une pour backend.
     - 'test "$(helm template microcrm infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-staging.yaml | grep -c "^  replicas: 2$")" = "2"'
     - 'test "$(helm template microcrm infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-staging.yaml | grep -c "^        podAntiAffinity:$")" = "2"'

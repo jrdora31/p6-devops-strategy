@@ -8,3 +8,7 @@ Le playbook installe le serveur K3s, lit son jeton d'adhésion sans l'afficher,
 rattache l'agent et exige exactement deux nœuds `Ready`. Un seul GitLab Agent
 `microcrm-poc`, alimenté par la variable protégée `GITLAB_AGENT_TOKEN`, expose
 le cluster partagé aux jobs Helm des deux namespaces.
+
+Le serveur est labellisé `staging` et l'agent `production`. Le rôle CloudWatch
+reste commun et idempotent sur les deux EC2 ; il collecte les métriques hôte,
+les logs K3s/Traefik et écoute StatsD sur le port UDP 8125 du nœud.

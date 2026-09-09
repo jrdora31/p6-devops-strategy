@@ -15,6 +15,7 @@
     - 'test -n "$CI_DEPLOY_USER"'
     - 'test -n "$CI_DEPLOY_PASSWORD"'
     - 'test -n "$KUBERNETES_DATABASE_PASSWORD"'
+    - 'test -n "$KUBERNETES_MONITORING_PASSWORD"'
     - >-
       case "$CI_ENVIRONMENT_NAME:$DEPLOYMENT_ENVIRONMENT:$KUBE_CONTEXT:$KUBE_NAMESPACE" in
         "aws-poc-staging:staging:project_6_group/microcrm:microcrm-poc:microcrm-staging") ;;
@@ -43,6 +44,7 @@
     - REGISTRY_USERNAME_B64="$(printf '%s' "$CI_DEPLOY_USER" | base64 | tr -d '\n')"
     - REGISTRY_PASSWORD_B64="$(printf '%s' "$CI_DEPLOY_PASSWORD" | base64 | tr -d '\n')"
     - DATABASE_PASSWORD_B64="$(printf '%s' "$KUBERNETES_DATABASE_PASSWORD" | base64 | tr -d '\n')"
+    - MONITORING_PASSWORD_B64="$(printf '%s' "$KUBERNETES_MONITORING_PASSWORD" | base64 | tr -d '\n')"
     - FRONTEND_REPOSITORY="${FRONTEND_IMAGE_DIGEST%@*}"
     - FRONTEND_DIGEST="${FRONTEND_IMAGE_DIGEST#*@}"
     - BACKEND_REPOSITORY="${BACKEND_IMAGE_DIGEST%@*}"
@@ -57,6 +59,7 @@
       --set-string "frontend.image.digest=$FRONTEND_DIGEST"
       --set-string "backend.image.repository=$BACKEND_REPOSITORY"
       --set-string "backend.image.digest=$BACKEND_DIGEST"
+      --set-string "release.version=${CI_COMMIT_TAG:-$CI_COMMIT_SHORT_SHA}"
       --set-string "imagePullSecrets[0].name=$KUBERNETES_REGISTRY_SECRET"
       --set "registrySecret.enabled=true"
       --set-string "registrySecret.name=$KUBERNETES_REGISTRY_SECRET"
@@ -67,6 +70,9 @@
       --set "database.managedSecret.enabled=true"
       --set-string "database.managedSecret.username=microcrm"
       --set-string "database.managedSecret.passwordBase64=$DATABASE_PASSWORD_B64"
+      --set "monitoringAuth.managedSecret.enabled=true"
+      --set-string "monitoringAuth.managedSecret.username=monitoring"
+      --set-string "monitoringAuth.managedSecret.passwordBase64=$MONITORING_PASSWORD_B64"
       --atomic
       --wait
       --timeout 5m
@@ -101,23 +107,93 @@ deploy:helm:staging:release-or-rollback:
       when: manual
   allow_failure: false
 
-# La production est une promotion explicite d'un tag SemVer. Le job manuel
-# recharge les images et le chart archivés pour ce tag. Relancer le job d'une
-# ancienne pipeline constitue le rollback vers cette release exacte.
-deploy:helm:production:release-or-rollback:
-  extends: .deploy:helm:k3s
+# Base des transitions Canary. Chaque job recharge le bundle durable de la
+# finale et utilise exclusivement ses références repository@sha256.
+.canary:production:
+  image:
+    name: alpine/helm:3.18.6
+    entrypoint: [""]
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: https://gitlab.com
+  variables:
+    DEPLOYMENT_ENVIRONMENT: production
+    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
+    KUBE_NAMESPACE: microcrm-prod
+    HELM_VALUES: infrastructure/helm/microcrm/values-production.yaml
+    AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
+    AWS_REGION: eu-west-3
+    AWS_WEB_IDENTITY_TOKEN_FILE: "$CI_PROJECT_DIR/.aws/gitlab-oidc-token"
+    NLB_NAME: microcrm-poc-nlb
+    NLB_TARGET_GROUP_NAME: microcrm-poc-http
+    INGRESS_HOST: microcrm.example.invalid
+    CANARY_STABLE_WEIGHT: "90"
+    CANARY_WEIGHT: "10"
+  before_script:
+    - apk add --no-cache aws-cli bash curl jq
+    - mkdir -p "$CI_PROJECT_DIR/.aws" .ci/release .ci/packages
+    - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+    - chmod 0600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
+    - 'test -s "$KUBECONFIG"'
+    - 'test -n "$CI_DEPLOY_USER"'
+    - 'test -n "$CI_DEPLOY_PASSWORD"'
+    - 'test -n "$KUBERNETES_DATABASE_PASSWORD"'
+    - 'test -n "$KUBERNETES_MONITORING_PASSWORD"'
+    - RELEASE_VERSION="$CI_COMMIT_TAG"
+    - CHART_VERSION="${CI_COMMIT_TAG#v}"
+    - RELEASE_BASE_URL="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/microcrm-release/$RELEASE_VERSION"
+    - curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/images.env" --output .ci/release/images.env
+    - curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/release-manifest.json" --output .ci/release/release-manifest.json
+    - curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/microcrm-$CHART_VERSION.tgz" --output ".ci/packages/microcrm-$CHART_VERSION.tgz"
+    - '. .ci/release/images.env; export FRONTEND_IMAGE_DIGEST BACKEND_IMAGE_DIGEST'
+    - 'test "$(jq -r .version .ci/release/release-manifest.json)" = "$RELEASE_VERSION"'
+    - 'test "$(jq -r .promotion.sourceVersion .ci/release/release-manifest.json)" != "null"'
+    - HELM_CHART=".ci/packages/microcrm-$CHART_VERSION.tgz"
+    - export RELEASE_VERSION FRONTEND_IMAGE_DIGEST BACKEND_IMAGE_DIGEST HELM_CHART
+  after_script:
+    - >-
+      if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
+        apk add --no-cache python3 >/dev/null &&
+        python3 scripts/ci/notify.py --event deployment --status "$CI_JOB_STATUS" --job "$CI_JOB_NAME" --pipeline-id "$CI_PIPELINE_ID" --pipeline-url "$CI_PIPELINE_URL" --ref "$CI_COMMIT_REF_NAME" --commit "$CI_COMMIT_SHA" --send-webhook-env SLACK_WEBHOOK_URL;
+      else
+        echo "Notification Slack ignorée : SLACK_WEBHOOK_URL indisponible.";
+      fi
+
+# Le premier geste humain est bloquant : après son clic, le contrôle Canary
+# doit s'exécuter automatiquement et déterminer le résultat de la pipeline.
+deploy:helm:production:canary:
+  extends: .canary:production
+  stage: helm
   resource_group: aws-poc-production
   needs:
     - job: release:bundle
       artifacts: false
   environment:
     name: aws-poc-production
-  variables:
-    DEPLOYMENT_ENVIRONMENT: production
-    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
-    KUBE_NAMESPACE: microcrm-prod
-    HELM_VALUES: infrastructure/helm/microcrm/values-production.yaml
+  script:
+    - bash scripts/ci/canary.sh deploy
+  manual_confirmation: "Déployer cette finale en Canary production avec les digests validés par sa RC ?"
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'
       when: manual
-  allow_failure: false
+      allow_failure: false
+
+# Un rollback relit une ancienne pipeline finale, mais refuse de s'exécuter si
+# un Canary est encore présent : ABORT et rollback restent deux opérations.
+rollback:helm:production:release:
+  extends: .canary:production
+  stage: canary-decision
+  resource_group: aws-poc-production
+  needs:
+    - job: release:bundle
+      artifacts: false
+  environment:
+    name: aws-poc-production
+  script:
+    - bash scripts/ci/canary.sh rollback
+    - bash scripts/ci/smoke_production.sh
+  manual_confirmation: "Redéployer cette ancienne finale comme stable production à 100 % ?"
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'
+      when: manual
+      allow_failure: true

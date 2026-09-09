@@ -3,6 +3,12 @@
 # documentation tant qu'aucun DNS réel n'est configuré.
 fullnameOverride: microcrm-staging
 
+release:
+  environment: staging
+
+nodeSelector:
+  microcrm.io/environment-role: staging
+
 database:
   persistence:
     size: 2Gi

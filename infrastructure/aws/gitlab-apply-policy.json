@@ -267,7 +267,10 @@
         "cloudwatch:GetDashboard",
         "cloudwatch:PutDashboard"
       ],
-      "Resource": "arn:aws:cloudwatch::*:dashboard/microcrm-*-monitoring"
+      "Resource": [
+        "arn:aws:cloudwatch::*:dashboard/microcrm-*-infrastructure",
+        "arn:aws:cloudwatch::*:dashboard/microcrm-application-production"
+      ]
     },
     {
       "Sid": "MicrocrmCloudWatchDashboardList",

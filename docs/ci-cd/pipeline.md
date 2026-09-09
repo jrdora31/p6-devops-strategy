@@ -28,7 +28,18 @@ Comment une version passe du code source à une release déployée ?
 5. vérifier les sources puis reprendre les digests de la RC, sans rebuild ;
 6. archiver le manifeste, les digests et le chart dans le Generic Package
    Registry ;
-7. promouvoir manuellement puis exécuter le contrôle HTTP post-déploiement.
+7. lancer manuellement `deploy:helm:production:canary` ; ce job est bloquant
+   afin que `verify:production:canary` parte automatiquement après son succès ;
+8. après le verify, la pipeline est `SUCCESS` et les jobs manuels optionnels
+   `promote:helm:production:canary` et `abort:helm:production:canary` restent
+   disponibles dans cette même pipeline.
+
+Les deux décisions finales utilisent `when: manual` avec
+`rules:allow_failure: true`. Ne pas les lancer ne bloque donc pas la pipeline.
+Si une décision est lancée et échoue, son job devient rouge avec son diagnostic,
+mais le succès déjà obtenu par la pipeline reste inchangé. Chaque script
+termine néanmoins avec un code non nul sur digest, rollout ou smoke test
+incorrect.
 
 Voir aussi [`deployment-strategy.md`](./deployment-strategy.md).
 

@@ -1,8 +1,20 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema#",
   "type": "object",
-  "required": ["frontend", "backend", "database", "registrySecret"],
+  "required": ["release", "nodeSelector", "frontend", "backend", "database", "registrySecret", "monitoringAuth", "canary"],
   "properties": {
+    "release": {
+      "type": "object",
+      "required": ["environment", "version"],
+      "properties": {
+        "environment": { "enum": ["development", "staging", "production"] },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "nodeSelector": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
     "registrySecret": {
       "type": "object",
       "required": ["enabled", "name", "server", "usernameBase64", "passwordBase64"],
@@ -30,6 +42,36 @@
         "replicaCount": { "type": "integer", "minimum": 2 },
         "podAntiAffinity": { "$ref": "#/definitions/podAntiAffinity" },
         "image": { "$ref": "#/definitions/image" }
+      }
+    },
+    "monitoringAuth": {
+      "type": "object",
+      "required": ["existingSecret", "usernameKey", "passwordKey", "managedSecret"],
+      "properties": {
+        "existingSecret": { "type": "string", "minLength": 1 },
+        "usernameKey": { "type": "string", "minLength": 1 },
+        "passwordKey": { "type": "string", "minLength": 1 },
+        "managedSecret": {
+          "type": "object",
+          "required": ["enabled", "username", "passwordBase64"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "username": { "type": "string", "minLength": 1 },
+            "passwordBase64": { "type": "string" }
+          }
+        }
+      }
+    },
+    "canary": {
+      "type": "object",
+      "required": ["enabled", "stableWeight", "canaryWeight", "version", "frontend", "backend"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "stableWeight": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "canaryWeight": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "version": { "type": "string" },
+        "frontend": { "$ref": "#/definitions/canaryComponent" },
+        "backend": { "$ref": "#/definitions/canaryComponent" }
       }
     },
     "database": {
@@ -63,6 +105,14 @@
     }
   },
   "definitions": {
+    "canaryComponent": {
+      "type": "object",
+      "required": ["replicaCount", "image"],
+      "properties": {
+        "replicaCount": { "type": "integer", "minimum": 1 },
+        "image": { "$ref": "#/definitions/image" }
+      }
+    },
     "podAntiAffinity": {
       "type": "object",
       "required": ["enabled", "weight", "topologyKey"],

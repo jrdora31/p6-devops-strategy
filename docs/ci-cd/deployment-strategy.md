@@ -52,18 +52,39 @@ Une nouvelle RC nécessite donc au moins un commit produisant une release depuis
 la dernière version calculée. Pour rejouer exactement la même RC, il faut
 relancer sa pipeline existante plutôt que créer un nouveau tag.
 
-## Promotion et rollback
+## Canary de production
 
 - Une pipeline Web `dev` gère l'infrastructure partagée dans le state
   `microcrm-poc` : deux EC2, un cluster K3s et un NLB.
 - Une pipeline Web `main` ne provisionne aucune seconde infrastructure.
 - La pipeline d'infrastructure ne déploie aucune application.
 - `deploy:helm:staging:release-or-rollback` accepte uniquement une RC et la déploie en staging.
-- `deploy:helm:production:release-or-rollback` accepte uniquement une version finale et la déploie en production.
-- Les deux jobs téléchargent le bundle du tag et passent à Helm les digests
-  frontend/backend. Le chart produit donc des images `repository@sha256`.
+- Une RC reste limitée à staging. Seule une finale `vX.Y.Z` valide avec
+  `Promote-From` expose `deploy:helm:production:canary`.
+- Le job conserve la stable courante et crée des Deployments et Services
+  séparés portant `microcrm.io/track: canary` et
+  `app.kubernetes.io/version: vX.Y.Z`.
+- Le `TraefikService` natif répartit par défaut 90 % vers le Service stable et
+  10 % vers le Service Canary. Les poids viennent des values Helm.
+- `verify:production:canary` contrôle automatiquement les rollouts, Pods,
+  versions, digests, Services internes stable/Canary et l'entrée NLB normale.
+  Il ne réalise aucune période d'observation.
+- CloudWatch est consulté directement par l'opérateur. Il n'existe aucun job
+  `observation:cloudwatch`.
+- `promote:helm:production:canary` route d'abord 100 % vers le Canary, le
+  teste, copie exactement ses digests et sa version dans les Deployments
+  stables, attend leur RollingUpdate, remet stable à 100 %, puis retire le
+  Canary.
+- `abort:helm:production:canary` remet la stable existante à 100 %, la teste,
+  puis retire le Canary sans modifier les digests stables.
+- `rollback:helm:production:release`, lancé depuis la pipeline d'une ancienne
+  finale, restaure cette version comme stable à 100 %. Il refuse de démarrer
+  tant qu'un Canary existe : ABORT CANARY et rollback production sont distincts.
+- Tous ces jobs téléchargent le bundle du tag et passent à Helm des références
+  `repository@sha256`. Aucun n'appelle une compilation, un build Docker, un
+  push ou un retag d'image.
 - Une ancienne RC se redéploie en staging depuis sa pipeline. Une ancienne
-  finale se redéploie en production depuis sa pipeline.
+  finale se restaure en production avec le job de rollback dédié.
 
 Cette procédure restaure la release applicative. Elle ne restaure pas les
 données PostgreSQL et ne remplace pas une procédure de restauration de base.
@@ -87,3 +108,25 @@ Avant le premier apply, inventorier les éventuels states
 `microcrm-staging`/`microcrm-production` et remettre leur ownership dans
 `microcrm-poc` sans dupliquer les ressources. Cette migration n'est pas
 exécutée automatiquement par la CI.
+
+## Scénarios de validation
+
+- **A — RC :** créer `vX.Y.Z-rc.N`, lancer le déploiement staging et vérifier
+  qu'aucun job Canary production n'existe.
+- **B — finale :** créer `vX.Y.Z` avec `Promote-From: vX.Y.Z-rc.N` et contrôler
+  dans le manifeste que les deux digests sont ceux de la RC.
+- **C — déploiement :** lancer `deploy:helm:production:canary`, puis observer
+  `verify:production:canary` automatique et la pipeline `SUCCESS` avec 90/10.
+- **D — observation :** ouvrir `microcrm-application-production` dans
+  CloudWatch et comparer stable/Canary.
+- **E — PROMOTE :** lancer le job correspondant ; stable doit finir à 100 %
+  avec les digests du Canary, lequel doit être absent.
+- **F — ABORT :** sur un nouveau Canary, lancer ABORT ; l'ancienne stable doit
+  rester à 100 % et le Canary disparaître.
+- **G — rollback :** après une promotion, ouvrir la pipeline d'une ancienne
+  finale et lancer `rollback:helm:production:release`.
+- **H — authentification :** depuis un Pod frontend, appeler
+  `/api/internal/auth-check` avec des identifiants Basic volontairement
+  invalides ; vérifier le HTTP 401 puis l'incrément
+  `AuthenticationFailureCount` dans CloudWatch. Ne jamais afficher le mot de
+  passe utilisé.

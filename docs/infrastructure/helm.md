@@ -128,17 +128,22 @@ TODO : documenter sans les présenter comme des fonctionnalités réalisées :
 - les limites réseau et TLS ;
 - les mécanismes prévus mais non encore implémentés.
 
-## 12. Évolutions envisagées
+## 12. Canary de production implémenté
 
-TODO : présenter séparément les évolutions validées ou proposées, avec leurs
-conditions préalables, notamment :
+Le chart conserve les Deployments historiques comme rôle `stable` et crée,
+uniquement avec `canary.enabled=true`, deux Deployments et deux Services
+`canary`. Les deux tracks utilisent la même base PostgreSQL et des images
+`repository@sha256`.
 
-- l'évolution du nombre de réplicas ;
-- la stratégie de déploiement progressive ;
-- la promotion d'images immuables entre environnements ;
-- les mécanismes de disponibilité et de restauration.
+En production, un `TraefikService` applique `canary.stableWeight` et
+`canary.canaryWeight`, dont la somme doit être exactement égale à 100, puis un
+`IngressRoute` l'expose. Avec Canary désactivé, l'Ingress Kubernetes historique
+pointe uniquement vers stable. Staging ne rend jamais les ressources Canary.
 
-Ne pas confondre ces évolutions avec l'état réellement implémenté dans le POC.
+Les workloads staging et production utilisent respectivement les
+`nodeSelector` `microcrm.io/environment-role=staging` et `production`. Les
+selectors immuables des Deployments stables existants restent inchangés ; le
+Canary emploie l'instance Kubernetes distincte `microcrm-canary`.
 
 ## 13. Références techniques
 

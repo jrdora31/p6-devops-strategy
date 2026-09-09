@@ -2,6 +2,12 @@
 # Il est déployé dans un namespace dédié du cluster K3s partagé.
 fullnameOverride: microcrm-prod
 
+release:
+  environment: production
+
+nodeSelector:
+  microcrm.io/environment-role: production
+
 database:
   persistence:
     size: 2Gi
@@ -11,3 +17,7 @@ ingress:
   enabled: true
   className: traefik
   host: microcrm.example.invalid
+
+canary:
+  stableWeight: 90
+  canaryWeight: 10

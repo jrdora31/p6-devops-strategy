@@ -19,16 +19,24 @@ output "public_ip" {
 }
 
 output "cloudwatch_dashboard_name" {
-  description = "Nom du dashboard CloudWatch créé lorsque l'agent CloudWatch est activé."
-  value       = try(aws_cloudwatch_dashboard.poc[0].dashboard_name, null)
+  description = "Noms des dashboards CloudWatch créés lorsque l'agent est activé."
+  value = var.cloudwatch_agent_enabled ? [
+    aws_cloudwatch_dashboard.infrastructure[0].dashboard_name,
+    aws_cloudwatch_dashboard.application[0].dashboard_name,
+  ] : []
 }
 
 output "cloudwatch_alarm_names" {
   description = "Noms des alarmes CloudWatch créées lorsque le monitoring est activé."
   value = var.cloudwatch_agent_enabled ? [
-    aws_cloudwatch_metric_alarm.instance_unavailable[0].alarm_name,
-    aws_cloudwatch_metric_alarm.cpu_high[0].alarm_name,
+    aws_cloudwatch_metric_alarm.instance_unavailable["staging"].alarm_name,
+    aws_cloudwatch_metric_alarm.instance_unavailable["production"].alarm_name,
+    aws_cloudwatch_metric_alarm.cpu_high["staging"].alarm_name,
+    aws_cloudwatch_metric_alarm.cpu_high["production"].alarm_name,
     aws_cloudwatch_metric_alarm.authentication_failures[0].alarm_name,
+    aws_cloudwatch_metric_alarm.canary_server_errors[0].alarm_name,
+    aws_cloudwatch_metric_alarm.canary_error_rate[0].alarm_name,
+    aws_cloudwatch_metric_alarm.canary_latency_p95[0].alarm_name,
   ] : []
 }
 
