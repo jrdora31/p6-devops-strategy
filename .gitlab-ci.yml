@@ -7,17 +7,12 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     # Autorise les pipelines périodiques créés dans l'interface GitLab.
     - if: '$CI_PIPELINE_SOURCE == "schedule"'
-    # Les pipelines Web pilotent un seul environnement selon leur branche.
+    # Une pipeline Web dev pilote l'infrastructure partagée du POC.
     - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
       variables:
-        DEPLOYMENT_ENVIRONMENT: staging
-        TF_STATE_NAME: microcrm-staging
-        INFRASTRUCTURE_ENVIRONMENT: aws-poc-staging
-    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      variables:
-        DEPLOYMENT_ENVIRONMENT: production
-        TF_STATE_NAME: microcrm-production
-        INFRASTRUCTURE_ENVIRONMENT: aws-poc-production
+        CLUSTER_ENVIRONMENT: poc
+        TF_STATE_NAME: microcrm-poc
+        INFRASTRUCTURE_ENVIRONMENT: aws-poc-infrastructure
     - if: '$CI_PIPELINE_SOURCE == "web"'
     # Autorise les pipelines de release déclenchés par un tag Git.
     - if: '$CI_COMMIT_TAG'
@@ -25,14 +20,10 @@ workflow:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       variables:
         DEPLOYMENT_ENVIRONMENT: production
-        TF_STATE_NAME: microcrm-production
-        INFRASTRUCTURE_ENVIRONMENT: aws-poc-production
     # `dev` reste la branche d'intégration et pilote uniquement staging.
     - if: '$CI_COMMIT_BRANCH == "dev"'
       variables:
         DEPLOYMENT_ENVIRONMENT: staging
-        TF_STATE_NAME: microcrm-staging
-        INFRASTRUCTURE_ENVIRONMENT: aws-poc-staging
     # Aucun pipeline n'est créé pour les autres branches ou événements.
     - when: never
 

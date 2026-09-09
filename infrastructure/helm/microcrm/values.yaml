@@ -11,7 +11,11 @@ registrySecret:
   passwordBase64: ""
 
 frontend:
-  replicaCount: 1
+  replicaCount: 2
+  podAntiAffinity:
+    enabled: true
+    weight: 100
+    topologyKey: kubernetes.io/hostname
   image:
     repository: registry.gitlab.com/project_6_group/microcrm/frontend
     tag: replace-me
@@ -28,7 +32,11 @@ frontend:
       memory: 128Mi
 
 backend:
-  replicaCount: 1
+  replicaCount: 2
+  podAntiAffinity:
+    enabled: true
+    weight: 100
+    topologyKey: kubernetes.io/hostname
   image:
     repository: registry.gitlab.com/project_6_group/microcrm/backend
     tag: replace-me

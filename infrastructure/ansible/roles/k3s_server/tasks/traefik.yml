@@ -1,0 +1,21 @@
+---
+- name: Déployer la configuration redondante du Traefik fourni par K3s
+  ansible.builtin.template:
+    src: traefik-config.yaml.j2
+    dest: "{{ k3s_server_traefik_config_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  when: not ansible_check_mode
+
+- name: Attendre les deux réplicas Traefik prêts
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl --namespace kube-system get deployment traefik
+      --output=jsonpath='{.spec.replicas}:{.status.readyReplicas}'
+  register: k3s_server_traefik_replicas
+  changed_when: false
+  retries: 18
+  delay: 10
+  until: k3s_server_traefik_replicas.stdout == '2:2'
+  when: not ansible_check_mode

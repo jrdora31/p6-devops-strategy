@@ -5,6 +5,7 @@ k3s_server_version: v1.33.13+k3s1
 k3s_server_install_script_url: https://get.k3s.io
 k3s_server_config_path: /etc/rancher/k3s/config.yaml
 k3s_server_kubeconfig_path: /etc/rancher/k3s/k3s.yaml
+k3s_server_traefik_config_path: /var/lib/rancher/k3s/server/manifests/traefik-config.yaml
 
 # L'ouverture du port 6443 ne signifie pas encore que l'API Kubernetes peut
 # traiter des requêtes. Ces délais bornent l'attente fonctionnelle et une

@@ -1,4 +1,4 @@
-# Environnement d'intégration déployé uniquement sur le cluster K3s staging.
+# Environnement d'intégration déployé dans le cluster K3s partagé.
 # Le namespace est fourni par le job GitLab ; l'hôte reste un domaine de
 # documentation tant qu'aucun DNS réel n'est configuré.
 fullnameOverride: microcrm-staging

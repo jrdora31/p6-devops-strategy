@@ -7,8 +7,8 @@ regions:
 filters:
   instance-state-name: running
   tag:Project: MicroCRM
-  tag:Environment: "{{ lookup('ansible.builtin.env', 'DEPLOYMENT_ENVIRONMENT') }}"
-  tag:Ansible: k3s-server
+  tag:Environment: "{{ lookup('ansible.builtin.env', 'CLUSTER_ENVIRONMENT') | default('poc', true) }}"
+  tag:Kubernetes: k3s
 
 # L'identifiant EC2 est stable et directement compris par la connexion SSM.
 hostnames:
@@ -19,5 +19,6 @@ compose:
 
 groups:
   k3s_servers: ec2_tags.Ansible == 'k3s-server'
+  k3s_agents: ec2_tags.Ansible == 'k3s-agent'
 
 strict: true

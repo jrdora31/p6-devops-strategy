@@ -12,3 +12,8 @@ output "k3s_security_group_id" {
   description = "Security group du nœud K3s."
   value       = aws_security_group.k3s.id
 }
+
+output "nlb_security_group_id" {
+  description = "Security group du Network Load Balancer."
+  value       = aws_security_group.nlb.id
+}

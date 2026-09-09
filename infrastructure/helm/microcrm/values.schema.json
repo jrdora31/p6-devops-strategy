@@ -16,17 +16,19 @@
     },
     "frontend": {
       "type": "object",
-      "required": ["replicaCount", "image", "service", "resources"],
+      "required": ["replicaCount", "podAntiAffinity", "image", "service", "resources"],
       "properties": {
-        "replicaCount": { "type": "integer", "minimum": 1 },
+        "replicaCount": { "type": "integer", "minimum": 2 },
+        "podAntiAffinity": { "$ref": "#/definitions/podAntiAffinity" },
         "image": { "$ref": "#/definitions/image" }
       }
     },
     "backend": {
       "type": "object",
-      "required": ["replicaCount", "image", "service", "resources"],
+      "required": ["replicaCount", "podAntiAffinity", "image", "service", "resources"],
       "properties": {
-        "replicaCount": { "type": "integer", "minimum": 1 },
+        "replicaCount": { "type": "integer", "minimum": 2 },
+        "podAntiAffinity": { "$ref": "#/definitions/podAntiAffinity" },
         "image": { "$ref": "#/definitions/image" }
       }
     },
@@ -61,6 +63,15 @@
     }
   },
   "definitions": {
+    "podAntiAffinity": {
+      "type": "object",
+      "required": ["enabled", "weight", "topologyKey"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "topologyKey": { "type": "string", "minLength": 1 }
+      }
+    },
     "image": {
       "type": "object",
       "required": ["repository", "tag", "digest", "pullPolicy"],

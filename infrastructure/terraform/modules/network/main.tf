@@ -48,7 +48,7 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_security_group" "k3s" {
   name        = "${var.name_prefix}-k3s"
-  description = "Public HTTP(S) only; administration uses AWS Systems Manager"
+  description = "K3s nodes; administration uses AWS Systems Manager"
   vpc_id      = aws_vpc.this.id
 
   tags = {
@@ -56,26 +56,58 @@ resource "aws_security_group" "k3s" {
   }
 }
 
+resource "aws_security_group" "nlb" {
+  name        = "${var.name_prefix}-nlb"
+  description = "Public HTTP entry point for the MicroCRM NLB"
+  vpc_id      = aws_vpc.this.id
+
+  tags = {
+    Name = "${var.name_prefix}-nlb"
+  }
+}
+
+# Autorise uniquement les échanges internes entre les nœuds portant ce SG.
+resource "aws_vpc_security_group_ingress_rule" "k3s_nodes" {
+  security_group_id            = aws_security_group.k3s.id
+  description                  = "Internal traffic between K3s nodes"
+  referenced_security_group_id = aws_security_group.k3s.id
+  ip_protocol                  = "-1"
+}
+
+resource "aws_vpc_security_group_egress_rule" "k3s_nodes" {
+  security_group_id            = aws_security_group.k3s.id
+  description                  = "Internal traffic between K3s nodes"
+  referenced_security_group_id = aws_security_group.k3s.id
+  ip_protocol                  = "-1"
+}
+
 resource "aws_vpc_security_group_ingress_rule" "http" {
   for_each = toset(var.http_ingress_cidrs)
 
-  security_group_id = aws_security_group.k3s.id
-  description       = "HTTP to Traefik"
+  security_group_id = aws_security_group.nlb.id
+  description       = "Public HTTP to the NLB"
   cidr_ipv4         = each.value
   from_port         = 80
   to_port           = 80
   ip_protocol       = "tcp"
 }
 
-resource "aws_vpc_security_group_ingress_rule" "https" {
-  for_each = toset(var.http_ingress_cidrs)
+resource "aws_vpc_security_group_egress_rule" "nlb_to_k3s_http" {
+  security_group_id            = aws_security_group.nlb.id
+  description                  = "HTTP from the NLB to Traefik on K3s nodes"
+  referenced_security_group_id = aws_security_group.k3s.id
+  from_port                    = 80
+  to_port                      = 80
+  ip_protocol                  = "tcp"
+}
 
-  security_group_id = aws_security_group.k3s.id
-  description       = "HTTPS to Traefik"
-  cidr_ipv4         = each.value
-  from_port         = 443
-  to_port           = 443
-  ip_protocol       = "tcp"
+resource "aws_vpc_security_group_ingress_rule" "nlb_to_k3s_http" {
+  security_group_id            = aws_security_group.k3s.id
+  description                  = "HTTP and health checks from the NLB"
+  referenced_security_group_id = aws_security_group.nlb.id
+  from_port                    = 80
+  to_port                      = 80
+  ip_protocol                  = "tcp"
 }
 
 # POC : sans NAT Gateway ni VPC endpoints, HTTP est requis pour les dépôts de

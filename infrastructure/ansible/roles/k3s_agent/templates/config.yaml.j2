@@ -1,6 +1,6 @@
 ---
-write-kubeconfig-mode: "0600"
-secrets-encryption: true
+server: "https://{{ k3s_agent_server_address }}:6443"
+token: "{{ k3s_agent_token }}"
 node-label:
   - "microcrm-environment={{ cluster_environment }}"
   - "microcrm-managed-by=ansible"

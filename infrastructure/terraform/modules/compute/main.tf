@@ -104,7 +104,13 @@ resource "aws_iam_instance_profile" "this" {
   role = aws_iam_role.instance.name
 }
 
+moved {
+  from = aws_instance.k3s
+  to   = aws_instance.k3s[0]
+}
+
 resource "aws_instance" "k3s" {
+  count                       = 2
   ami                         = local.selected_ami_id
   instance_type               = var.instance_type
   subnet_id                   = var.subnet_id
@@ -132,9 +138,10 @@ resource "aws_instance" "k3s" {
   }
 
   tags = {
-    Name       = "${var.name_prefix}-k3s"
-    Ansible    = "k3s-server"
+    Name       = "${var.name_prefix}-k3s-${count.index == 0 ? "server" : "agent"}"
+    Ansible    = count.index == 0 ? "k3s-server" : "k3s-agent"
     Kubernetes = "k3s"
+    K3sRole    = count.index == 0 ? "server" : "agent"
   }
 
   lifecycle {

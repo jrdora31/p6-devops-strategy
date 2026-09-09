@@ -9,12 +9,12 @@ output "environment" {
 }
 
 output "instance_id" {
-  description = "Identifiant utilisé par l'inventaire dynamique et SSM."
+  description = "Identifiants utilisés par l'inventaire dynamique et SSM."
   value       = module.compute.instance_id
 }
 
 output "public_ip" {
-  description = "IPv4 publique dynamique ; elle ne doit jamais être codée dans le repository."
+  description = "IPv4 publiques dynamiques de diagnostic ; le trafic applicatif utilise le DNS du NLB."
   value       = module.compute.public_ip
 }
 
@@ -55,4 +55,14 @@ output "ansible_transfer_bucket" {
 output "selected_ami_id" {
   description = "AMI réellement sélectionnée afin de conserver la preuve du plan."
   value       = module.compute.ami_id
+}
+
+output "nlb_dns_name" {
+  description = "Nom DNS public du Network Load Balancer commun."
+  value       = aws_lb.microcrm.dns_name
+}
+
+output "nlb_target_group_arn" {
+  description = "ARN du target group HTTP utilisé pour les contrôles de santé."
+  value       = aws_lb_target_group.http.arn
 }

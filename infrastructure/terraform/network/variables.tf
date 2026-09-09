@@ -50,7 +50,7 @@ variable "public_subnet_cidr" {
 }
 
 variable "http_ingress_cidrs" {
-  description = "CIDR autorisés à joindre Traefik sur les deux EC2."
+  description = "CIDR autorisés à joindre le listener HTTP public du NLB."
   type        = list(string)
   default     = ["0.0.0.0/0"]
 

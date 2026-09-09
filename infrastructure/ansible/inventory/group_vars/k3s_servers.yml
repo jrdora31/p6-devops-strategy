@@ -12,18 +12,16 @@ ansible_become: true
 
 # Chaque exécution cible exactement l'environnement transmis par le state
 # Terraform et filtré par l'inventaire dynamique AWS.
-deployment_environment: "{{ lookup('ansible.builtin.env', 'DEPLOYMENT_ENVIRONMENT') }}"
-k3s_server_gitlab_agent_name: >-
-  {{ 'microcrm-poc' if deployment_environment == 'staging'
-     else 'microcrm-production' }}
+cluster_environment: "{{ lookup('ansible.builtin.env', 'CLUSTER_ENVIRONMENT') | default('poc', true) }}"
+k3s_server_gitlab_agent_name: microcrm-poc
 
 # O.4 : le même interrupteur CI pilote Terraform et Ansible dans le seul
 # environnement sélectionné. La valeur par défaut reste désactivée.
 cloudwatch_agent_enabled: "{{ lookup('ansible.builtin.env', 'CLOUDWATCH_AGENT_ENABLED') | default('false', true) | bool }}"
 cloudwatch_agent_log_group_prefix: >-
   {{ lookup('ansible.builtin.env', 'CLOUDWATCH_LOG_GROUP_PREFIX')
-     | default('/microcrm/' ~ deployment_environment, true) }}
+     | default('/microcrm/' ~ cluster_environment, true) }}
 cloudwatch_agent_metrics_namespace: >-
   {{ lookup('ansible.builtin.env', 'CLOUDWATCH_METRICS_NAMESPACE')
-     | default('MicroCRM/' ~ (deployment_environment | title), true) }}
+     | default('MicroCRM/' ~ (cluster_environment | title), true) }}
 cloudwatch_agent_collect_kubernetes_logs: true

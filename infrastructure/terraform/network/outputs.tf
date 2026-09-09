@@ -22,3 +22,8 @@ output "k3s_security_group_id" {
   description = "Identifiant du security group partagé par les deux EC2 K3s."
   value       = module.network.k3s_security_group_id
 }
+
+output "nlb_security_group_id" {
+  description = "Identifiant du security group du Network Load Balancer."
+  value       = module.network.nlb_security_group_id
+}

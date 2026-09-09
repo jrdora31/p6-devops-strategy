@@ -1,16 +1,16 @@
 output "instance_id" {
-  description = "Identifiant EC2 du nœud K3s."
-  value       = aws_instance.k3s.id
+  description = "Identifiants EC2 des nœuds K3s."
+  value       = aws_instance.k3s[*].id
 }
 
 output "public_ip" {
-  description = "IPv4 publique dynamique du nœud K3s."
-  value       = aws_instance.k3s.public_ip
+  description = "IPv4 publiques dynamiques des nœuds K3s."
+  value       = aws_instance.k3s[*].public_ip
 }
 
 output "metric_hostname" {
-  description = "Nom d'hôte court publié dans la dimension host des métriques CloudWatch Agent."
-  value       = split(".", aws_instance.k3s.private_dns)[0]
+  description = "Noms d'hôte courts publiés dans la dimension host des métriques CloudWatch Agent."
+  value       = [for instance in aws_instance.k3s : split(".", instance.private_dns)[0]]
 }
 
 output "ami_id" {

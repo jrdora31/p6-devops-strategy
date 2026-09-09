@@ -1,9 +1,10 @@
 # Ansible
 
-Ansible découvre l'EC2 via AWS et SSM, puis filtre strictement le tag
-`Environment` transmis par le state Terraform. L'inventaire doit retourner
-exactement un hôte `k3s_servers` avant toute configuration.
+Ansible découvre les EC2 via AWS et SSM, puis filtre strictement le tag
+`Environment=poc`. L'inventaire doit retourner exactement un hôte
+`k3s_servers` et un hôte `k3s_agents` avant toute configuration.
 
-Le même playbook installe K3s sur staging ou production. Il applique un label
-de nœud propre à l'environnement et un GitLab Agent distinct ; le token est
-fourni par une variable GitLab protégée spécifique à l'environnement.
+Le playbook installe le serveur K3s, lit son jeton d'adhésion sans l'afficher,
+rattache l'agent et exige exactement deux nœuds `Ready`. Un seul GitLab Agent
+`microcrm-poc`, alimenté par la variable protégée `GITLAB_AGENT_TOKEN`, expose
+le cluster partagé aux jobs Helm des deux namespaces.

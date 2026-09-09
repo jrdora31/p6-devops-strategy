@@ -58,7 +58,7 @@ test:terraform:
     - export TF_HTTP_ADDRESS="$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/$TF_STATE_NAME"
     - export TF_HTTP_LOCK_ADDRESS="$TF_HTTP_ADDRESS/lock"
     - export TF_HTTP_UNLOCK_ADDRESS="$TF_HTTP_ADDRESS/lock"
-    - export TF_VAR_environment="${DEPLOYMENT_ENVIRONMENT:-staging}"
+    - export TF_VAR_environment="${CLUSTER_ENVIRONMENT:-poc}"
     - export TF_VAR_network_state_address="$CI_API_V4_URL/projects/$CI_PROJECT_ID/terraform/state/microcrm-network"
     - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - chmod 600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
@@ -117,7 +117,7 @@ quality:terraform:network:plan:
         - .gitlab/ci/iac.yml
     - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
 
-# Produit un plan réel de l'environnement strictement associé à la branche.
+# Produit le plan réel de l'unique cluster partagé du POC.
 quality:terraform:plan:
   extends: .terraform:aws-oidc
   stage: terraform-plan
@@ -130,12 +130,13 @@ quality:terraform:plan:
       optional: true
   variables:
     AWS_ROLE_ARN: "$AWS_PLAN_ROLE_ARN"
+    CLUSTER_ENVIRONMENT: poc
+    TF_STATE_NAME: microcrm-poc
+    INFRASTRUCTURE_ENVIRONMENT: aws-poc-infrastructure
   script:
     - >-
-      DEPLOYMENT_REF="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-${CI_COMMIT_BRANCH:-}}";
-      case "$DEPLOYMENT_REF:$DEPLOYMENT_ENVIRONMENT:$TF_STATE_NAME:$INFRASTRUCTURE_ENVIRONMENT" in
-        "dev:staging:microcrm-staging:aws-poc-staging") ;;
-        "$CI_DEFAULT_BRANCH:production:microcrm-production:aws-poc-production") ;;
+      case "$CI_COMMIT_BRANCH:$CLUSTER_ENVIRONMENT:$TF_STATE_NAME:$INFRASTRUCTURE_ENVIRONMENT" in
+        "dev:poc:microcrm-poc:aws-poc-infrastructure") ;;
         *) echo "Périmètre Terraform incohérent avec la branche" >&2; exit 1 ;;
       esac
     - terraform -chdir=infrastructure/terraform init -reconfigure
@@ -155,8 +156,7 @@ quality:terraform:plan:
   rules:
     - if: '$AWS_PLAN_ROLE_ARN == null || $AWS_PLAN_ROLE_ARN == ""'
       when: never
-    # Aucun plan environnement en MR : il dépend du state microcrm-network.
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
 
 # L'initialisation du réseau partagé est manuelle, limitée à une pipeline Web
 # `dev` et ne possède volontairement aucun job destroy.
@@ -202,15 +202,17 @@ deploy:terraform:apply:
   - job: quality:trivy:iac
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
+    CLUSTER_ENVIRONMENT: poc
+    TF_STATE_NAME: microcrm-poc
+    INFRASTRUCTURE_ENVIRONMENT: aws-poc-infrastructure
   resource_group: "$INFRASTRUCTURE_ENVIRONMENT"
   environment:
     name: "$INFRASTRUCTURE_ENVIRONMENT"
     on_stop: deploy:terraform:destroy
   script:
     - >-
-      case "$CI_COMMIT_BRANCH:$DEPLOYMENT_ENVIRONMENT:$TF_STATE_NAME:$INFRASTRUCTURE_ENVIRONMENT" in
-        "dev:staging:microcrm-staging:aws-poc-staging") ;;
-        "$CI_DEFAULT_BRANCH:production:microcrm-production:aws-poc-production") ;;
+      case "$CI_COMMIT_BRANCH:$CLUSTER_ENVIRONMENT:$TF_STATE_NAME:$INFRASTRUCTURE_ENVIRONMENT" in
+        "dev:poc:microcrm-poc:aws-poc-infrastructure") ;;
         *) echo "Périmètre Terraform incohérent avec la branche" >&2; exit 1 ;;
       esac
     - test -f "$CI_PROJECT_DIR/.terraform-plan"
@@ -222,8 +224,10 @@ deploy:terraform:apply:
     - printf 'ANSIBLE_AWS_SSM_BUCKET_NAME=%s\n' "$(terraform -chdir=infrastructure/terraform output -raw ansible_transfer_bucket)" >> "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
     - printf 'CLOUDWATCH_LOG_GROUP_PREFIX=%s\n' "$(terraform -chdir=infrastructure/terraform output -raw cloudwatch_log_group_prefix)" >> "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
     - printf 'CLOUDWATCH_METRICS_NAMESPACE=%s\n' "$(terraform -chdir=infrastructure/terraform output -raw metrics_namespace)" >> "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
-    - printf 'DEPLOYMENT_ENVIRONMENT=%s\n' "$DEPLOYMENT_ENVIRONMENT" >> "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
+    - printf 'CLUSTER_ENVIRONMENT=%s\n' "$CLUSTER_ENVIRONMENT" >> "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
     - printf 'INFRASTRUCTURE_ENVIRONMENT=%s\n' "$INFRASTRUCTURE_ENVIRONMENT" >> "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
+    - printf 'NLB_DNS_NAME=%s\n' "$(terraform -chdir=infrastructure/terraform output -raw nlb_dns_name)" >> "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
+    - printf 'NLB_TARGET_GROUP_ARN=%s\n' "$(terraform -chdir=infrastructure/terraform output -raw nlb_target_group_arn)" >> "$CI_PROJECT_DIR/.ci/reports/terraform/ansible.env"
   artifacts:
     expire_in: 1 day
     paths:
@@ -233,7 +237,7 @@ deploy:terraform:apply:
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
       when: on_success
 
 # Le destroy est une action séparée, manuelle et sérialisée. La variable
@@ -244,6 +248,9 @@ deploy:terraform:destroy:
   stage: terraform
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
+    CLUSTER_ENVIRONMENT: poc
+    TF_STATE_NAME: microcrm-poc
+    INFRASTRUCTURE_ENVIRONMENT: aws-poc-infrastructure
   resource_group: "$INFRASTRUCTURE_ENVIRONMENT"
   environment:
     name: "$INFRASTRUCTURE_ENVIRONMENT"
@@ -251,9 +258,8 @@ deploy:terraform:destroy:
   manual_confirmation: "Confirmer la destruction de l'environnement AWS MicroCRM sélectionné"
   script:
     - >-
-      case "$CI_COMMIT_BRANCH:$DEPLOYMENT_ENVIRONMENT:$TF_STATE_NAME:$INFRASTRUCTURE_ENVIRONMENT" in
-        "dev:staging:microcrm-staging:aws-poc-staging") ;;
-        "$CI_DEFAULT_BRANCH:production:microcrm-production:aws-poc-production") ;;
+      case "$CI_COMMIT_BRANCH:$CLUSTER_ENVIRONMENT:$TF_STATE_NAME:$INFRASTRUCTURE_ENVIRONMENT" in
+        "dev:poc:microcrm-poc:aws-poc-infrastructure") ;;
         *) echo "Périmètre Terraform incohérent avec la branche" >&2; exit 1 ;;
       esac
     - test "$TF_DESTROY_CONFIRM" = "true"
@@ -277,7 +283,7 @@ deploy:terraform:destroy:
       when: never
     # Le job est absent d'un cycle de création normal. Il n'apparaît que dans
     # une pipeline Web explicitement lancée pour détruire un environnement.
-    - if: '$CI_PIPELINE_SOURCE == "web" && $TF_DESTROY_CONFIRM == "true" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $TF_DESTROY_CONFIRM == "true" && $CI_COMMIT_BRANCH == "dev"'
       when: manual
 
 # Les jobs runtime Ansible utilisent les outputs Terraform transmis par le
@@ -314,15 +320,11 @@ deploy:terraform:destroy:
     - python -m pip install --requirement infrastructure/ansible/requirements-ci.txt
     - ansible-galaxy collection install --requirements-file infrastructure/ansible/requirements.yml
     - >-
-      case "$CI_COMMIT_BRANCH:$DEPLOYMENT_ENVIRONMENT:$TF_STATE_NAME:$INFRASTRUCTURE_ENVIRONMENT" in
-        "dev:staging:microcrm-staging:aws-poc-staging")
-          GITLAB_AGENT_TOKEN="${GITLAB_AGENT_TOKEN_STAGING:-}" ;;
-        "$CI_DEFAULT_BRANCH:production:microcrm-production:aws-poc-production")
-          GITLAB_AGENT_TOKEN="${GITLAB_AGENT_TOKEN_PRODUCTION:-}" ;;
+      case "$CI_COMMIT_BRANCH:$CLUSTER_ENVIRONMENT:$TF_STATE_NAME:$INFRASTRUCTURE_ENVIRONMENT" in
+        "dev:poc:microcrm-poc:aws-poc-infrastructure") ;;
         *) echo "Périmètre Ansible incohérent avec la branche" >&2; exit 1 ;;
       esac;
       test -n "$GITLAB_AGENT_TOKEN";
-      export GITLAB_AGENT_TOKEN
 
 # Le check mode s'exécute automatiquement après l'apply Terraform. Il prouve
 # la connexion SSM avant toute configuration réelle.
@@ -342,7 +344,7 @@ deploy:ansible:check:
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
 
 # La configuration réelle s'enchaîne automatiquement uniquement si Terraform
 # et le check mode Ansible ont réussi.
@@ -361,7 +363,7 @@ deploy:ansible:apply:
   rules:
     - if: '$AWS_APPLY_ROLE_ARN == null || $AWS_APPLY_ROLE_ARN == ""'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "web" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == "dev"'
       when: on_success
 
 # Vérifie la syntaxe, l'idempotence déclarative et les conventions Ansible.

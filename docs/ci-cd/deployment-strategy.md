@@ -54,11 +54,10 @@ relancer sa pipeline existante plutôt que créer un nouveau tag.
 
 ## Promotion et rollback
 
-- Une pipeline Web `dev` gère uniquement le state `microcrm-staging`, l'EC2
-  staging et son cluster K3s.
-- Une pipeline Web `main` gère uniquement le state `microcrm-production`,
-  l'EC2 production et son cluster K3s.
-- Ces pipelines d'infrastructure ne déploient aucune application.
+- Une pipeline Web `dev` gère l'infrastructure partagée dans le state
+  `microcrm-poc` : deux EC2, un cluster K3s et un NLB.
+- Une pipeline Web `main` ne provisionne aucune seconde infrastructure.
+- La pipeline d'infrastructure ne déploie aucune application.
 - `deploy:helm:staging:release-or-rollback` accepte uniquement une RC et la déploie en staging.
 - `deploy:helm:production:release-or-rollback` accepte uniquement une version finale et la déploie en production.
 - Les deux jobs téléchargent le bundle du tag et passent à Helm les digests
@@ -71,24 +70,20 @@ données PostgreSQL et ne remplace pas une procédure de restauration de base.
 
 ## Séparation de l'infrastructure
 
-L'infrastructure est déclarée dans trois states GitLab distincts :
+L'infrastructure est déclarée dans deux states GitLab distincts :
 
 - `microcrm-network` contient le VPC, le subnet public, la route Internet et le
   Security Group commun ;
-- `microcrm-staging` contient l'EC2/K3s staging, son IAM, son bucket temporaire
-  Ansible/SSM et son monitoring ;
-- `microcrm-production` contient les mêmes ressources, exclusivement pour la
-  production.
+- `microcrm-poc` contient exactement deux EC2, le cluster K3s partagé, le NLB,
+  son IAM, le bucket temporaire Ansible/SSM et le monitoring.
 
-Le root réseau reste séparé du root environnement générique. Le plan transmet
-le state et l'environnement prévus à l'apply, qui refuse toute combinaison
-autre que `dev/staging/microcrm-staging` ou
-`main/production/microcrm-production`. Le destroy d'un environnement conserve
-ainsi le réseau partagé et l'autre EC2. Aucun job de destroy réseau n'est
-fourni dans la pipeline courante.
+Le root réseau reste séparé du root cluster. Le plan et l'apply du cluster
+refusent toute combinaison autre que
+`dev/poc/microcrm-poc/aws-poc-infrastructure`. Son destroy est manuel, dédié
+à l'infrastructure et conserve le state réseau. Aucun job Helm staging ou
+production ne peut le déclencher.
 
-Avant le premier apply de cette version, les ressources du state historique
-`microcrm-poc` doivent être réparties dans les trois states. Copier une même
-ressource dans plusieurs states ou changer seulement `TF_STATE_NAME` est
-interdit : Terraform pourrait recréer ou détruire une ressource appartenant à
-l'autre environnement. Cette migration de state n'est pas exécutée par la CI.
+Avant le premier apply, inventorier les éventuels states
+`microcrm-staging`/`microcrm-production` et remettre leur ownership dans
+`microcrm-poc` sans dupliquer les ressources. Cette migration n'est pas
+exécutée automatiquement par la CI.

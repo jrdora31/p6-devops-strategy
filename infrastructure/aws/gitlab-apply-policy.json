@@ -39,6 +39,38 @@
       "Resource": "*"
     },
     {
+      "Sid": "MicrocrmNetworkLoadBalancerLifecycle",
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:CreateListener",
+        "elasticloadbalancing:CreateLoadBalancer",
+        "elasticloadbalancing:CreateTargetGroup",
+        "elasticloadbalancing:DeleteListener",
+        "elasticloadbalancing:DeleteLoadBalancer",
+        "elasticloadbalancing:DeleteTargetGroup",
+        "elasticloadbalancing:DeregisterTargets",
+        "elasticloadbalancing:DescribeListeners",
+        "elasticloadbalancing:DescribeListenerAttributes",
+        "elasticloadbalancing:DescribeLoadBalancerAttributes",
+        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeTags",
+        "elasticloadbalancing:DescribeTargetGroupAttributes",
+        "elasticloadbalancing:DescribeTargetGroups",
+        "elasticloadbalancing:DescribeTargetHealth",
+        "elasticloadbalancing:ModifyLoadBalancerAttributes",
+        "elasticloadbalancing:ModifyListener",
+        "elasticloadbalancing:ModifyListenerAttributes",
+        "elasticloadbalancing:ModifyTargetGroup",
+        "elasticloadbalancing:ModifyTargetGroupAttributes",
+        "elasticloadbalancing:RegisterTargets",
+        "elasticloadbalancing:RemoveTags",
+        "elasticloadbalancing:SetSecurityGroups",
+        "elasticloadbalancing:SetSubnets"
+      ],
+      "Resource": "*"
+    },
+    {
       "Sid": "MicrocrmInstanceRoleLifecycle",
       "Effect": "Allow",
       "Action": [
@@ -55,11 +87,7 @@
         "iam:UntagRole",
         "iam:UpdateAssumeRolePolicy"
       ],
-      "Resource": [
-        "arn:aws:iam::*:role/microcrm-poc-*",
-        "arn:aws:iam::*:role/microcrm-staging-*",
-        "arn:aws:iam::*:role/microcrm-production-*"
-      ]
+      "Resource": "arn:aws:iam::*:role/microcrm-poc-*"
     },
     {
       "Sid": "AttachOnlySsmManagedPolicy",
@@ -68,11 +96,7 @@
         "iam:AttachRolePolicy",
         "iam:DetachRolePolicy"
       ],
-      "Resource": [
-        "arn:aws:iam::*:role/microcrm-poc-*",
-        "arn:aws:iam::*:role/microcrm-staging-*",
-        "arn:aws:iam::*:role/microcrm-production-*"
-      ],
+      "Resource": "arn:aws:iam::*:role/microcrm-poc-*",
       "Condition": {
         "ArnEquals": {
           "iam:PolicyARN": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -91,21 +115,13 @@
         "iam:TagInstanceProfile",
         "iam:UntagInstanceProfile"
       ],
-      "Resource": [
-        "arn:aws:iam::*:instance-profile/microcrm-poc-*",
-        "arn:aws:iam::*:instance-profile/microcrm-staging-*",
-        "arn:aws:iam::*:instance-profile/microcrm-production-*"
-      ]
+      "Resource": "arn:aws:iam::*:instance-profile/microcrm-poc-*"
     },
     {
       "Sid": "PassOnlyMicrocrmRoleToEc2",
       "Effect": "Allow",
       "Action": "iam:PassRole",
-      "Resource": [
-        "arn:aws:iam::*:role/microcrm-poc-*",
-        "arn:aws:iam::*:role/microcrm-staging-*",
-        "arn:aws:iam::*:role/microcrm-production-*"
-      ],
+      "Resource": "arn:aws:iam::*:role/microcrm-poc-*",
       "Condition": {
         "StringEquals": {
           "iam:PassedToService": "ec2.amazonaws.com"
@@ -150,11 +166,7 @@
       ],
       "Resource": [
         "arn:aws:s3:::microcrm-poc-ansible-*",
-        "arn:aws:s3:::microcrm-poc-ansible-*/*",
-        "arn:aws:s3:::microcrm-staging-ansible-*",
-        "arn:aws:s3:::microcrm-staging-ansible-*/*",
-        "arn:aws:s3:::microcrm-production-ansible-*",
-        "arn:aws:s3:::microcrm-production-ansible-*/*"
+        "arn:aws:s3:::microcrm-poc-ansible-*/*"
       ]
     },
     {

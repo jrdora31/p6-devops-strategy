@@ -90,6 +90,9 @@ test:helm:
     - helm template microcrm infrastructure/helm/microcrm --namespace microcrm --values infrastructure/helm/microcrm/values-k3s.yaml > /dev/null
     - helm template microcrm infrastructure/helm/microcrm --namespace microcrm-staging --values infrastructure/helm/microcrm/values-staging.yaml > /dev/null
     - helm template microcrm infrastructure/helm/microcrm --namespace microcrm-prod --values infrastructure/helm/microcrm/values-production.yaml > /dev/null
+    # Deux occurrences sont attendues : une pour frontend et une pour backend.
+    - 'test "$(helm template microcrm infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-staging.yaml | grep -c "^  replicas: 2$")" = "2"'
+    - 'test "$(helm template microcrm infrastructure/helm/microcrm --values infrastructure/helm/microcrm/values-staging.yaml | grep -c "^        podAntiAffinity:$")" = "2"'
     # Couvre aussi le chemin réellement utilisé par le déploiement AWS, avec
     # uniquement de fausses valeurs encodées pour les deux Secrets gérés.
     - >-

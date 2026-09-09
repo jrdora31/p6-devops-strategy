@@ -7,17 +7,17 @@ réelle doit encore être validée par un déploiement.
 
 ```text
 VPC MicroCRM partagé
-└── Subnet public + Security Group HTTP/HTTPS/SSM
-    ├── EC2 Debian 12 staging
-    │   └── K3s staging
-    │       └── Helm : namespace microcrm-staging
-    └── EC2 Debian 12 production
-        └── K3s production
-            └── Helm : namespace microcrm-prod
+└── Subnet public unique (limite mono-AZ du POC)
+    ├── Network Load Balancer TCP/80
+    └── Cluster K3s partagé
+        ├── EC2 Debian 12 : server/control-plane + workloads
+        ├── EC2 Debian 12 : agent/worker
+        └── Traefik
+            ├── namespace microcrm-staging
+            └── namespace microcrm-prod
 
 GitLab CI/CD
-├── dev  ──> state microcrm-staging    ──> SSM/Ansible staging
-├── main ──> state microcrm-production ──> SSM/Ansible production
-├── tag RC    ──> GitLab Agent staging    ──> Helm staging
-└── tag final ──> GitLab Agent production ──> Helm production
+├── Web dev  ──> states microcrm-network + microcrm-poc ──> SSM/Ansible
+├── tag RC    ──> GitLab Agent microcrm-poc ──> Helm staging
+└── tag final ──> GitLab Agent microcrm-poc ──> Helm production
 ```

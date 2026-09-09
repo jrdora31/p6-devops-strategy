@@ -1,0 +1,83 @@
+---
+- name: Créer le dossier de configuration K3s agent
+  ansible.builtin.file:
+    path: "{{ k3s_agent_config_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Déployer la configuration K3s agent
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ k3s_agent_config_path }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  when: not ansible_check_mode
+  notify: Redémarrer K3s agent
+
+- name: Lire la version K3s installée
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s --version
+  register: k3s_agent_installed_version
+  check_mode: false
+  changed_when: false
+  failed_when: false
+
+- name: Télécharger le script d'installation officiel K3s
+  ansible.builtin.get_url:
+    url: "{{ k3s_agent_install_script_url }}"
+    dest: /usr/local/src/k3s-install.sh
+    owner: root
+    group: root
+    mode: "0755"
+  when: k3s_agent_version not in (k3s_agent_installed_version.stdout | default(''))
+
+- name: Installer la version K3s agent attendue
+  ansible.builtin.command:
+    cmd: /usr/local/src/k3s-install.sh
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_agent_version }}"
+    INSTALL_K3S_EXEC: "agent --config {{ k3s_agent_config_path }}"
+  when:
+    - not ansible_check_mode
+    - k3s_agent_version not in (k3s_agent_installed_version.stdout | default(''))
+  changed_when: true
+  no_log: true
+
+- name: Garantir que K3s agent est démarré au boot
+  ansible.builtin.systemd_service:
+    name: k3s-agent
+    state: started
+    enabled: true
+  when: not ansible_check_mode
+
+- name: Appliquer les handlers K3s agent avant le contrôle du cluster
+  ansible.builtin.meta: flush_handlers
+
+- name: Attendre que les deux nœuds K3s soient prêts
+  ansible.builtin.command:
+    cmd: >-
+      /usr/local/bin/k3s kubectl wait --for=condition=Ready node --all
+      --timeout=180s
+  delegate_to: "{{ groups['k3s_servers'][0] }}"
+  register: k3s_agent_cluster_ready
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Compter les nœuds du cluster K3s
+  ansible.builtin.command:
+    cmd: /usr/local/bin/k3s kubectl get nodes --output=name
+  delegate_to: "{{ groups['k3s_servers'][0] }}"
+  register: k3s_agent_cluster_nodes
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Garantir que le cluster contient exactement deux nœuds
+  ansible.builtin.assert:
+    that:
+      - k3s_agent_cluster_nodes.stdout_lines | length == 2
+    fail_msg: "Le cluster K3s partagé doit contenir exactement deux nœuds."
+  when: not ansible_check_mode

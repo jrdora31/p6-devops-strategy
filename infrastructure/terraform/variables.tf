@@ -21,13 +21,13 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "Environnement isolé associé à cette EC2 et à son cluster K3s."
+  description = "Périmètre de l'infrastructure K3s partagée."
   type        = string
-  default     = "staging"
+  default     = "poc"
 
   validation {
-    condition     = contains(["staging", "production"], var.environment)
-    error_message = "Seuls les environnements staging et production sont autorisés par ce root module."
+    condition     = var.environment == "poc"
+    error_message = "Ce root module gère uniquement le cluster partagé du POC."
   }
 }
 

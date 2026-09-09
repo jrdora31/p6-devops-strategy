@@ -32,6 +32,19 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.backend.podAntiAffinity.enabled }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .Values.backend.podAntiAffinity.weight }}
+              podAffinityTerm:
+                topologyKey: {{ .Values.backend.podAntiAffinity.topologyKey | quote }}
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: {{ include "microcrm.name" . }}
+                    app.kubernetes.io/instance: {{ .Release.Name }}
+                    app.kubernetes.io/component: backend
+      {{- end }}
       containers:
         - name: backend
           image: {{ include "microcrm.image" .Values.backend.image | quote }}

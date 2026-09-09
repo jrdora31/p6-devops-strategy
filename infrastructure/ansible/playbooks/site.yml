@@ -3,16 +3,17 @@
   hosts: localhost
   gather_facts: false
   vars:
-    deployment_environment: "{{ lookup('ansible.builtin.env', 'DEPLOYMENT_ENVIRONMENT') }}"
+    cluster_environment: "{{ lookup('ansible.builtin.env', 'CLUSTER_ENVIRONMENT') | default('poc', true) }}"
   tasks:
-    - name: Garantir un environnement autorisé et une seule EC2 cible
+    - name: Garantir un serveur et un agent K3s dans l'environnement
       ansible.builtin.assert:
         that:
-          - deployment_environment in ['staging', 'production']
+          - cluster_environment == 'poc'
           - groups.get('k3s_servers', []) | length == 1
+          - groups.get('k3s_agents', []) | length == 1
         fail_msg: >-
-          L'inventaire doit contenir exactement une EC2 K3s pour
-          DEPLOYMENT_ENVIRONMENT=staging ou production.
+          L'inventaire doit contenir exactement un serveur et un agent K3s
+          pour CLUSTER_ENVIRONMENT=poc.
 
 - name: Configurer le serveur K3s MicroCRM de l'environnement sélectionné
   hosts: k3s_servers
@@ -27,14 +28,14 @@
     cloudwatch_agent_enabled: >-
       {{ lookup('ansible.builtin.env', 'CLOUDWATCH_AGENT_ENABLED')
          | default('false', true) | bool }}
-    deployment_environment: >-
-      {{ lookup('ansible.builtin.env', 'DEPLOYMENT_ENVIRONMENT') }}
+    cluster_environment: >-
+      {{ lookup('ansible.builtin.env', 'CLUSTER_ENVIRONMENT') | default('poc', true) }}
 
   pre_tasks:
     - name: Vérifier le tag de l'EC2 ciblée
       ansible.builtin.assert:
         that:
-          - ec2_tags.Environment == deployment_environment
+          - ec2_tags.Environment == cluster_environment
         fail_msg: >-
           L'EC2 ciblée par Ansible n'appartient pas à l'environnement demandé.
 
@@ -67,3 +68,57 @@
     - role: common
     - role: k3s_server
     - role: cloudwatch_agent
+
+- name: Configurer le nœud agent K3s de l'environnement sélectionné
+  hosts: k3s_agents
+  gather_facts: false
+  become: true
+  vars:
+    ansible_connection: amazon.aws.aws_ssm
+    ansible_aws_ssm_bucket_name: >-
+      {{ lookup('ansible.builtin.env', 'ANSIBLE_AWS_SSM_BUCKET_NAME') }}
+    ansible_aws_ssm_region: >-
+      {{ lookup('ansible.builtin.env', 'AWS_REGION') | default('eu-west-3', true) }}
+    cluster_environment: >-
+      {{ lookup('ansible.builtin.env', 'CLUSTER_ENVIRONMENT') | default('poc', true) }}
+    cloudwatch_agent_enabled: >-
+      {{ lookup('ansible.builtin.env', 'CLOUDWATCH_AGENT_ENABLED')
+         | default('false', true) | bool }}
+    cloudwatch_agent_log_group_prefix: >-
+      {{ lookup('ansible.builtin.env', 'CLOUDWATCH_LOG_GROUP_PREFIX')
+         | default('/microcrm/poc', true) }}
+    cloudwatch_agent_metrics_namespace: >-
+      {{ lookup('ansible.builtin.env', 'CLOUDWATCH_METRICS_NAMESPACE')
+         | default('MicroCRM/Poc', true) }}
+    cloudwatch_agent_collect_kubernetes_logs: true
+    k3s_agent_server_address: "{{ hostvars[groups['k3s_servers'][0]].private_ip_address }}"
+    k3s_agent_token: >-
+      {{ (hostvars[groups['k3s_servers'][0]].k3s_server_node_token
+          | default({'content': ''})).content | b64decode }}
+  pre_tasks:
+    - name: Attendre que Systems Manager accepte la connexion
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+      check_mode: false
+    - name: Collecter les informations de l'agent après connexion
+      ansible.builtin.setup:
+  roles:
+    - role: common
+    - role: k3s_agent
+    - role: cloudwatch_agent
+
+- name: Configurer Traefik sur le serveur une fois les deux nœuds prêts
+  hosts: k3s_servers
+  gather_facts: false
+  become: true
+  vars:
+    ansible_connection: amazon.aws.aws_ssm
+    ansible_aws_ssm_bucket_name: >-
+      {{ lookup('ansible.builtin.env', 'ANSIBLE_AWS_SSM_BUCKET_NAME') }}
+    ansible_aws_ssm_region: >-
+      {{ lookup('ansible.builtin.env', 'AWS_REGION') | default('eu-west-3', true) }}
+  tasks:
+    - name: Appliquer les tâches Traefik du rôle serveur
+      ansible.builtin.import_role:
+        name: k3s_server
+        tasks_from: traefik

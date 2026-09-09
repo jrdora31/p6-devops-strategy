@@ -16,8 +16,8 @@ Le job recharge depuis le Generic Package Registry le manifeste, les digests
 et le chart du tag. Un rollback de `v1.1.0` vers `v1.0.0` redéploie donc les
 images exactes de `v1.0.0`, sans les reconstruire.
 
-Chaque rollback cible le contexte GitLab Agent du cluster concerné ; staging
-ne peut pas modifier le cluster production, et inversement.
+Chaque rollback utilise le contexte GitLab Agent commun, mais cible uniquement
+le namespace et l'environment GitLab de staging ou de production.
 
 Le rollback Helm ne restaure pas PostgreSQL. Le projet DevOps ne prévoit aucune
 évolution de schéma ; Liquibase, déjà présent dans le backend initial, n’est

@@ -38,9 +38,43 @@ done
 [[ -n "$namespace" ]] || { echo "Le namespace est obligatoire" >&2; exit 2; }
 [[ -n "$kube_context" ]] || { echo "Le contexte Kubernetes est obligatoire" >&2; exit 2; }
 
-kubectl --context "$kube_context" --namespace "$namespace" \
-  rollout status deployment -l 'app.kubernetes.io/instance=microcrm,app.kubernetes.io/component=frontend' \
-  --timeout=5m
+for component in frontend backend; do
+  selector="app.kubernetes.io/instance=microcrm,app.kubernetes.io/component=${component}"
+  kubectl --context "$kube_context" --namespace "$namespace" \
+    rollout status deployment -l "$selector" --timeout=5m
+
+  deployment_status="$(kubectl --context "$kube_context" --namespace "$namespace" \
+    get deployment -l "$selector" \
+    --output=jsonpath='{.items[0].spec.replicas}:{.items[0].status.readyReplicas}')"
+  [[ "$deployment_status" == "2:2" ]] || {
+    echo "Le Deployment ${component} n'a pas 2 replicas disponibles (${deployment_status})" >&2
+    exit 1
+  }
+
+  service_name="$(kubectl --context "$kube_context" --namespace "$namespace" \
+    get service -l "$selector" --output=jsonpath='{.items[0].metadata.name}')"
+  [[ -n "$service_name" ]] || {
+    echo "Service ${component} introuvable" >&2
+    exit 1
+  }
+  service_endpoints="$(kubectl --context "$kube_context" --namespace "$namespace" \
+    get endpoints "$service_name" \
+    --output=jsonpath='{.subsets[*].addresses[*].ip}' | wc -w | tr -d '[:space:]')"
+  [[ "$service_endpoints" -eq 2 ]] || {
+    echo "Le Service ${component} n'expose pas les 2 Pods prêts (${service_endpoints})" >&2
+    exit 1
+  }
+
+  ready_nodes="$(kubectl --context "$kube_context" --namespace "$namespace" \
+    get pods -l "$selector" \
+    --field-selector=status.phase=Running \
+    --output=jsonpath='{range .items[?(@.status.containerStatuses[0].ready==true)]}{.spec.nodeName}{"\n"}{end}' \
+    | sort -u | wc -l | tr -d '[:space:]')"
+  echo "Placement ${component} : ${ready_nodes} nœud(s) distinct(s)"
+  if [[ "$ready_nodes" -lt 2 ]]; then
+    echo "Avertissement : les replicas ${component} ne sont pas encore répartis sur les 2 nœuds" >&2
+  fi
+done
 
 frontend_deployment="$(kubectl --context "$kube_context" --namespace "$namespace" \
   get deployment -l 'app.kubernetes.io/instance=microcrm,app.kubernetes.io/component=frontend' \

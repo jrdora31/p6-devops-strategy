@@ -69,6 +69,13 @@
     k3s_server_version in
     (k3s_server_installed_version.stdout | default(''))
 
+- name: Lire le jeton d'adhésion des agents K3s
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: k3s_server_node_token
+  no_log: true
+  when: not ansible_check_mode
+
 - name: Stabiliser K3s avant de configurer le GitLab Agent
   when: not ansible_check_mode
   tags:
@@ -110,15 +117,14 @@
             k3s_server_api_recovered.rc == 0 and
             'ok' in k3s_server_api_recovered.stdout
 
-    - name: Vérifier que le nœud Kubernetes est prêt
+    - name: Vérifier que le serveur Kubernetes est prêt
       ansible.builtin.command:
         argv:
           - /usr/local/bin/k3s
           - kubectl
           - wait
           - --for=condition=Ready
-          - node
-          - --all
+          - "node/{{ ansible_hostname }}"
           - "--timeout={{ k3s_server_node_ready_timeout }}"
       register: k3s_server_node_check
       changed_when: false

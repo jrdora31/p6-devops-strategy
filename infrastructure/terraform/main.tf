@@ -56,6 +56,55 @@ module "compute" {
   cloudwatch_log_group_prefix = local.cloudwatch_log_group_prefix
 }
 
+resource "aws_lb" "microcrm" {
+  name                             = "${var.project_name}-poc-nlb"
+  internal                         = false
+  load_balancer_type               = "network"
+  subnets                          = [data.terraform_remote_state.network.outputs.public_subnet_id]
+  security_groups                  = [data.terraform_remote_state.network.outputs.nlb_security_group_id]
+  enable_cross_zone_load_balancing = false
+
+  tags = local.common_tags
+}
+
+resource "aws_lb_target_group" "http" {
+  name        = "${var.project_name}-poc-http"
+  port        = 80
+  protocol    = "TCP"
+  target_type = "instance"
+  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
+
+  health_check {
+    enabled             = true
+    protocol            = "TCP"
+    port                = "traffic-port"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    interval            = 30
+  }
+
+  tags = local.common_tags
+}
+
+resource "aws_lb_target_group_attachment" "k3s" {
+  for_each = toset(module.compute.instance_id)
+
+  target_group_arn = aws_lb_target_group.http.arn
+  target_id        = each.value
+  port             = 80
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.microcrm.arn
+  port              = 80
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.http.arn
+  }
+}
+
 locals {
   cloudwatch_log_groups = {
     system     = "${local.cloudwatch_log_group_prefix}/system"
@@ -101,7 +150,7 @@ resource "aws_cloudwatch_metric_alarm" "instance_unavailable" {
   alarm_actions       = local.alarm_actions
 
   dimensions = {
-    InstanceId = module.compute.instance_id
+    InstanceId = module.compute.instance_id[0]
   }
 
   tags = merge(local.common_tags, { Severity = "critical" })
@@ -122,7 +171,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   alarm_actions       = local.alarm_actions
 
   dimensions = {
-    InstanceId = module.compute.instance_id
+    InstanceId = module.compute.instance_id[0]
   }
 
   tags = merge(local.common_tags, { Severity = "warning" })
@@ -160,7 +209,7 @@ resource "aws_cloudwatch_dashboard" "poc" {
         width  = 24
         height = 2
         properties = {
-          markdown = "# MicroCRM ${var.environment}\n\nDashboard provisionné par Terraform. Les métriques utilisent l'hôte courant `${module.compute.metric_hostname}`."
+          markdown = "# MicroCRM ${var.environment}\n\nDashboard provisionné par Terraform. Les widgets détaillés utilisent le serveur K3s `${module.compute.metric_hostname[0]}`."
         }
       },
       {
@@ -176,7 +225,7 @@ resource "aws_cloudwatch_dashboard" "poc" {
           stat   = "Maximum"
           period = 60
           metrics = [
-            ["AWS/EC2", "StatusCheckFailed", "InstanceId", module.compute.instance_id, { label = "Échec des contrôles EC2" }]
+            ["AWS/EC2", "StatusCheckFailed", "InstanceId", module.compute.instance_id[0], { label = "Échec des contrôles EC2" }]
           ]
         }
       },
@@ -193,8 +242,8 @@ resource "aws_cloudwatch_dashboard" "poc" {
           stat   = "Average"
           period = 300
           metrics = [
-            [local.metrics_namespace, "cpu_usage_user", "cpu", "cpu-total", "host", module.compute.metric_hostname, { label = "CPU user (%)" }],
-            [local.metrics_namespace, "cpu_usage_system", "cpu", "cpu-total", "host", module.compute.metric_hostname, { label = "CPU system (%)" }]
+            [local.metrics_namespace, "cpu_usage_user", "cpu", "cpu-total", "host", module.compute.metric_hostname[0], { label = "CPU user (%)" }],
+            [local.metrics_namespace, "cpu_usage_system", "cpu", "cpu-total", "host", module.compute.metric_hostname[0], { label = "CPU system (%)" }]
           ]
         }
       },
@@ -211,9 +260,9 @@ resource "aws_cloudwatch_dashboard" "poc" {
           stat   = "Average"
           period = 300
           metrics = [
-            [local.metrics_namespace, "mem_used_percent", "host", module.compute.metric_hostname, { label = "Mémoire utilisée (%)" }],
+            [local.metrics_namespace, "mem_used_percent", "host", module.compute.metric_hostname[0], { label = "Mémoire utilisée (%)" }],
             [{
-              expression = "SEARCH('{${local.metrics_namespace},device,fstype,host,path} MetricName=\"disk_used_percent\" host=\"${module.compute.metric_hostname}\" path=\"/\"', 'Average', 300)"
+              expression = "SEARCH('{${local.metrics_namespace},device,fstype,host,path} MetricName=\"disk_used_percent\" host=\"${module.compute.metric_hostname[0]}\" path=\"/\"', 'Average', 300)"
               id         = "disk"
               label      = "Disque utilisé (%)"
             }]

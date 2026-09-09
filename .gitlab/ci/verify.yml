@@ -34,10 +34,21 @@ verify:images:
     name: alpine/helm:3.18.6
     entrypoint: [""]
   stage: verify
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: https://gitlab.com
   variables:
     KUBECTL_VERSION: "v1.33.13"
+    AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
+    AWS_REGION: eu-west-3
+    AWS_WEB_IDENTITY_TOKEN_FILE: "$CI_PROJECT_DIR/.aws/gitlab-oidc-token"
+    NLB_NAME: microcrm-poc-nlb
+    NLB_TARGET_GROUP_NAME: microcrm-poc-http
   before_script:
-    - apk add --no-cache bash curl
+    - apk add --no-cache aws-cli bash curl
+    - mkdir -p "$CI_PROJECT_DIR/.aws"
+    - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
+    - chmod 0600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - curl --fail --silent --show-error --location "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" --output /usr/local/bin/kubectl
     - chmod 0755 /usr/local/bin/kubectl
   script:
@@ -45,12 +56,33 @@ verify:images:
     - >-
       case "$CI_ENVIRONMENT_NAME:$DEPLOYMENT_ENVIRONMENT:$KUBE_CONTEXT:$KUBE_NAMESPACE" in
         "aws-poc-staging:staging:project_6_group/microcrm:microcrm-poc:microcrm-staging") ;;
-        "aws-poc-production:production:project_6_group/microcrm:microcrm-production:microcrm-prod") ;;
+        "aws-poc-production:production:project_6_group/microcrm:microcrm-poc:microcrm-prod") ;;
         *) echo "Ciblage du smoke test incohérent avec l'environnement GitLab" >&2; exit 1 ;;
       esac
-    - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --output=name | wc -l | tr -d "[:space:]")" = "1"'
-    - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --selector "microcrm-environment=$DEPLOYMENT_ENVIRONMENT" --output=name | wc -l | tr -d "[:space:]")" = "1"'
+    - kubectl --context "$KUBE_CONTEXT" wait --for=condition=Ready node --all --timeout=180s
+    - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --output=name | wc -l | tr -d "[:space:]")" = "2"'
+    - 'test "$(kubectl --context "$KUBE_CONTEXT" get nodes --selector "microcrm-environment=poc" --output=name | wc -l | tr -d "[:space:]")" = "2"'
+    - kubectl --context "$KUBE_CONTEXT" --namespace kube-system rollout status deployment/traefik --timeout=180s
+    - >-
+      test "$(kubectl --context "$KUBE_CONTEXT" --namespace kube-system get deployment traefik
+      --output=jsonpath='{.spec.replicas}:{.status.readyReplicas}')" = "2:2"
+    - kubectl --context "$KUBE_CONTEXT" --namespace kube-system get pods --selector app.kubernetes.io/name=traefik --output=wide
+    - >-
+      TRAEFIK_READY_NODES="$(kubectl --context "$KUBE_CONTEXT" --namespace kube-system
+      get pods --selector app.kubernetes.io/name=traefik --field-selector=status.phase=Running
+      --output=jsonpath='{range .items[?(@.status.containerStatuses[0].ready==true)]}{.spec.nodeName}{"\n"}{end}'
+      | sort -u | wc -l | tr -d '[:space:]')";
+      echo "Placement Traefik : ${TRAEFIK_READY_NODES} nœud(s) distinct(s)";
+      if [ "$TRAEFIK_READY_NODES" -lt 2 ]; then
+        echo "Avertissement : les replicas Traefik prêts sont temporairement co-localisés" >&2;
+      fi
     - bash scripts/ci/smoke_deployment.sh --namespace "$KUBE_NAMESPACE" --context "$KUBE_CONTEXT"
+    - NLB_DNS_NAME="$(aws elbv2 describe-load-balancers --names "$NLB_NAME" --query 'LoadBalancers[0].DNSName' --output text)"
+    - NLB_TARGET_GROUP_ARN="$(aws elbv2 describe-target-groups --names "$NLB_TARGET_GROUP_NAME" --query 'TargetGroups[0].TargetGroupArn' --output text)"
+    - 'test -n "$NLB_DNS_NAME" && test "$NLB_DNS_NAME" != "None"'
+    - 'test "$(aws elbv2 describe-target-health --target-group-arn "$NLB_TARGET_GROUP_ARN" --query "length(TargetHealthDescriptions[?TargetHealth.State==''healthy''])" --output text)" = "2"'
+    - curl --fail --silent --show-error --retry 6 --retry-delay 10 --header "Host: $INGRESS_HOST" "http://$NLB_DNS_NAME/" --output /dev/null
+    - curl --fail --silent --show-error --retry 6 --retry-delay 10 --header "Host: $INGRESS_HOST" "http://$NLB_DNS_NAME/api/persons" --output /dev/null
 
 # Même contrôle HTTP après promotion ou rollback d'un tag en staging.
 verify:deployment:release:staging:
@@ -64,6 +96,7 @@ verify:deployment:release:staging:
     DEPLOYMENT_ENVIRONMENT: staging
     KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
     KUBE_NAMESPACE: microcrm-staging
+    INGRESS_HOST: microcrm-staging.example.invalid
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.[1-9][0-9]*$/'
 
@@ -77,7 +110,8 @@ verify:deployment:production:
     name: aws-poc-production
   variables:
     DEPLOYMENT_ENVIRONMENT: production
-    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-production"
+    KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
     KUBE_NAMESPACE: microcrm-prod
+    INGRESS_HOST: microcrm.example.invalid
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/'
