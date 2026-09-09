@@ -72,12 +72,16 @@ deployment_name() {
 }
 
 deployment_image() {
-  kube get deployment "$(deployment_name "$1" "$2")" \
+  local track="$1"
+  local component="$2"
+  kube get deployment "$(deployment_name "$track" "$component")" \
     --output=jsonpath='{.spec.template.spec.containers[0].image}'
 }
 
 deployment_version() {
-  kube get deployment "$(deployment_name "$1" "$2")" \
+  local track="$1"
+  local component="$2"
+  kube get deployment "$(deployment_name "$track" "$component")" \
     --output=jsonpath='{.metadata.labels.app\.kubernetes\.io/version}'
 }
 
@@ -309,5 +313,9 @@ case "$action" in
     smoke_track stable
     printf 'ROLLBACK production réussi: stable=%s frontend=%s backend=%s\n' \
       "$RELEASE_VERSION" "$FRONTEND_IMAGE_DIGEST" "$BACKEND_IMAGE_DIGEST"
+    ;;
+  *)
+    usage >&2
+    exit 2
     ;;
 esac

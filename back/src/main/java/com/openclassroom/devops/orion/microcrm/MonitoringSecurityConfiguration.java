@@ -21,10 +21,9 @@ public class MonitoringSecurityConfiguration {
             HttpSecurity http,
             MonitoringAuthenticationEntryPoint authenticationEntryPoint) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
+                .securityMatcher("/internal/auth-check")
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/internal/auth-check").authenticated()
-                        .anyRequest().permitAll())
+                        .anyRequest().authenticated())
                 .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(authenticationEntryPoint))
                 .build();
     }
