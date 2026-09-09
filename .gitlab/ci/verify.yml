@@ -81,8 +81,12 @@ verify:images:
     - NLB_TARGET_GROUP_ARN="$(aws elbv2 describe-target-groups --names "$NLB_TARGET_GROUP_NAME" --query 'TargetGroups[0].TargetGroupArn' --output text)"
     - 'test -n "$NLB_DNS_NAME" && test "$NLB_DNS_NAME" != "None"'
     - 'test "$(aws elbv2 describe-target-health --target-group-arn "$NLB_TARGET_GROUP_ARN" --query "length(TargetHealthDescriptions[?TargetHealth.State==''healthy''])" --output text)" = "2"'
-    - curl --fail --silent --show-error --retry 6 --retry-delay 10 --header "Host: $INGRESS_HOST" "http://$NLB_DNS_NAME/" --output /dev/null
-    - curl --fail --silent --show-error --retry 6 --retry-delay 10 --header "Host: $INGRESS_HOST" "http://$NLB_DNS_NAME/api/persons" --output /dev/null
+    - >-
+      curl --fail --silent --show-error --retry 6 --retry-delay 10
+      --header "Host: $INGRESS_HOST" "http://$NLB_DNS_NAME/" --output /dev/null
+    - >-
+      curl --fail --silent --show-error --retry 6 --retry-delay 10
+      --header "Host: $INGRESS_HOST" "http://$NLB_DNS_NAME/api/persons" --output /dev/null
 
 # Même contrôle HTTP après promotion ou rollback d'un tag en staging.
 verify:deployment:release:staging:
