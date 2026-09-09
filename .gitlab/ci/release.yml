@@ -1,5 +1,6 @@
-# Calcule le prochain numéro RC à partir des commits conventionnels. Ce job
-# manuel ne crée aucun tag et ne publie aucune release : le dépôt local nu sert
+# Calcule à la demande le prochain numéro RC à partir des commits conventionnels.
+# Ce job apparaît uniquement dans une pipeline lancée manuellement sur dev. Il
+# ne crée aucun tag et ne publie aucune release : le dépôt local nu sert
 # uniquement à satisfaire la vérification Git de Semantic Release en dry-run.
 release:version:semantic:
   image: node:24.20.0-bookworm
@@ -24,7 +25,7 @@ release:version:semantic:
     paths:
       - .ci/release/semantic-version.env
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_COMMIT_BRANCH == "dev" && $CI_PIPELINE_SOURCE == "web"'
       when: manual
   allow_failure: true
 
