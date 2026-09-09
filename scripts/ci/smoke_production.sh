@@ -43,11 +43,11 @@ healthy_targets="$(aws elbv2 describe-target-health \
 
 # Le NLB du POC expose uniquement TCP/80. Ces probes HTTP n'envoient ni
 # credential ni contenu sensible ; le passage à TLS nécessite un domaine et un certificat.
-readonly nlb_http_base_url="http://${nlb_dns_name}" # NOSONAR
+readonly nlb_http_base_url="http://${nlb_dns_name}"
 
 curl --fail --silent --show-error --retry 6 --retry-delay 10 \
-  --header "Host: $INGRESS_HOST" "${nlb_http_base_url}/" --output /dev/null
+  --header "Host: $INGRESS_HOST" "${nlb_http_base_url}/" --output /dev/null # NOSONAR
 curl --fail --silent --show-error --retry 6 --retry-delay 10 \
-  --header "Host: $INGRESS_HOST" "${nlb_http_base_url}/api/persons" --output /dev/null
+  --header "Host: $INGRESS_HOST" "${nlb_http_base_url}/api/persons" --output /dev/null # NOSONAR
 
 echo "Smoke HTTP de la production via NLB réussi"
