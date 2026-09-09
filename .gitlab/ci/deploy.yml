@@ -142,9 +142,9 @@ deploy:helm:staging:release-or-rollback:
     - RELEASE_VERSION="$CI_COMMIT_TAG"
     - CHART_VERSION="${CI_COMMIT_TAG#v}"
     - RELEASE_BASE_URL="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/microcrm-release/$RELEASE_VERSION"
-    - curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/images.env" --output .ci/release/images.env
-    - curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/release-manifest.json" --output .ci/release/release-manifest.json
-    - curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/microcrm-$CHART_VERSION.tgz" --output ".ci/packages/microcrm-$CHART_VERSION.tgz"
+    - 'curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/images.env" --output .ci/release/images.env'
+    - 'curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/release-manifest.json" --output .ci/release/release-manifest.json'
+    - 'curl --fail --silent --show-error --header "JOB-TOKEN: $CI_JOB_TOKEN" "$RELEASE_BASE_URL/microcrm-$CHART_VERSION.tgz" --output ".ci/packages/microcrm-$CHART_VERSION.tgz"'
     - '. .ci/release/images.env; export FRONTEND_IMAGE_DIGEST BACKEND_IMAGE_DIGEST'
     - 'test "$(jq -r .version .ci/release/release-manifest.json)" = "$RELEASE_VERSION"'
     - 'test "$(jq -r .promotion.sourceVersion .ci/release/release-manifest.json)" != "null"'
