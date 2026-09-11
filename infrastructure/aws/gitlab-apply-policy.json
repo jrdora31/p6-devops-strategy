@@ -39,7 +39,7 @@
       "Resource": "*"
     },
     {
-      "Sid": "MicrocrmNetworkLoadBalancerLifecycle",
+      "Sid": "NlbLifecycle",
       "Effect": "Allow",
       "Action": [
         "elasticloadbalancing:AddTags",
@@ -50,14 +50,7 @@
         "elasticloadbalancing:DeleteLoadBalancer",
         "elasticloadbalancing:DeleteTargetGroup",
         "elasticloadbalancing:DeregisterTargets",
-        "elasticloadbalancing:DescribeListeners",
-        "elasticloadbalancing:DescribeListenerAttributes",
-        "elasticloadbalancing:DescribeLoadBalancerAttributes",
-        "elasticloadbalancing:DescribeLoadBalancers",
-        "elasticloadbalancing:DescribeTags",
-        "elasticloadbalancing:DescribeTargetGroupAttributes",
-        "elasticloadbalancing:DescribeTargetGroups",
-        "elasticloadbalancing:DescribeTargetHealth",
+        "elasticloadbalancing:Describe*",
         "elasticloadbalancing:ModifyLoadBalancerAttributes",
         "elasticloadbalancing:ModifyListener",
         "elasticloadbalancing:ModifyListenerAttributes",
@@ -71,7 +64,7 @@
       "Resource": "*"
     },
     {
-      "Sid": "CreateElasticLoadBalancingServiceLinkedRole",
+      "Sid": "CreateElbServiceLinkedRole",
       "Effect": "Allow",
       "Action": "iam:CreateServiceLinkedRole",
       "Resource": "arn:aws:iam::*:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing*",
