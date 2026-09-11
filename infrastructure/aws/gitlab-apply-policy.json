@@ -71,6 +71,17 @@
       "Resource": "*"
     },
     {
+      "Sid": "CreateElasticLoadBalancingServiceLinkedRole",
+      "Effect": "Allow",
+      "Action": "iam:CreateServiceLinkedRole",
+      "Resource": "arn:aws:iam::*:role/aws-service-role/elasticloadbalancing.amazonaws.com/AWSServiceRoleForElasticLoadBalancing*",
+      "Condition": {
+        "StringLike": {
+          "iam:AWSServiceName": "elasticloadbalancing.amazonaws.com"
+        }
+      }
+    },
+    {
       "Sid": "MicrocrmInstanceRoleLifecycle",
       "Effect": "Allow",
       "Action": [

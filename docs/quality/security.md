@@ -28,6 +28,14 @@ l'historique Git.
 Aucune exception Gitleaks n'est configurée. Toute exception future doit viser un
 faux positif précis, être justifiée en revue et ne jamais contenir de secret réel.
 
+## Exceptions Trivy à documenter
+
+TODO : si une CVE doit être ajoutée à `.trivyignore` parce qu'aucun correctif
+applicable n'est disponible, documenter ici son identifiant, le composant et la
+version concernés, la justification temporaire, le risque résiduel, les mesures
+de réduction du risque et la date de prochaine revue. Présenter brièvement les
+CVE encore surveillées lors de la soutenance.
+
 Les rapports sont disponibles dans les artifacts GitLab des jobs concernés
 et conservés 30 jours.
 
