@@ -36,7 +36,7 @@ stages:
   - release
   - terraform-network
   - terraform-plan
-  - terraform
+  - terraform-apply
   - ansible
   - helm
   - verify

@@ -192,7 +192,7 @@ deploy:terraform:network:apply:
 # branche. Le rôle AWS d'écriture est distinct du rôle de lecture du plan.
 deploy:terraform:apply:
   extends: .terraform:aws-oidc
-  stage: terraform
+  stage: terraform-apply
   needs:
   - job: quality:terraform:plan
     artifacts: true
@@ -245,7 +245,7 @@ deploy:terraform:apply:
 # garde-fous complémentaires avant la destruction de l'environnement.
 deploy:terraform:destroy:
   extends: .terraform:aws-oidc
-  stage: terraform
+  stage: terraform-apply
   variables:
     AWS_ROLE_ARN: "$AWS_APPLY_ROLE_ARN"
     CLUSTER_ENVIRONMENT: poc
