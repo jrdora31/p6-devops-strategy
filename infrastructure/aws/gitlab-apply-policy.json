@@ -26,6 +26,7 @@
         "ec2:Describe*",
         "ec2:DetachInternetGateway",
         "ec2:DisassociateRouteTable",
+        "ec2:GetSecurityGroupsForVpc",
         "ec2:ModifyInstanceAttribute",
         "ec2:ModifySubnetAttribute",
         "ec2:ModifyVpcAttribute",
