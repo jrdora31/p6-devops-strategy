@@ -48,6 +48,14 @@ def test_final_canary_deploy_is_manual_and_blocking_before_verify() -> None:
     assert "when: manual" not in verify
 
 
+def test_canary_jobs_install_pinned_kubectl() -> None:
+    canary = job_block(DEPLOY_CI, ".canary:production")
+
+    assert 'KUBECTL_VERSION: "v1.33.13"' in canary
+    assert 'https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl' in canary
+    assert "chmod 0755 /usr/local/bin/kubectl" in canary
+
+
 def test_human_decisions_are_optional_jobs_after_verify() -> None:
     for name in (
         "promote:helm:production:canary",

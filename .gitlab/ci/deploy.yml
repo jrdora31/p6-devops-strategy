@@ -117,6 +117,7 @@ deploy:helm:staging:release-or-rollback:
     GITLAB_OIDC_TOKEN:
       aud: https://gitlab.com
   variables:
+    KUBECTL_VERSION: "v1.33.13"
     DEPLOYMENT_ENVIRONMENT: production
     KUBE_CONTEXT: "project_6_group/microcrm:microcrm-poc"
     KUBE_NAMESPACE: microcrm-prod
@@ -131,6 +132,8 @@ deploy:helm:staging:release-or-rollback:
     CANARY_WEIGHT: "10"
   before_script:
     - apk add --no-cache aws-cli bash curl jq
+    - curl --fail --silent --show-error --location "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" --output /usr/local/bin/kubectl
+    - chmod 0755 /usr/local/bin/kubectl
     - mkdir -p "$CI_PROJECT_DIR/.aws" .ci/release .ci/packages
     - printf '%s' "$GITLAB_OIDC_TOKEN" > "$AWS_WEB_IDENTITY_TOKEN_FILE"
     - chmod 0600 "$AWS_WEB_IDENTITY_TOKEN_FILE"
