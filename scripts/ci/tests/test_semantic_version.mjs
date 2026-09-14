@@ -15,6 +15,29 @@ test("construit les tags RC et final compatibles avec le workflow existant", () 
   });
 });
 
+test("incrémente le suffixe lorsque la RC proposée existe déjà", () => {
+  assert.deepEqual(
+    versionMetadata("1.3.0-rc.1", ["v1.2.0", "v1.3.0-rc.1"]),
+    {
+      NEXT_RELEASE_VERSION: "1.3.0",
+      NEXT_RC_VERSION: "1.3.0-rc.2",
+      NEXT_RC_TAG: "v1.3.0-rc.2",
+      NEXT_FINAL_TAG: "v1.3.0",
+    },
+  );
+});
+
+test("reprend après le plus grand suffixe RC existant", () => {
+  assert.equal(
+    versionMetadata("1.3.0-rc.1", [
+      "v1.3.0-rc.1",
+      "v1.3.0-rc.3",
+      "v1.4.0-rc.8",
+    ]).NEXT_RC_TAG,
+    "v1.3.0-rc.4",
+  );
+});
+
 test("refuse une version qui ne vient pas du canal RC", () => {
   assert.throws(
     () => versionMetadata("1.3.0"),
@@ -28,7 +51,7 @@ test("écrit un rapport dotenv exploitable par GitLab", async () => {
   const messages = [];
 
   await verifyRelease(
-    { outputFile },
+    { outputFile, existingTags: [] },
     {
       nextRelease: { version: "2.0.0-rc.1" },
       logger: { log: (message) => messages.push(message) },
