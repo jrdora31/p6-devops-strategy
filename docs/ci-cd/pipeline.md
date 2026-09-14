@@ -17,11 +17,11 @@ Comment une version passe du code source à une release déployée ?
 
 ### Étapes de livraison
 
-1. lancer manuellement `release:version:semantic` sur une pipeline de push
-   `dev` pour obtenir le prochain numéro RC calculé depuis les Conventional
-   Commits ; le job est un dry-run et ne crée aucun tag ;
-2. valider le code puis construire, tester, scanner et publier les images SHA
-   sur `dev` ;
+1. valider le code puis construire, tester, scanner et publier les images SHA
+   dans la pipeline de push sur `dev` ;
+2. dans cette même pipeline, lancer manuellement `release:suggest:version`
+   pour obtenir le prochain numéro RC calculé depuis les Conventional Commits ;
+   le job est un dry-run et ne crée aucun tag ;
 3. créer manuellement la RC proposée `vX.Y.Z-rc.N` et la valider en staging ;
 4. après merge vers `main`, créer manuellement le tag final proposé, annoté avec
    `Promote-From: vX.Y.Z-rc.N` ;

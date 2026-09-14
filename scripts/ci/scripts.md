@@ -207,7 +207,7 @@ TODO
 
 Valide la version RC calculée par Semantic Release et écrit les variables
 `NEXT_RELEASE_VERSION`, `NEXT_RC_VERSION`, `NEXT_RC_TAG` et `NEXT_FINAL_TAG`
-dans le rapport dotenv du job manuel `release:version:semantic`.
+dans le rapport dotenv du job manuel `release:suggest:version`.
 
 Le script ne crée aucun tag. Semantic Release est configuré en `dry-run` et la
 création manuelle de la RC puis de la finale reste obligatoire.

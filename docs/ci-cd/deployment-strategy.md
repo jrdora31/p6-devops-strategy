@@ -8,12 +8,12 @@ commit (`CI_COMMIT_SHA`). Les environnements ne reconstruisent jamais l'image.
 
 ## Création d'une release
 
-1. Depuis une pipeline de push `dev`, le maintainer peut lancer manuellement
-   `release:version:semantic`. Semantic Release analyse les commits depuis la
+1. La pipeline de branche `dev` construit et publie
+   `frontend:$CI_COMMIT_SHA` et `backend:$CI_COMMIT_SHA`.
+2. Dans cette pipeline de push, le maintainer peut lancer manuellement
+   `release:suggest:version`. Semantic Release analyse les commits depuis la
    dernière version et propose le prochain tag RC et le tag final associé. Ce
    job fonctionne uniquement en `dry-run` : il ne crée ni tag ni release.
-2. La pipeline de branche `dev` construit et publie
-   `frontend:$CI_COMMIT_SHA` et `backend:$CI_COMMIT_SHA`.
 3. Le maintainer crée le tag RC proposé `vMAJOR.MINOR.PATCH-rc.N` sur ce
    commit. Sa pipeline réutilise les images SHA existantes et ne construit que
    l'image éventuellement absente avant d'enregistrer les digests.

@@ -122,8 +122,15 @@ Le nœud server porte `microcrm.io/environment-role=staging` et le nœud agent
 de traiter l'EC2 staging comme un Canary.
 
 Le secret `KUBERNETES_MONITORING_PASSWORD` doit être une variable GitLab
-masquée et protégée. Le test sûr consiste à envoyer des identifiants invalides
-vers `/api/internal/auth-check`, attendre HTTP 401, puis chercher
+masquée et protégée. Les tags RC et finaux doivent donc correspondre à une
+règle de tags protégés, par exemple `v*` avec création limitée aux Maintainers.
+Sans cette règle, GitLab ne transmet pas le secret au job de déploiement du tag,
+qui s'arrête avant Helm. Il ne faut pas rendre la variable non protégée pour
+contourner ce contrôle. Son scope d'environnement doit également couvrir
+`aws-poc-staging` et `aws-poc-production`, ou rester à `*`.
+
+Le test sûr consiste à envoyer des identifiants invalides vers
+`/api/internal/auth-check`, attendre HTTP 401, puis chercher
 `AuthenticationFailureCount` avec les dimensions attendues. Aucun credential
 ne doit être copié dans les logs ou la commande conservée comme preuve.
 
