@@ -1,8 +1,26 @@
 #!/usr/bin/env python3
 """Squelette de l'orchestrateur du bootstrap MicroCRM.
 
-Une implémentation future appellera d'abord la préparation AWS, puis la
-configuration GitLab. Aucun changement externe n'est effectué actuellement.
+PURPOSE
+    Montrer le point d'entrée qui coordonnerait une reprise du projet sans
+    confondre les responsabilités AWS et GitLab.
+INPUTS
+    À terme : configuration non secrète du projet et références de credentials
+    fournies par l'environnement, jamais codées en dur.
+OUTPUTS
+    Un compte rendu des contrôles et changements réalisés par chaque étape.
+DEPENDENCIES
+    Les futurs modules ``bootstrap-aws`` puis ``bootstrap-gitlab`` ainsi que
+    des clients API authentifiés avec des droits minimaux.
+EXECUTION FLOW
+    Vérifier les prérequis, préparer les accès AWS OIDC, puis configurer les
+    variables et protections GitLab qui référencent ces accès.
+FAILURE BEHAVIOUR
+    L'orchestrateur doit s'arrêter au premier échec, sans poursuivre avec une
+    configuration partielle ni afficher de secret.
+
+Ce POC conserve volontairement ce fichier non opérationnel : l'exécuter ne
+modifie aujourd'hui aucune ressource externe.
 """
 
 
