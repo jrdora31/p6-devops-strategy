@@ -26,4 +26,12 @@ public class MonitoringController {
     Map<String, String> authenticationCheck() {
         return Map.of("environment", environment, "track", track, "version", version);
     }
+
+    // Ces trois valeurs décrivent uniquement le déploiement courant. Elles ne
+    // contiennent aucun secret et permettent au frontend de rendre visible la
+    // cible réellement servie lors des tests staging, stable et Canary.
+    @GetMapping("/deployment-info")
+    Map<String, String> deploymentInfo() {
+        return Map.of("environment", environment, "track", track, "version", version);
+    }
 }

@@ -1,5 +1,10 @@
-<output class="notification is-info is-light">
-  v1.2.0-rc.X - Test du reuse des images CI.
+<output
+  class="notification is-light"
+  [ngClass]="deployment.environment === 'production' ? 'is-info' : 'is-warning'"
+>
+  <strong>{{ deployment.environment | uppercase }}</strong>
+  · {{ deployment.track | uppercase }}
+  · {{ deployment.version }}
 </output>
 
 <div class="columns">

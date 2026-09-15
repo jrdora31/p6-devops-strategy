@@ -29,6 +29,15 @@ class MonitoringSecurityIntegrationTest {
     }
 
     @Test
+    void publicDeploymentInfoExposesOnlyTheCurrentDeploymentIdentity() throws Exception {
+        mockMvc.perform(get("/deployment-info"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.environment").value("development"))
+                .andExpect(jsonPath("$.track").value("stable"))
+                .andExpect(jsonPath("$.version").value("v1.2.3"));
+    }
+
+    @Test
     void invalidCredentialsProduceARealAuthenticationFailure() throws Exception {
         mockMvc.perform(get("/internal/auth-check")
                 .with(httpBasic("test-monitoring", "invalid-password")))
