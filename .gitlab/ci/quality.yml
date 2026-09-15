@@ -20,6 +20,21 @@ quality:gitleaks:
     GIT_DEPTH: "0"
   script:
     - mkdir -p .ci/reports/security
+    # Prouve que le scanner bloque réellement une fuite contrôlée. La valeur
+    # factice est assemblée à l'exécution afin qu'aucun faux secret ne soit
+    # versionné dans le dépôt, puis la fixture est supprimée immédiatement.
+    - >-
+      GITLEAKS_FIXTURE="$(mktemp -d)";
+      printf 'api_%s = "%s%s"\n' 'key' 'q7N4vZ9pL2xR8mK5' 'tY3wF6aD1sH0jC4b' > "$GITLEAKS_FIXTURE/controlled-secret.txt";
+      if gitleaks dir --no-banner --redact --exit-code 23 "$GITLEAKS_FIXTURE"; then
+        echo "Gitleaks n'a pas détecté la fixture contrôlée" >&2;
+        rm -rf "$GITLEAKS_FIXTURE";
+        exit 1;
+      else
+        GITLEAKS_FIXTURE_STATUS=$?;
+      fi;
+      rm -rf "$GITLEAKS_FIXTURE";
+      test "$GITLEAKS_FIXTURE_STATUS" -eq 23
     - >-
       gitleaks git
       --redact
