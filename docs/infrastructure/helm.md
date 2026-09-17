@@ -1,158 +1,115 @@
-# Déploiement Helm et plan de conteneurs
+# Helm et K3s
 
-Ce document décrit les conteneurs qui composent MicroCRM et la manière dont
-Helm les configure et les déploie dans K3s.
+Helm installe MicroCRM dans le cluster K3s à partir du
+[chart `microcrm`](../../infrastructure/helm/microcrm/Chart.yaml). Terraform
+crée l'infrastructure AWS, Ansible configure K3s et la CI construit les
+images Docker. Helm assemble ensuite les ressources Kubernetes avec les
+valeurs propres à l'environnement et les images du bundle de release,
+référencées par leur digest `repository@sha256`.
 
-## 1. Rôle de Helm dans MicroCRM
+## Conteneurs et réseau
 
-TODO : expliquer le rôle du chart `helm/microcrm` et préciser ce qui relève de
-Helm, de Docker, d'Ansible et de GitLab CI/CD.
-
-## 2. Architecture des conteneurs
-
-TODO : présenter les conteneurs et leurs relations.
+Une requête entre par le NLB, passe par Traefik, puis atteint le frontend
+Caddy. Le frontend transmet les appels `/api` au backend Spring Boot, qui
+accède à PostgreSQL. Le NLB fournit l'entrée réseau commune aux deux nœuds ;
+Traefik choisit la route HTTP selon l'hôte et, en production Canary, la version
+à servir. Chaque Service Kubernetes garde une adresse stable devant les Pods
+du composant concerné.
 
 ```text
-Utilisateur
-    ↓
-Frontend Caddy
-    ↓
-Backend Spring Boot
-    ↓
-PostgreSQL
+Utilisateur → NLB TCP/80 → Traefik → frontend (80) → backend (8080) → PostgreSQL (5432)
 ```
 
-TODO : accompagner tout diagramme d'une description textuelle accessible.
+Les Deployments maintiennent les Pods frontend et backend. Le StatefulSet
+PostgreSQL conserve l'identité de la base et son volume persistant. Les sondes
+de démarrage, disponibilité et vie évitent d'envoyer du trafic à un conteneur
+qui n'est pas prêt. Les `NetworkPolicies` limitent les connexions entrantes
+entre composants.
 
-## 3. Conteneur frontend
+Les valeurs communes de [`values.yaml`](../../infrastructure/helm/microcrm/values.yaml)
+fixent les capacités suivantes :
 
-TODO : documenter :
+| Composant | Réplicas | Ressources demandées | Limites |
+|---|---:|---|---|
+| Frontend | 2 | 50m CPU, 32 Mi mémoire | 250m CPU, 128 Mi |
+| Backend | 2 | 100m CPU, 256 Mi | 500m CPU, 512 Mi |
+| PostgreSQL | 1 | 100m CPU, 256 Mi | 500m CPU, 512 Mi |
 
-- le rôle du frontend ;
-- l'image utilisée ;
-- le nombre de réplicas ;
-- le port exposé ;
-- les ressources CPU et mémoire ;
-- les vérifications de santé ;
-- la communication avec le backend.
+Les ressources demandées réservent une capacité minimale au placement des
+Pods ; les limites plafonnent leur consommation. Une anti-affinité préférée
+cherche à séparer les réplicas applicatifs sans bloquer le déploiement si ce
+placement n'est pas possible. Les images du GitLab Registry utilisent
+`IfNotPresent` ; les identifiants du registre, de la base et du monitoring
+sont fournis par les variables CI protégées, puis injectés dans des Secrets.
 
-## 4. Conteneur backend
+PostgreSQL conserve ses données sur un volume de 2 Gio avec `local-path`,
+c'est-à-dire sur le disque local du nœud K3s. Ce choix convient au POC mais
+n'apporte ni réplication du stockage ni sauvegarde externe.
 
-TODO : documenter :
+## Environnements
 
-- le rôle du backend ;
-- l'image et la version Java utilisées ;
-- le nombre de réplicas ;
-- le port exposé ;
-- les ressources CPU et mémoire ;
-- les vérifications de santé ;
-- la connexion à PostgreSQL.
+Staging et production partagent les deux EC2, le control-plane K3s et le NLB.
+Leurs applications et leurs bases sont toutefois installées dans des
+namespaces séparés : `microcrm-staging` et `microcrm-prod`. Cette séparation
+évite qu'une mise à jour ou une configuration applicative de staging modifie
+directement la production.
 
-## 5. Conteneur PostgreSQL
+| Environnement | Fichier de valeurs | Placement | Routage |
+|---|---|---|---|
+| Staging | [`values-staging.yaml`](../../infrastructure/helm/microcrm/values-staging.yaml) | Nœud `staging` | Version RC, sans Canary |
+| Production | [`values-production.yaml`](../../infrastructure/helm/microcrm/values-production.yaml) | Nœud `production` | Stable seule ou stable + Canary |
 
-TODO : documenter :
+Les `nodeSelector` assurent ce placement. Les bases PostgreSQL restent
+distinctes, chacune sur son volume `local-path`. Les hôtes
+`*.example.invalid` du chart sont des exemples : le POC utilise un accès HTTP
+via le NLB, sans domaine public ni TLS configurés ici.
 
-- l'image utilisée ;
-- le StatefulSet et le Service ;
-- le port exposé ;
-- le volume persistant ;
-- les ressources CPU et mémoire ;
-- les vérifications de santé ;
-- la gestion des identifiants par Secret ;
-- les limites actuelles de sauvegarde et de restauration.
+## Ressources Kubernetes du Canary
 
-## 6. Services et communications
+Quand `canary.enabled=true`, le chart conserve les Deployments et Services
+frontend/backend stables et crée des Deployments et Services frontend/backend
+Canary distincts. Ils portent notamment les labels `microcrm.io/track: canary`
+et `app.kubernetes.io/version` ; les deux versions utilisent la même base
+PostgreSQL de production. Le frontend Canary appelle le backend Canary, et le
+frontend stable appelle le backend stable.
 
-TODO : expliquer :
+Traefik répartit les requêtes entre les Services avec un `TraefikService`
+pondéré. L'`IngressRoute` expose cette route derrière le NLB. La
+[configuration de production](../../infrastructure/helm/microcrm/values-production.yaml)
+fixe `canary.stableWeight=90` et `canary.canaryWeight=10` :
 
-- les Services frontend, backend et PostgreSQL ;
-- le routage réalisé par l'Ingress ;
-- les flux autorisés entre les conteneurs ;
-- les restrictions définies par les NetworkPolicies.
+| Version | Trafic configuré |
+|---|---:|
+| Stable | 90 % |
+| Canary | 10 % |
 
-## 7. Gestion des images
+Le chart exige que les deux poids totalisent 100. Quand `canary.enabled=false`,
+l'Ingress Kubernetes dirige tout le trafic vers la version stable. Les jobs
+de [promotion ou d'abandon](../ci-cd/deployment-strategy.md) ramènent ensuite
+la production à une seule version stable.
 
-TODO : préciser :
+Traefik est configuré avec deux réplicas et une anti-affinité préférée, sans
+garantie de placement sur les deux EC2. Si les deux Pods Traefik se trouvent
+sur staging, la perte de cette EC2 supprime aussi l'entrée HTTP production.
+Le détail de la limite d'infrastructure figure dans
+[Terraform](terraform.md).
 
-- les repositories du GitLab Container Registry ;
-- l'identification des images par commit ;
-- le déploiement par digest ;
-- la politique de récupération des images ;
-- le Secret utilisé pour accéder au registre.
+## Commandes d'inspection
 
-La construction, les scans et la publication des images sont décrits dans la
-documentation CI/CD. Cette section couvre uniquement leur utilisation par
-Helm.
+Depuis un contexte Kubernetes autorisé, remplacer `<namespace>` par
+`microcrm-staging` ou `microcrm-prod`. La release Helm s'appelle `microcrm`.
 
-## 8. Configuration des environnements
+```bash
+helm -n <namespace> history microcrm
+kubectl -n <namespace> get pods,deploy,svc,ingress
+kubectl -n <namespace> get events --sort-by=.lastTimestamp
+```
 
-TODO : distinguer clairement :
+L'historique Helm montre les révisions ; les commandes Kubernetes affichent
+l'état des Pods, Services, Ingress et événements. Les jobs Helm utilisent
+`helm upgrade --install` avec attente et retour automatique en cas d'échec
+(`--atomic`). Les critères de validation applicative figurent dans les
+[tests](../quality/testing.md).
 
-- les valeurs communes de `values.yaml` ;
-- les valeurs de staging ;
-- les valeurs de production ;
-- les namespaces ;
-- les noms de release et les hôtes ;
-- les éléments identiques et différents entre les environnements.
-
-## 9. Déploiement et mise à jour
-
-TODO : expliquer le déroulement du déploiement Helm :
-
-1. récupération du package Helm ;
-2. injection des images et Secrets attendus ;
-3. exécution de `helm upgrade --install` ;
-4. attente de l'état opérationnel ;
-5. création d'une nouvelle révision Helm ;
-6. comportement de `--atomic` en cas d'échec.
-
-## 10. Vérification du déploiement
-
-TODO : ajouter uniquement les commandes réellement utilisées pour vérifier :
-
-- l'état de la release Helm ;
-- l'historique des révisions ;
-- l'état des pods ;
-- les Services et l'Ingress ;
-- les événements Kubernetes ;
-- les vérifications de santé applicatives.
-
-## 11. Limites du POC actuel
-
-TODO : documenter sans les présenter comme des fonctionnalités réalisées :
-
-- l'absence de haute disponibilité ;
-- le nombre actuel de réplicas ;
-- le stockage PostgreSQL local ;
-- l'état réel de la sauvegarde et de la restauration ;
-- les limites réseau et TLS ;
-- les mécanismes prévus mais non encore implémentés.
-
-## 12. Canary de production implémenté
-
-Le chart conserve les Deployments historiques comme rôle `stable` et crée,
-uniquement avec `canary.enabled=true`, deux Deployments et deux Services
-`canary`. Les deux tracks utilisent la même base PostgreSQL et des images
-`repository@sha256`.
-
-En production, un `TraefikService` applique `canary.stableWeight` et
-`canary.canaryWeight`, dont la somme doit être exactement égale à 100, puis un
-`IngressRoute` l'expose. Avec Canary désactivé, l'Ingress Kubernetes historique
-pointe uniquement vers stable. Staging ne rend jamais les ressources Canary.
-
-Les workloads staging et production utilisent respectivement les
-`nodeSelector` `microcrm.io/environment-role=staging` et `production`. Les
-selectors immuables des Deployments stables existants restent inchangés ; le
-Canary emploie l'instance Kubernetes distincte `microcrm-canary`.
-
-## 13. Références techniques
-
-TODO : ajouter les liens relatifs vers :
-
-- le chart et ses fichiers de valeurs ;
-- la pipeline de déploiement ;
-- la stratégie de release ;
-- la procédure de rollback ;
-- la procédure de sauvegarde et de restauration.
-
-plan de conteneur à faire ici aussi.
+Voir aussi le [rollback](../Maintenance/rollback.md) et les
+[limites de sauvegarde](../Maintenance/backup-recovery.md).

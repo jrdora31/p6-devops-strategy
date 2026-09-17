@@ -2,9 +2,9 @@
    <img src="./front/src/favicon.png" width="192px" />
 </p>
 
-# MicroCRM (P5 - Expert DevOps - Gérez le cycle de vie de développement logiciel)
+# MicroCRM — projet DevOps P6
 
-MicroCRM est une application de démonstration basique ayant pour être objectif de servir de socle pour le module "P5 - Expert DevOps".
+MicroCRM est une application de démonstration utilisée pour le projet OpenClassrooms P6.
 
 L'application MicroCRM est une implémentation simplifiée d'un ["CRM" (Customer Relationship Management)](https://fr.wikipedia.org/wiki/Gestion_de_la_relation_client). Les fonctionnalités sont limitées à la création, édition et la visualisations des individus liés à des organisations.
 
@@ -20,7 +20,11 @@ Ce [monorepo](https://en.wikipedia.org/wiki/Monorepo) contient les 2 composantes
 - La partie serveur (ou "backend"), en Java SpringBoot 3;
 - La partie cliente (ou "frontend"), en Angular 17.
 
-Une intégration basique avec Gitlab CI est définie via le fichier [`.gitlab-ci.yml`](./.gitlab-ci.yml).
+La [CI/CD GitLab](./docs/ci-cd/pipeline.md) organise les contrôles et les
+releases. Terraform provisionne le POC AWS, Ansible configure le cluster K3s,
+puis Helm déploie l'application dans les namespaces staging et production du
+même cluster. La configuration CI se trouve dans [`.gitlab-ci.yml`](./.gitlab-ci.yml)
+et `.gitlab/ci/`.
 
 ### Démarrer avec les sources
 
@@ -136,7 +140,7 @@ sh scripts/ci/smoke.sh \
 ## Documentation
 
 Pour reprendre le projet depuis un clone et effectuer un premier déploiement
-sur AWS, consulter [`DOCS/GET-STARTED.md`](./DOCS/GET-STARTED.md).
+sur AWS, consulter [`docs/GET-STARTED.md`](./docs/GET-STARTED.md).
 
 La documentation peut être adaptée aux besoins de l'équipe : information
 jamais transmise par la couleur seule et diagrammes légendés, titres Markdown
@@ -145,24 +149,16 @@ utilisables au clavier avec des commandes copiables.
 
 ### Architecture et infrastructure
 
-- [`DOCS/stack.md`](./DOCS/stack.md) — Stack technique du projet.
-- [`DOCS/schema_architecture_aws.md`](./DOCS/schema_architecture_aws.md) — Architecture AWS et interactions entre les composants.
-- [`DOCS/infrastructure/terraform.md`](./DOCS/infrastructure/terraform.md) — Provisionnement AWS avec Terraform.
-- [`DOCS/infrastructure/ansible.md`](./DOCS/infrastructure/ansible.md) — Configuration de l’instance et du cluster K3s.
-- [`DOCS/infrastructure/helm.md`](./DOCS/infrastructure/helm.md) — Déploiement de MicroCRM dans K3s.
+- [Stack](./docs/stack.md) et [architecture](./docs/schema_architecture_globale.md).
+- [Terraform](./docs/infrastructure/terraform.md), [Ansible](./docs/infrastructure/ansible.md) et [Helm](./docs/infrastructure/helm.md).
 
 ### CI/CD et maintenance
 
-- [`DOCS/ci-cd/pipeline.md`](./DOCS/ci-cd/pipeline.md) — Organisation de la pipeline GitLab CI/CD.
-- [`DOCS/ci-cd/deployment-strategy.md`](./DOCS/ci-cd/deployment-strategy.md) — Release, promotion et rollback.
-- [`DOCS/Maintenance/backup-recovery.md`](./DOCS/Maintenance/backup-recovery.md) — Sauvegarde et restauration.
-- [`DOCS/Maintenance/rollback.md`](./DOCS/Maintenance/rollback.md) — Retour à une version précédente.
-- [`DOCS/Maintenance/supervision.md`](./DOCS/Maintenance/supervision.md) — Supervision CloudWatch.
+- [Pipeline](./docs/ci-cd/pipeline.md) et [stratégie](./docs/ci-cd/deployment-strategy.md).
+- [Backup](./docs/Maintenance/backup-recovery.md), [rollback](./docs/Maintenance/rollback.md) et [supervision](./docs/Maintenance/supervision.md).
 
 ### Qualité et scripts
 
-- [`DOCS/quality/testing.md`](./DOCS/quality/testing.md) — Stratégie de tests.
-- [`DOCS/quality/security.md`](./DOCS/quality/security.md) — Sécurité, secrets et scans.
-- [`DOCS/quality/performance.md`](./DOCS/quality/performance.md) — Performance et métriques DORA.
+- [Tests](./docs/quality/testing.md), [sécurité](./docs/quality/security.md) et [DORA](./docs/quality/performance.md).
 - [`scripts/bootstrap/bootstrap.md`](./scripts/bootstrap/bootstrap.md) — Initialisation AWS et GitLab.
 - [`scripts/ci/scripts.md`](./scripts/ci/scripts.md) — Scripts utilisés par la pipeline.

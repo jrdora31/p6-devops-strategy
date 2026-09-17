@@ -1,6 +1,9 @@
 # Supervision
 
-Comment surveiller MicroCRM une fois déployé et diagnostiquer son état.
+CloudWatch suit l'état des deux EC2 et de l'application pendant les
+déploiements. Les dashboards aident à distinguer un problème de nœud d'une
+dégradation propre à la version Canary ; les alarmes avertissent l'opérateur
+mais ne décident pas à sa place de promouvoir ou d'abandonner une version.
 
 ## Dashboard CloudWatch
 
@@ -11,11 +14,13 @@ Lorsque CloudWatch est activé, Terraform crée :
 
 ## Métriques
 
-### EC2
+### Métriques EC2
 
 Chaque EC2 dispose de CPU, RAM, disque, réseau et `StatusCheckFailed`. Les
 InstanceId viennent directement des outputs du module Terraform ; aucun
 identifiant n'est codé en dur.
+
+### Métriques applicatives
 
 Le backend publie en StatsD vers le CloudWatch Agent du nœud :
 
@@ -42,49 +47,44 @@ Le dashboard calcule `ErrorRate = ServerErrorCount / RequestCount * 100` avec
 `IF` et `FILL` pour retourner zéro lorsque le nombre de requêtes est nul ou
 qu'aucun 5xx n'existe.
 
-### Exposition HTTP
-
-Le NLB public TCP/80 distribue le trafic entre les deux EC2 saines. Traefik
-conserve le routage HTTP par host vers chaque namespace.
-
-Traefik est configuré avec deux réplicas, sans `nodeSelector` ni anti-affinité
-obligatoire. L'anti-affinité seulement préférée cherche à placer un Pod sur
-chaque EC2, mais autorise leur co-localisation sur staging. Dans ce cas, le
-trafic production reçu par le NLB traverse l'EC2 staging avant de rejoindre les
-Pods stable/Canary sur l'EC2 production.
-
-La perte de l'EC2 staging supprime aussi l'unique control-plane. Les workloads
-et un Pod Traefik déjà actifs sur l'agent production peuvent continuer à servir
-le trafic avec l'état réseau existant, mais PROMOTE, ABORT, rollback et tout
-nouveau scheduling sont impossibles jusqu'au rétablissement de l'API K3s. Si
-les deux Pods Traefik étaient co-localisés sur staging, l'entrée HTTP production
-tombe également. Cette limite est acceptée pour le POC à deux EC2 ; la corriger
-proprement nécessiterait une architecture control-plane/worker hautement
-disponible hors périmètre.
-
 ## Logs applicatifs
 
 Les groupes `/microcrm/poc/{system,kubernetes,traefik}` collectent les journaux
-des deux nœuds. Traefik écrit ses accès en JSON sans conserver les en-têtes ni
-les paramètres de requête.
+des deux nœuds avec une rétention de trois jours. Traefik écrit ses accès en
+JSON sans conserver les en-têtes ni les paramètres de requête.
 
 ## CloudWatch Logs Insights
 
-TODO : requêtes utiles pour :
-
-* erreurs applicatives ;
-* erreurs de déploiement ;
-* échecs d'authentification.
+Logs Insights permet de rapprocher un incident de ses journaux. Sélectionner
+`/microcrm/poc/kubernetes`, limiter la période au déploiement et rechercher
+`ERROR`, `Liquibase` ou `AuthenticationFailure`. Dans
+`/microcrm/poc/traefik`, examiner les réponses 5xx et les chemins HTTP ; un
+statut isolé doit être replacé dans le parcours testé avant diagnostic.
 
 ## Alarmes
 
-Les deux EC2 ont des alarmes de disponibilité et CPU. Le Canary possède quatre
-alertes : au moins un 5xx sur cinq minutes, un taux de 5xx supérieur ou égal à
-5 % pendant deux périodes de cinq minutes, au moins un échec d'authentification
-sur cinq minutes et une latence p95 supérieure ou égale à 1000 ms pendant deux
-périodes de cinq minutes. L'alarme de taux utilise les séries sans `Version` et
-retourne zéro lorsque `RequestCount` vaut zéro. Elles notifient éventuellement
-SNS ; elles ne déclenchent jamais PROMOTE, ABORT ou rollback.
+Les deux EC2 disposent d'alarmes de disponibilité et de CPU. Pendant un
+Canary, quatre alarmes suivent la nouvelle version pour repérer rapidement
+une dégradation :
+
+| Indicateur Canary | Rôle | Seuil |
+|---|---|---|
+| Réponses 5xx | Repérer les erreurs serveur | Au moins 1 en 5 min |
+| Taux de 5xx | Rapporter les erreurs au trafic | Au moins 5 % sur deux périodes de 5 min |
+| Échecs d'authentification | Repérer les refus sur l'endpoint protégé | Au moins 1 en 5 min |
+| Latence p95 | Suivre les requêtes les plus lentes | Au moins 1 000 ms sur deux périodes de 5 min |
+
+Une latence p95 de 1 000 ms signifie que 95 % des requêtes répondent en une
+seconde ou moins. Pour le taux de 5xx, l'alarme utilise la série du Canary
+courant sans dimension `Version` et retourne zéro si `RequestCount` vaut zéro.
+Les alarmes peuvent notifier SNS ; l'opérateur examine les métriques avant de
+lancer une décision Canary ou un rollback. Le déroulement des décisions est
+décrit dans la [stratégie de déploiement](../ci-cd/deployment-strategy.md).
+
+Pour observer un Canary, ouvrir `microcrm-application-production` dans
+CloudWatch et comparer les séries stable/Canary. Cette consultation est
+manuelle : il n'existe pas de job `observation:cloudwatch` ni de période
+d'observation automatisée par la pipeline.
 
 ## Notifications Slack
 
@@ -94,10 +94,8 @@ déploiements et les rollbacks, réussis ou échoués. Les jobs Trivy notifient 
 d'une vulnérabilité, d'un secret détecté ou d'une erreur du scanner.
 
 L'envoi utilise `scripts/ci/notify.py` et un **Incoming Webhook** Slack conservé
-dans la variable GitLab `SLACK_WEBHOOK_URL`. Cette variable doit être masquée,
-protégée et non développée. Elle ne doit jamais être copiée dans le dépôt ou
-les logs. Une variable protégée n'est disponible que sur une branche ou un tag
-également protégé ; `dev` doit donc être protégé pour notifier le staging.
+dans la variable GitLab `SLACK_WEBHOOK_URL`. Sa protection est décrite dans la
+[documentation de sécurité](../quality/security.md).
 
 Créer l'Incoming Webhook dans Slack, récupérer son URL puis l'ajouter dans
 **Settings > CI/CD > Variables** sous le nom `SLACK_WEBHOOK_URL`. Le message
@@ -111,37 +109,29 @@ production, ainsi que des contrôles Trivy
 `quality:trivy:repository`, `quality:trivy:kubernetes`,
 `release:trivy:image:frontend` et `release:trivy:image:backend` en cas d'échec.
 
-TODO : ajouter une preuve observable (message Slack horodaté et pipeline liée)
-avant de déclarer cette notification validée en conditions réelles.
-
-## État K3s / Pods
-
-Le contexte GitLab Agent unique `microcrm-poc` dessert les deux namespaces.
-Le nœud server porte `microcrm.io/environment-role=staging` et le nœud agent
-`microcrm.io/environment-role=production`. Les `nodeSelector` Helm empêchent
-de traiter l'EC2 staging comme un Canary.
-
-Le secret `KUBERNETES_MONITORING_PASSWORD` doit être une variable GitLab
-masquée et protégée. Les tags RC et finaux doivent donc correspondre à une
-règle de tags protégés, par exemple `v*` avec création limitée aux Maintainers.
-Sans cette règle, GitLab ne transmet pas le secret au job de déploiement du tag,
-qui s'arrête avant Helm. Il ne faut pas rendre la variable non protégée pour
-contourner ce contrôle. Son scope d'environnement doit également couvrir
-`aws-poc-staging` et `aws-poc-production`, ou rester à `*`.
-
-Le test sûr consiste à envoyer des identifiants invalides vers
-`/api/internal/auth-check`, attendre HTTP 401, puis chercher
-`AuthenticationFailureCount` avec les dimensions attendues. Aucun credential
-ne doit être copié dans les logs ou la commande conservée comme preuve.
+L'envoi dépend de la configuration effective de `SLACK_WEBHOOK_URL` dans
+GitLab ; sans cette variable, les jobs passent la notification.
 
 ## Diagnostic rapide
 
-TODO : commandes utiles pour diagnostiquer :
+Depuis une session autorisée, contrôler d'abord les EC2 et les nœuds K3s :
 
-* EC2 ;
-* K3s / pods ;
-* application ;
-* contexte GitLab Agent et Traefik.
+```bash
+aws ec2 describe-instance-status
+kubectl get nodes -o wide
+```
+
+Le résultat attendu est un état sain pour les deux EC2 et deux nœuds K3s
+`Ready`. Après contrôle du contexte GitLab Agent, examiner les composants de
+chaque environnement :
+
+```bash
+kubectl -n microcrm-prod get pods,svc,events
+kubectl -n microcrm-staging get pods,svc,events
+```
+
+Les Pods Traefik se trouvent dans `kube-system`. Les jobs `verify` complètent
+ce diagnostic par des vérifications HTTP de l'application.
 
 ## Exploitation des données
 

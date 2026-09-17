@@ -12,3 +12,7 @@ le cluster partagé aux jobs Helm des deux namespaces.
 Le serveur est labellisé `staging` et l'agent `production`. Le rôle CloudWatch
 reste commun et idempotent sur les deux EC2 ; il collecte les métriques hôte,
 les logs K3s/Traefik et écoute StatsD sur le port UDP 8125 du nœud.
+
+Après l'apply Terraform, les jobs `deploy:ansible:check` et
+`deploy:ansible:apply` contrôlent puis appliquent cette configuration. Ils
+préparent K3s sans déployer l'application.

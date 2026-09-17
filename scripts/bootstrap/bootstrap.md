@@ -5,7 +5,7 @@ Référence technique des scripts utilisés pour initialiser les accès AWS et l
 > Ces scripts sont des squelettes non exécutés dans le cadre du POC. Ils
 > décrivent une piste d'automatisation et ne configurent actuellement aucune
 > ressource ni variable. Pour la procédure d'initialisation, voir
-> `docs/GET-STARTED.md`.
+> [Démarrer MicroCRM](../../docs/GET-STARTED.md).
 
 ## Vue d'ensemble
 

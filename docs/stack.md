@@ -44,6 +44,6 @@ Vue exhaustive et concise des technologies utilisées dans MicroCRM.
 
 - AWS
 
-## observabilité
+## Observabilité
 
 - CloudWatch

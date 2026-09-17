@@ -1,46 +1,49 @@
-# TO DO TOUT LE FICHIER
+# Sécurité
 
-→ comment la sécurité fonctionne : Trivy, scans, rapports, vulnérabilités, procédure de correction.
+La CI contrôle les secrets, les dépendances, les images et la configuration
+avant livraison. Chaque outil couvre un risque différent :
 
-TO DO
+| Contrôle | Jobs | Rôle |
+|---|---|---|
+| Gitleaks | `quality:gitleaks` | Rechercher les secrets dans l'historique Git accessible depuis la référence |
+| Trivy | `quality:trivy:repository`, `quality:trivy:kubernetes`, `quality:trivy:iac`, `release:trivy:image:frontend/backend` | Scanner dépôt, manifests, infrastructure et images |
 
+Gitleaks `v8.30.1` bloque la pipeline s'il trouve un secret. Il conserve un
+rapport JSON expurgé pendant 30 jours et s'exécute sur les merge requests,
+`dev`, la branche principale et les tags. Les pipelines Web et planifiées ne
+chargent pas les jobs `quality` généraux. Aucune exception Gitleaks n'est
+configurée ; un éventuel faux positif doit être justifié sans exposer de
+secret réel.
 
+Trivy couvre les vulnérabilités des dépendances, des images et de l'IaC,
+ainsi que les secrets incorporés aux images. Il ne remplace pas la recherche
+de secrets dans l'historique Git, et ces jobs ne sont pas le scanner de
+dépendances natif de GitLab. Les rapports HIGH/CRITICAL n'impliquent pas tous
+un blocage : celui-ci dépend du seuil `--exit-code 1` propre au contrôle.
+Les artefacts des jobs concernés sont conservés 30 jours.
 
-## Rapports de sécurité
+## Exception Trivy
 
-Les contrôles de sécurité sont exécutés automatiquement par la CI :
-- Gitleaks recherche les secrets dans l'historique Git accessible depuis la ref ;
-- Trivy recherche les vulnérabilités dans les dépendances du dépôt ;
-- les images Docker ;
-- l'IaC ;
-- les manifests Kubernetes.
+Le frontend utilise `.trivyignore-frontend` pour `CVE-2026-56854`, liée à
+l'image Caddy. L'exception expire le 31 décembre 2026. Le POC n'expose pas la
+fonction SSH concernée ; l'exception doit être retirée lorsqu'une image
+corrigée est disponible. L'option `--ignore-unfixed` filtre séparément les
+vulnérabilités sans correctif : ce n'est pas une exception nominative.
 
-Le job `quality:gitleaks` utilise Gitleaks `v8.30.1`, bloque la pipeline lorsqu'un
-secret est détecté et conserve un rapport JSON expurgé pendant 30 jours. Il
-s'exécute sur les merge requests, `dev`, la branche par défaut et les tags. Les
-pipelines planifiées et Web n'incluent pas les jobs `quality` généraux.
+Pour traiter un signalement, ouvrir le job et son rapport, identifier le
+composant, la version et la sévérité, corriger ou justifier le cas précis,
+puis relancer la pipeline. Une nouvelle exception doit préciser le risque
+résiduel et sa date de revue.
 
-Gitleaks remplace uniquement le scan de secrets du dépôt auparavant effectué par
-Trivy. Trivy reste responsable des vulnérabilités, de l'IaC, de Kubernetes et des
-secrets incorporés aux images Docker ; ces derniers ne dupliquent pas le scan de
-l'historique Git.
+## Secrets de déploiement
 
-Aucune exception Gitleaks n'est configurée. Toute exception future doit viser un
-faux positif précis, être justifiée en revue et ne jamais contenir de secret réel.
-
-## Exceptions Trivy à documenter
-
-TODO : si une CVE doit être ajoutée à `.trivyignore` parce qu'aucun correctif
-applicable n'est disponible, documenter ici son identifiant, le composant et la
-version concernés, la justification temporaire, le risque résiduel, les mesures
-de réduction du risque et la date de prochaine revue. Présenter brièvement les
-CVE encore surveillées lors de la soutenance.
-
-Les rapports sont disponibles dans les artifacts GitLab des jobs concernés
-et conservés 30 jours.
-
-En cas de secret ou de vulnérabilité détecté :
-1. ouvrir le job concerné ;
-2. consulter le rapport Gitleaks ou Trivy ;
-3. identifier le package/fichier et la sévérité ;
-4. corriger puis relancer la pipeline.
+Les secrets GitLab, dont `KUBERNETES_MONITORING_PASSWORD` et
+`SLACK_WEBHOOK_URL`, doivent rester masqués et protégés ; ils ne doivent être
+copiés ni dans le dépôt ni dans les logs. Une variable protégée n'est fournie
+qu'aux branches ou tags également protégés : les releases doivent donc utiliser
+une règle de tags protégés, par exemple `v*` avec création limitée aux
+Maintainers. Le scope de `KUBERNETES_MONITORING_PASSWORD` doit couvrir
+`aws-poc-staging` et `aws-poc-production`, ou rester à `*`. Si le secret est
+absent d'un job de release, corriger la protection ou le scope plutôt que
+rendre la variable non protégée. Pour notifier le staging via Slack, `dev`
+doit également être protégé.

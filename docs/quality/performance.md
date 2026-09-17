@@ -1,120 +1,25 @@
-# Performance
+# Performance et DORA
 
-Ce rapport synthétise les résultats du monitoring et des tests de performance, puis les améliorations qui en découlent.
+Les métriques DORA suivent la cadence et la stabilité des livraisons du POC.
+Le job non bloquant `pages:dora` interroge l'API GitLab avec
+`DORA_GITLAB_TOKEN`, puis publie une page HTML et des exports JSON/CSV dans
+`public/`. Il s'exécute sur `dev` et lors des pipelines planifiées sur `dev`.
+La configuration vise `aws-poc-staging`, sur 90 jours, avec un suivi des
+incidents commencé le `2026-08-11T00:00:00Z` (voir
+[`dora.yml`](../../.gitlab/ci/dora.yml) et
+[`dora_metrics.py`](../../scripts/ci/dora_metrics.py)).
 
-La configuration du monitoring est décrite dans [`../Maintenance/supervision.md`](../Maintenance/supervision.md).
+| Indicateur | Calcul dans MicroCRM |
+|---|---|
+| Fréquence de déploiement | Deployments GitLab réussis dans la période, ramenés à une semaine |
+| Délai des changements | Médiane entre la fusion d'une MR et son premier deployment réussi |
+| Taux d'échec des changements | Part des deployments réussis reliés à un incident GitLab `dora` par `DORA_DEPLOYMENT_ID` |
+| Temps de restauration | Médiane entre création et clôture des incidents suivis |
 
-## Indicateurs retenus
+Sans échantillon, un indicateur reste non mesurable plutôt que de prendre la
+valeur zéro. Les résultats dépendent des liens établis dans GitLab et de la
+déclaration des incidents. Ils décrivent le POC, pas l'exploitation d'un
+service de production réel.
 
-### Métriques DORA
-
-* **Fréquence de déploiement** : TODO
-* **Change Lead Time** : TODO
-* **Change Failure Rate** : TODO
-* **Temps de restauration** : TODO
-
-Pour chaque indicateur :
-
-* signification ;
-* valeur obtenue ;
-* intérêt pour MicroCRM.
-
-### Métriques techniques
-
-* disponibilité EC2 ;
-* CPU ;
-* mémoire ;
-* disque ;
-* erreurs applicatives ;
-* échecs d'authentification ;
-* métriques / health checks du Load Balancer.
-
-Préciser leur signification et justifier leur présence.
-
-## Résultats du monitoring et des tests
-
-TODO :
-
-* captures pertinentes des dashboards ;
-* résultats des tests ;
-* métriques concrètes observées ;
-* synthèse compréhensible des constats.
-
-## Analyse des résultats
-
-TODO :
-
-* interpréter les métriques ;
-* identifier saturation, indisponibilité ou anomalie ;
-* expliquer les impacts observés sur la disponibilité, la stabilité et les performances.
-
-## Gains obtenus
-
-### Performance de livraison
-
-Comparer le processus OPS initial avec le processus automatisé actuel.
-
-**Avant :**
-
-* réception du numéro de version de l'image ;
-* scan Trivy manuel ;
-* déploiement Docker manuel sur l'environnement de démonstration ;
-* vérification du fonctionnement.
-
-**Après :**
-
-* contrôles, release, déploiement et vérifications automatisés par la CI/CD.
-
-TODO :
-
-* chronométrer une exécution du processus manuel initial ;
-* mesurer le temps d'intervention humaine actuel ;
-* calculer le gain par déploiement.
-
-Ne pas inclure dans le calcul les fonctionnalités ajoutées sans équivalent dans le processus initial.
-
-### Disponibilité et performance
-
-TODO : présenter les impacts mesurés des améliorations apportées.
-
-## Recommandations d'amélioration continue
-
-Pour chaque recommandation :
-
-* problème constaté ;
-* métrique ou observation associée ;
-* amélioration proposée ;
-* bénéfice attendu ;
-* justification technique et organisationnelle.
-
-Exemples déjà prévus :
-
-* ajustement des seuils d'alerte ;
-* scaling / deuxième EC2 ;
-* Load Balancer ;
-* amélioration du monitoring ;
-* amélioration du rollback.
-
-## Sécurité
-
-### Gains obtenus
-
-TODO : présenter les gains obtenus grâce aux contrôles de sécurité.
-
-### Vulnérabilités et corrections
-
-TODO : vulnérabilités détectées et corrections apportées.
-
-### Recommandations
-
-TODO : améliorations proposées pour le suivi et la correction des vulnérabilités.
-
-## Conclusion
-
-TODO : expliquer comment les mesures et améliorations mises en place contribuent :
-
-* à l'amélioration continue de la pipeline CI/CD ;
-* à la disponibilité du système ;
-* à sa stabilité ;
-* à sa fiabilité ;
-* à ses performances globales.
+Les métriques d'exploitation et les alarmes CloudWatch sont décrites dans la
+[supervision](../Maintenance/supervision.md), distincte des indicateurs DORA.

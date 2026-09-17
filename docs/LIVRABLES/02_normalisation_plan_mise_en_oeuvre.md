@@ -2,7 +2,9 @@
 
 **Projet :** MicroCRM
 
-**État actuel du document :** normes et plan de mise en œuvre renseignés ; conclusion finale à compléter après les dernières preuves d’exploitation.
+**Lecture du document :** ce plan conserve les choix de conception de son
+époque ; les parcours CI/CD en place sont décrits dans
+[`pipeline.md`](../ci-cd/pipeline.md).
 
 > Le plan présenté dans ce document illustre la structure attendue dans le cadre d’un projet réel.
 >
@@ -146,13 +148,14 @@ Références de compatibilité : [Angular](https://angular.dev/reference/version
 
 | Vue | Référence |
 |---|---|
-| Avant — workflow audité | [source Mermaid](diagrammes/workflow_ci_actuel.md) · [export SVG](diagrammes/workflow_ci_actuel.svg) · commit `526bd96cddd2903676988b56dfeb2778667aa435` |
-| Cible — architecture conçue | [source Mermaid](diagrammes/workflow_ci_cible.md) · [export SVG](diagrammes/workflow_ci_cible.svg) |
+| Avant — workflow audité | [source Mermaid](assets/diagrammes/workflow_ci_actuel.md) · [export SVG](assets/diagrammes/workflow_ci_actuel.svg) · commit `526bd96cddd2903676988b56dfeb2778667aa435` |
+| Parcours actuels | [Schémas SVG des workflows](../ci-cd/pipeline.md#workflows-cicd) ; la conception ci-dessous reste historique |
 | Après — architecture réalisée | release et commit à renseigner après l’implémentation |
 
 Le schéma cible sépare la chaîne GitLab à réaliser en partie 1 du deployment AWS/K3s à réaliser en partie 2.
 
-![Architecture CI/CD cible de MicroCRM](diagrammes/workflow_ci_cible.svg)
+Les schémas V8 liés ci-dessus représentent la configuration actuelle ; aucun
+export de l'ancienne cible non versionnée n'est présenté comme preuve.
 
 ### 2.6 Tests
 
@@ -313,10 +316,16 @@ Les semaines sont comptées à partir de la validation du plan. Elles seront rem
 
 > Synthétiser les principaux objectifs de la normalisation et les avantages apportés au projet.
 
-**À finaliser plus tard.** La CI/CD, le déploiement AWS/K3s, le monitoring, les alertes, les métriques DORA et un rollback Helm en staging sont réalisés et prouvés. La synthèse définitive attend encore une preuve de sauvegarde/restauration PostgreSQL et la mise en œuvre de la cible de production.
+MicroCRM dispose aujourd'hui d'une chaîne CI/CD, d'un POC AWS/K3s, du
+monitoring CloudWatch et d'un rollback applicatif. Le chart et les jobs
+gèrent aussi un Canary Traefik en production. La restauration PostgreSQL, distincte du
+rollback applicatif, n'est pas implémentée dans le POC.
 
 ### 4.2 Prochaines étapes
 
 > Identifier les étapes suivant la mise en œuvre afin d’assurer le succès à long terme de la stratégie de normalisation.
 
-**À finaliser plus tard.** Les prochaines actions sont de tester la sauvegarde/restauration PostgreSQL, compléter les KPI HTTP prévus, puis évaluer la cible de production (haute disponibilité, load balancer et déploiement canary) avant toute création de ressources.
+La validation finale suit le passage d'une RC en staging à une finale
+introduite en Canary devant une version stable, sans figer les numéros des
+releases. La haute disponibilité du control-plane et la restauration
+PostgreSQL restent des évolutions au-delà de ce POC.

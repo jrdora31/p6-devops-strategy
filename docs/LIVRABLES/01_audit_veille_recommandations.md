@@ -273,7 +273,10 @@ Liquibase est déjà présent dans le backend ; il est retenu et doit être main
 | Blue-green | Par rapport au blue-green, **le rolling update** consomme moins de capacité supplémentaire. En revanche, les deux versions coexistent pendant la mise à jour. | — | Par rapport au blue-green, **canary** introduit la nouvelle version progressivement. En revanche, sa mise en œuvre est plus complexe. |
 | Canary | Par rapport au canary, **le rolling update** est natif dans Kubernetes et plus simple pour le POC. En revanche, il contrôle moins finement le trafic. | Par rapport au canary, **blue-green** simplifie la bascule. En revanche, il double temporairement la capacité. | — |
 
-Le rolling update est retenu pour le POC. Canary est la cible recommandée si une architecture multi-nœuds et équilibrée est mise en place.
+À la date de cet audit initial, le rolling update était retenu et le Canary
+restait une cible. Depuis, MicroCRM utilise un cluster POC partagé et une
+configuration Traefik stable/Canary. La
+[stratégie actuelle](../ci-cd/deployment-strategy.md) décrit ce parcours.
 
 Les choix retenus sont formulés dans les recommandations et restent conditionnés par le tier GitLab, l’éligibilité AWS du compte et les mesures de coût réelles.
 
@@ -568,7 +571,10 @@ Les solutions proposées ci-dessous résultent de l’audit et de la veille. Leu
 
 MicroCRM dispose déjà de GitLab, d’une CI minimale et de conteneurs Docker fonctionnels. L’audit montre cependant des tests limités, des contrôles de sécurité tardifs ou absents, aucune conservation des rapports et un processus de release encore largement manuel.
 
-Les recommandations portent donc sur l’automatisation des contrôles, la conservation des preuves, la traçabilité des images, la portabilité de l’application, la persistance des données avec Liquibase et la maîtrise des releases. K3s est retenu pour le POC AWS à coût contenu ; le rolling update est la stratégie immédiatement réaliste et le canary la cible recommandée pour une future architecture de production.
+Les recommandations initiales portent sur l’automatisation des contrôles, la
+traçabilité des images et la maîtrise des releases. K3s répond au besoin d'un
+POC AWS à coût contenu. Le Canary Traefik a depuis été ajouté au cluster
+partagé ; la sauvegarde et la restauration PostgreSQL restent hors du POC.
 
 ### 5.2 Prochaines étapes
 
