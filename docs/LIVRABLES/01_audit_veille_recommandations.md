@@ -476,7 +476,7 @@ Les solutions proposées ci-dessous résultent de l’audit et de la veille. Leu
 
 - **Description :** publier les rapports de tests et réutiliser les builds validés par la CI.
 - **Raisonnement :** le pipeline actuel ne conserve aucune preuve et reconstruit certains éléments.
-- **Implémentation :** publier les rapports de tests et de sécurité comme artifacts GitLab, définir leur durée de conservation et transmettre les builds entre jobs sans les reconstruire.
+- **Implémentation :** publier les rapports de tests et de sécurité comme artifacts GitLab, définir leur durée de conservation et transmettre les builds entre jobs sans les reconstruire. Optimisation des contrôles pour un SHA inchangé : hors périmètre, faute de temps.
 - **Impacts :** disposer de preuves durables et réduire les opérations répétées.
 
 #### 4.2.3 Renforcer les tests automatisés

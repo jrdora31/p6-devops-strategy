@@ -31,19 +31,19 @@ manque de temps.
 ### Workflows CI/CD
 
 Les schémas SVG sont consultables dans VS Code et GitLab ; ils sont regroupés
-dans le [dossier `workflows`](../LIVRABLES/assets/diagrammes/workflows/).
+dans le [dossier `workflows`](workflows/).
 
-![Vue générale des workflows GitLab MicroCRM](../LIVRABLES/assets/diagrammes/workflows/00_WORKFLOWS_MICROCRM.svg)
+![Vue générale des workflows GitLab MicroCRM](workflows/00_WORKFLOWS_MICROCRM.svg)
 
 | Déclencheur | Schéma | Parcours distinctif |
 |---|---|---|
-| Merge request | [01 — voir le schéma](../LIVRABLES/assets/diagrammes/workflows/01_MERGE_REQUEST.svg) | Tests, qualité et plan réseau, sans apply |
-| Push `dev` | [02 — voir le schéma](../LIVRABLES/assets/diagrammes/workflows/02_PUSH_DEV.svg) | Images SHA ; suggestion RC manuelle, sans Helm |
-| Push `main` | [03 — voir le schéma](../LIVRABLES/assets/diagrammes/workflows/03_PUSH_MAIN.svg) | Contrôles et images, sans Helm production |
-| Schedule `dev` | [04 — voir le schéma](../LIVRABLES/assets/diagrammes/workflows/04_PIPELINE_PLANIFIEE.svg) | `pages:dora` uniquement |
-| Web `dev` | [05 — voir le schéma](../LIVRABLES/assets/diagrammes/workflows/05_WEB_DEV_INFRASTRUCTURE.svg) | Réseau, compute, Ansible ; destroy manuel distinct |
-| Tag RC | [06 — voir le schéma](../LIVRABLES/assets/diagrammes/workflows/06_RELEASE_RC.svg) | Réutilisation SHA, bundle, staging manuel |
-| Tag final | [07 — voir le schéma](../LIVRABLES/assets/diagrammes/workflows/07_PROMOTION_RC_RELEASE_PRODUCTION.svg) | `Promote-From`, digests RC, canary manuel |
+| Merge request | [01 — voir le schéma](workflows/01_MERGE_REQUEST.svg) | Tests, qualité et plan réseau, sans apply |
+| Push `dev` | [02 — voir le schéma](workflows/02_PUSH_DEV.svg) | Images SHA ; suggestion RC manuelle, sans Helm |
+| Push `main` | [03 — voir le schéma](workflows/03_PUSH_MAIN.svg) | Contrôles et images, sans Helm production |
+| Schedule `dev` | [04 — voir le schéma](workflows/04_PIPELINE_PLANIFIEE.svg) | `pages:dora` uniquement |
+| Web `dev` | [05 — voir le schéma](workflows/05_WEB_DEV_INFRASTRUCTURE.svg) | Réseau, compute, Ansible ; destroy manuel distinct |
+| Tag RC | [06 — voir le schéma](workflows/06_RELEASE_RC.svg) | Réutilisation SHA, bundle, staging manuel |
+| Tag final | [07 — voir le schéma](workflows/07_PROMOTION_RC_RELEASE_PRODUCTION.svg) | `Promote-From`, digests RC, canary manuel |
 
 Les jobs build d'une RC restent présents même si `check:registry:images`
 constate les deux images : leurs scripts sautent alors compilation et build
