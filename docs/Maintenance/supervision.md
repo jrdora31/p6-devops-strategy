@@ -47,11 +47,45 @@ Le dashboard calcule `ErrorRate = ServerErrorCount / RequestCount * 100` avec
 `IF` et `FILL` pour retourner zéro lorsque le nombre de requêtes est nul ou
 qu'aucun 5xx n'existe.
 
+#### Validation du dashboard applicatif
+
+Les captures suivantes, réalisées le 21 septembre 2026 sur le dashboard
+`microcrm-application-production`, confirment la séparation des séries stable et
+Canary. Les requêtes et leurs versions restent identifiables pour chaque track.
+
+![Requêtes et versions stable et Canary](dashboard/requests_et_versions_count.png)
+
+La latence p95 permet de comparer les deux versions sur une même période et de
+repérer les variations ponctuelles.
+
+![Latence p95 stable et Canary](dashboard/latency_p95_ms.png)
+
+Les valeurs 5xx et `ErrorRate` ci-dessous proviennent d'un test synthétique
+contrôlé avec `aws cloudwatch put-metric-data`. Elles valident la restitution du
+dashboard et son calcul, mais ne constituent pas un incident applicatif réel ni
+une preuve de génération end-to-end d'une réponse HTTP 500 par le backend.
+
+![Erreurs HTTP 5xx injectées pour le test du dashboard](dashboard/http5xx_count.png)
+
+![Taux d'erreur calculé à partir des séries synthétiques](dashboard/error_rate_percentage.png)
+
+Le contrôle de sécurité `/internal/auth-check` appelé avec des identifiants
+volontairement invalides produit un HTTP 401 et incrémente la métrique dédiée.
+La répartition observée, 45 échecs sur stable et 5 sur Canary, correspond au
+routage 90/10 utilisé pendant le test.
+
+![Échecs d'authentification stable et Canary](dashboard/authentication_failure_count.png)
+
 ## Logs applicatifs
 
 Les groupes `/microcrm/poc/{system,kubernetes,traefik}` collectent les journaux
 des deux nœuds avec une rétention de trois jours. Traefik écrit ses accès en
 JSON sans conserver les en-têtes ni les paramètres de requête.
+
+La recherche des événements récents permet notamment de retrouver les refus
+d'authentification générés pendant le contrôle du monitoring.
+
+![Échecs d'authentification visibles dans les logs applicatifs](dashboard/erreurs_applicatives_récentes_list.png)
 
 ## CloudWatch Logs Insights
 

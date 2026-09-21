@@ -1,0 +1,242 @@
+direction: down
+
+# Acteurs humains : les deux accès utilisent le même NLB, mais pas le même
+# environnement applicatif.
+access: "Accès humains" {
+  direction: down
+  near: center-left
+  style.fill: "#F8FAFC"
+  style.stroke: "#64748B"
+  style.stroke-width: 2
+  style.border-radius: 10
+
+  users: "Utilisateurs" {
+    shape: person
+    label.near: outside-bottom-center
+    style.fill: "#E8F1FF"
+    style.stroke: "#2563EB"
+    style.stroke-width: 2
+  }
+
+  qa: "Mainteneur / QA" {
+    shape: person
+    label.near: outside-bottom-center
+    style.fill: "#FFF4E5"
+    style.stroke: "#D97706"
+    style.stroke-width: 2
+  }
+}
+
+aws: "AWS" {
+  direction: right
+  style.fill: "#F8FAFC"
+  style.stroke: "#1D4ED8"
+  style.stroke-width: 3
+  style.border-radius: 12
+
+  vpc: "VPC" {
+    direction: down
+    style.fill: "#EFF6FF"
+    style.stroke: "#3B82F6"
+    style.stroke-width: 2
+    style.border-radius: 10
+
+    subnet: "Subnet public unique — une AZ" {
+      direction: down
+      style.fill: "#FFFFFF"
+      style.stroke: "#60A5FA"
+      style.stroke-width: 2
+      style.border-radius: 8
+
+      nlb: "NLB x1\nTCP/80" {
+        shape: hexagon
+        style.fill: "#DBEAFE"
+        style.stroke: "#1D4ED8"
+        style.stroke-width: 2
+      }
+
+      k3s: "Cluster K3s partagé — redondance partielle" {
+        direction: right
+        style.fill: "#F0FDF4"
+        style.stroke: "#16A34A"
+        style.stroke-width: 3
+        style.border-radius: 10
+
+        nodes: "Nœuds K3s" {
+          direction: down
+          style.fill: "#FFFFFF"
+          style.stroke: "#86EFAC"
+          style.stroke-width: 2
+
+          ec2_staging: "EC2 STAGING\nserver / control-plane x1\nworkloads staging" {
+            style.fill: "#FEF3C7"
+            style.stroke: "#D97706"
+            style.stroke-width: 2
+          }
+
+          ec2_production: "EC2 PRODUCTION\nagent / worker x1\nworkloads stable + canary" {
+            style.fill: "#EDE9FE"
+            style.stroke: "#7C3AED"
+            style.stroke-width: 2
+          }
+        }
+
+        traefik: "Traefik\nroutage HTTP" {
+          shape: hexagon
+          style.fill: "#DCFCE7"
+          style.stroke: "#15803D"
+          style.stroke-width: 2
+        }
+
+        namespaces: "Namespaces Kubernetes" {
+          grid-columns: 2
+          grid-gap: 30
+          style.fill: "#F8FAFC"
+          style.stroke: "#94A3B8"
+          style.stroke-width: 2
+          style.border-radius: 8
+
+          staging: "namespace staging" {
+            direction: down
+            style.fill: "#FFFBEB"
+            style.stroke: "#F59E0B"
+            style.stroke-width: 3
+            style.border-radius: 8
+
+            frontend: "Frontend\nx2 Pods" {
+              style.fill: "#FEF3C7"
+              style.stroke: "#D97706"
+            }
+            backend: "Backend\nx2 Pods" {
+              style.fill: "#FEF3C7"
+              style.stroke: "#D97706"
+            }
+            database: "PostgreSQL x1" {
+              shape: cylinder
+              style.fill: "#FDE68A"
+              style.stroke: "#B45309"
+            }
+
+            frontend -> backend
+            backend -> database
+          }
+
+          production: "namespace production" {
+            grid-rows: 2
+            vertical-gap: 30
+            style.fill: "#F5F3FF"
+            style.stroke: "#7C3AED"
+            style.stroke-width: 3
+            style.border-radius: 8
+
+            tracks: "" {
+              grid-columns: 2
+              grid-gap: 24
+              style.fill: transparent
+              style.stroke: transparent
+
+              stable_frontend: "Stable — Frontend\nx2 Pods" {
+                style.fill: "#EDE9FE"
+                style.stroke: "#7C3AED"
+              }
+              canary_frontend: "Canary — Frontend\nx1 Pod" {
+                style.fill: "#FCE7F3"
+                style.stroke: "#DB2777"
+              }
+              stable_backend: "Stable — Backend\nx2 Pods" {
+                style.fill: "#EDE9FE"
+                style.stroke: "#7C3AED"
+              }
+              canary_backend: "Canary — Backend\nx1 Pod" {
+                style.fill: "#FCE7F3"
+                style.stroke: "#DB2777"
+              }
+
+              stable_frontend -> stable_backend
+              canary_frontend -> canary_backend
+            }
+            database: "PostgreSQL x1\npartagé stable / canary" {
+              shape: cylinder
+              style.fill: "#DDD6FE"
+              style.stroke: "#6D28D9"
+            }
+
+            tracks.stable_backend -> database
+            tracks.canary_backend -> database
+          }
+        }
+
+        agent: "Agent GitLab" {
+          style.fill: "#E2E8F0"
+          style.stroke: "#475569"
+          style.stroke-width: 2
+        }
+      }
+    }
+  }
+
+  cloudwatch: "CloudWatch\nlogs, métriques et alertes" {
+    near: aws.vpc.subnet.k3s.nodes
+    style.fill: "#FFEDD5"
+    style.stroke: "#EA580C"
+    style.stroke-width: 2
+  }
+}
+
+gitlab: "GitLab" {
+  direction: right
+  near: top-center
+  style.fill: "#FFF7ED"
+  style.stroke: "#F97316"
+  style.stroke-width: 3
+  style.border-radius: 10
+
+  pipeline: "Pipeline CI/CD" {
+    style.fill: "#FFEDD5"
+    style.stroke: "#EA580C"
+  }
+  registry: "Container Registry" {
+    style.fill: "#FFEDD5"
+    style.stroke: "#EA580C"
+  }
+}
+
+iac: "Terraform + Ansible" {
+  style.fill: "#E2E8F0"
+  style.stroke: "#475569"
+  style.stroke-width: 2
+}
+
+# Accès humains via le NLB partagé.
+access.users -> aws.vpc.subnet.nlb: "trafic production" {
+  style.stroke: "#2563EB"
+  style.stroke-width: 2
+}
+access.qa -> aws.vpc.subnet.nlb: "validation staging" {
+  style.stroke: "#D97706"
+  style.stroke-width: 2
+}
+
+# Entrée réseau et routage applicatif.
+aws.vpc.subnet.nlb -> aws.vpc.subnet.k3s.nodes.ec2_staging: "validation staging"
+aws.vpc.subnet.nlb -> aws.vpc.subnet.k3s.nodes.ec2_production: "trafic production"
+aws.vpc.subnet.k3s.nodes.ec2_staging -> aws.vpc.subnet.k3s.traefik
+aws.vpc.subnet.k3s.nodes.ec2_production -> aws.vpc.subnet.k3s.traefik
+aws.vpc.subnet.k3s.traefik -> aws.vpc.subnet.k3s.namespaces.staging.frontend: "staging"
+aws.vpc.subnet.k3s.traefik -> aws.vpc.subnet.k3s.namespaces.production.tracks.stable_frontend: "90 % stable"
+aws.vpc.subnet.k3s.traefik -> aws.vpc.subnet.k3s.namespaces.production.tracks.canary_frontend: "10 % canary"
+
+# Déploiements et images.
+gitlab.pipeline -> aws.vpc.subnet.k3s.agent: "déploiement Helm"
+aws.vpc.subnet.k3s.agent -> aws.vpc.subnet.k3s.namespaces: "déploiements"
+gitlab.registry -> aws.vpc.subnet.k3s.namespaces: "images frontend / backend" {
+  style.stroke-dash: 5
+}
+
+# Provisionnement et supervision.
+iac -> aws.vpc.subnet.k3s.nodes: "AWS + configuration via SSM" {
+  style.stroke-dash: 5
+}
+aws.vpc.subnet.k3s.nodes -> aws.cloudwatch: "logs et métriques" {
+  style.stroke-dash: 5
+}
