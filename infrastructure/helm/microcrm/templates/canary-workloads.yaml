@@ -1,3 +1,5 @@
+{{/* Les workloads Canary n'existent que pendant une expérimentation.
+Leur version et leurs deux digests garantissent des images immuables. */}}
 {{- if .Values.canary.enabled }}
 {{- $version := required "canary.version est obligatoire lorsque le Canary est actif" .Values.canary.version }}
 {{- $frontendDigest := required "canary.frontend.image.digest est obligatoire lorsque le Canary est actif" .Values.canary.frontend.image.digest }}
@@ -15,6 +17,8 @@ metadata:
     {{- include "microcrm.releaseLabels" (dict "track" "canary" "version" $version) | nindent 4 }}
 spec:
   replicas: {{ .Values.canary.frontend.replicaCount }}
+  # Les labels et sélecteurs distincts empêchent le Service stable de choisir
+  # les Pods de cette expérimentation.
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -62,6 +66,7 @@ spec:
           ports:
             - name: http
               containerPort: 80
+          # Le frontend Canary appelle exclusivement le Service backend Canary.
           env:
             - name: BACKEND_ADDRESS
               value: {{ printf "%s-canary-backend:8080" (include "microcrm.fullname" .) | quote }}
@@ -100,6 +105,7 @@ spec:
         - name: tmp
           emptyDir: {}
 ---
+# Un Service distinct empêche le sélecteur stable d'envoyer du trafic aux Pods Canary.
 apiVersion: v1
 kind: Service
 metadata:
@@ -120,6 +126,8 @@ spec:
       port: {{ .Values.frontend.service.port }}
       targetPort: http
 ---
+# Le backend Canary porte ses propres labels de sélection mais partage la base
+# PostgreSQL de production avec la version stable.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -130,6 +138,7 @@ metadata:
     {{- include "microcrm.releaseLabels" (dict "track" "canary" "version" $version) | nindent 4 }}
 spec:
   replicas: {{ .Values.canary.backend.replicaCount }}
+  # La version et le track alimentent les métriques comparées au stable.
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -259,6 +268,7 @@ spec:
       port: {{ .Values.backend.service.port }}
       targetPort: http
 ---
+# Cette policy conserve le chemin Canary frontend -> backend isolé du stable.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:

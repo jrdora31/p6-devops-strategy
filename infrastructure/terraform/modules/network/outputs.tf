@@ -1,3 +1,5 @@
+# Ces identifiants constituent l'interface consommée par le root cluster via
+# terraform_remote_state.
 output "vpc_id" {
   description = "Identifiant du VPC."
   value       = aws_vpc.this.id

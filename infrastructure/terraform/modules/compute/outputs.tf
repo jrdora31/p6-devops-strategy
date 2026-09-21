@@ -1,3 +1,4 @@
+# Les listes conservent l'ordre défini par count : staging puis production.
 output "instance_id" {
   description = "Identifiants EC2 des nœuds K3s."
   value       = aws_instance.k3s[*].id

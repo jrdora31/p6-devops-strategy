@@ -1,3 +1,5 @@
+# Entrées du module EC2 : réseau déjà créé, capacité des nœuds, bootstrap et
+# périmètre CloudWatch optionnel.
 variable "name_prefix" {
   description = "Préfixe commun des ressources compute."
   type        = string

@@ -1,3 +1,4 @@
+# Surcharge générique pour un cluster K3s utilisant Traefik et local-path.
 database:
   persistence:
     size: 2Gi

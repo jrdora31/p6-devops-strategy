@@ -1,4 +1,7 @@
+# Utilise l'AMI Debian fournie ou résout la plus récente publiée officiellement
+# pour l'architecture attendue par le POC.
 data "aws_ami" "debian" {
+  # count évite la recherche AWS lorsqu'un ami_id explicite rend le plan reproductible.
   count = var.ami_id == null ? 1 : 0
 
   most_recent = true
@@ -27,9 +30,12 @@ data "aws_ec2_instance_type" "selected" {
 }
 
 locals {
+  # try protège l'accès à data.aws_ami[0] lorsque sa création est désactivée.
   selected_ami_id = coalesce(var.ami_id, try(data.aws_ami.debian[0].id, null))
 }
 
+# Le même profil d'instance autorise l'administration sans SSH via SSM et,
+# lorsque demandé, l'envoi limité des métriques et logs CloudWatch du POC.
 data "aws_iam_policy_document" "ec2_assume_role" {
   statement {
     effect  = "Allow"
@@ -48,11 +54,13 @@ resource "aws_iam_role" "instance" {
 }
 
 resource "aws_iam_role_policy_attachment" "ssm" {
+  # La policy AWS gérée suffit au transport SSM utilisé par Ansible.
   role       = aws_iam_role.instance.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 data "aws_iam_policy_document" "cloudwatch_agent" {
+  # count garde la policy absente lorsque l'agent CloudWatch n'est pas déployé.
   count = var.cloudwatch_agent_enabled ? 1 : 0
 
   statement {
@@ -104,11 +112,15 @@ resource "aws_iam_instance_profile" "this" {
   role = aws_iam_role.instance.name
 }
 
+# Préserve l'adresse de la première EC2 dans le state lors du passage d'une
+# ressource unique à la paire staging/production gérée avec count.
 moved {
   from = aws_instance.k3s
   to   = aws_instance.k3s[0]
 }
 
+# Les index sont intentionnels : 0 porte le serveur staging, 1 l'agent
+# production. Les tags alimentent ensuite l'inventaire dynamique Ansible.
 resource "aws_instance" "k3s" {
   count                       = 2
   ami                         = local.selected_ami_id
@@ -121,6 +133,7 @@ resource "aws_instance" "k3s" {
   user_data_replace_on_change = true
 
   metadata_options {
+    # IMDSv2 obligatoire réduit les risques de récupération non autorisée des credentials.
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 1
@@ -128,6 +141,7 @@ resource "aws_instance" "k3s" {
   }
 
   root_block_device {
+    # Le volume racine est chiffré et dimensionné par le root appelant.
     encrypted   = true
     volume_type = "gp3"
     volume_size = var.root_volume_size
@@ -145,6 +159,8 @@ resource "aws_instance" "k3s" {
     EnvironmentRole = count.index == 0 ? "staging" : "production"
   }
 
+  # Échoue dès le plan si le type demandé sort du cadre matériel et financier
+  # retenu pour ce POC K3s.
   lifecycle {
     precondition {
       condition     = data.aws_ec2_instance_type.selected.free_tier_eligible

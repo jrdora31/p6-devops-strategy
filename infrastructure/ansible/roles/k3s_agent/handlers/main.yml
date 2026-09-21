@@ -1,4 +1,5 @@
 ---
+# Le redémarrage n'est déclenché que si le template de configuration change.
 - name: Redémarrer K3s agent
   ansible.builtin.systemd_service:
     name: k3s-agent

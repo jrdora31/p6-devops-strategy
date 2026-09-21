@@ -1,9 +1,11 @@
 ---
+# Interroge AWS à chaque exécution au lieu de maintenir une liste d'IP statique.
 plugin: amazon.aws.aws_ec2
 
 regions:
   - "{{ lookup('ansible.builtin.env', 'AWS_REGION') | default('eu-west-3', true) }}"
 
+# Les tags posés par Terraform bornent strictement le cluster autorisé.
 filters:
   instance-state-name: running
   tag:Project: MicroCRM
@@ -14,11 +16,14 @@ filters:
 hostnames:
   - instance-id
 
+# SSM utilise l'ID d'instance; aucune IP publique ne sert d'identité Ansible.
 compose:
   ansible_host: instance_id
 
+# Les tags Ansible séparent le serveur de l'agent dans le playbook.
 groups:
   k3s_servers: ec2_tags.Ansible == 'k3s-server'
   k3s_agents: ec2_tags.Ansible == 'k3s-agent'
 
+# Refuse les données d'inventaire incohérentes au lieu de les ignorer.
 strict: true

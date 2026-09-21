@@ -1,3 +1,5 @@
+# Le Deployment stable conserve au moins un Pod disponible pendant les mises à
+# jour et récupère ses secrets par référence, sans les intégrer au manifeste.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8,6 +10,7 @@ metadata:
     {{- include "microcrm.releaseLabels" (dict "track" "stable" "version" .Values.release.version) | nindent 4 }}
 spec:
   replicas: {{ .Values.backend.replicaCount }}
+  # RollingUpdate maintient la capacité stable pendant le remplacement des Pods.
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -55,6 +58,7 @@ spec:
         - name: backend
           image: {{ include "microcrm.image" .Values.backend.image | quote }}
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          # Le conteneur s'exécute sans privilèges et n'écrit que dans /tmp.
           securityContext:
             runAsNonRoot: true
             runAsUser: 100
@@ -63,6 +67,8 @@ spec:
             readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
+          # La configuration publique vient du ConfigMap; les identifiants sont
+          # lus séparément depuis des Secrets existants.
           envFrom:
             - configMapRef:
                 name: {{ include "microcrm.fullname" . }}-backend
@@ -102,6 +108,8 @@ spec:
           ports:
             - name: http
               containerPort: 8080
+          # startupProbe laisse le temps au démarrage; readiness contrôle le
+          # trafic et liveness demande un redémarrage en cas de blocage durable.
           startupProbe:
             httpGet:
               path: /

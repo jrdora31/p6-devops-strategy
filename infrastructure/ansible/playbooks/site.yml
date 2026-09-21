@@ -1,10 +1,14 @@
 ---
+# Valide d'abord le périmètre de l'inventaire pour éviter de configurer un
+# cluster incomplet ou des EC2 appartenant à un autre environnement.
 - name: Vérifier le ciblage de l'environnement K3s
   hosts: localhost
   gather_facts: false
   vars:
     cluster_environment: "{{ lookup('ansible.builtin.env', 'CLUSTER_ENVIRONMENT') | default('poc', true) }}"
   tasks:
+    # groups.get renvoie une liste vide si le groupe manque. Le test bloque donc
+    # aussi bien un inventaire vide qu'un inventaire contenant des doublons.
     - name: Garantir un serveur et un agent K3s dans l'environnement
       ansible.builtin.assert:
         that:
@@ -15,10 +19,14 @@
           L'inventaire doit contenir exactement un serveur et un agent K3s
           pour CLUSTER_ENVIRONMENT=poc.
 
+# Le serveur est configuré avant l'agent car il fournit l'API Kubernetes et le
+# jeton d'adhésion nécessaires à la suite du playbook.
 - name: Configurer le serveur K3s MicroCRM de l'environnement sélectionné
   hosts: k3s_servers
   gather_facts: false
   become: true
+  # SSM remplace SSH. Le bucket transporte les modules Ansible et le même
+  # interrupteur que Terraform active éventuellement CloudWatch.
   vars:
     ansible_connection: amazon.aws.aws_ssm
     ansible_aws_ssm_bucket_name: >-
@@ -31,7 +39,10 @@
     cluster_environment: >-
       {{ lookup('ansible.builtin.env', 'CLUSTER_ENVIRONMENT') | default('poc', true) }}
 
+  # Vérifie le rôle de l'EC2 et les entrées sensibles avant d'installer K3s.
   pre_tasks:
+    # Les tags viennent de l'inventaire EC2. Leur comparaison évite qu'un hôte
+    # correctement groupé mais mal étiqueté reçoive le rôle serveur.
     - name: Vérifier le tag de l'EC2 ciblée
       ansible.builtin.assert:
         that:
@@ -40,6 +51,8 @@
         fail_msg: >-
           L'EC2 ciblée par Ansible n'appartient pas à l'environnement demandé.
 
+    # Le transport SSM utilise S3 pour ses modules. Une valeur vide provoquerait
+    # une erreur de connexion plus tardive et moins explicite.
     - name: Vérifier la variable du bucket temporaire SSM
       ansible.builtin.assert:
         that:
@@ -48,6 +61,8 @@
           ANSIBLE_AWS_SSM_BUCKET_NAME doit contenir l'output Terraform
           ansible_transfer_bucket.
 
+    # lookup lit le secret depuis l'environnement CI. Le check mode ignore ce
+    # contrôle car il ne doit ni exiger ni consommer le jeton protégé.
     - name: Vérifier le jeton du GitLab Agent
       ansible.builtin.assert:
         that:
@@ -62,18 +77,24 @@
         timeout: 300
       check_mode: false
 
+    # setup peuple ansible_facts, ensuite utilisés par common pour valider l'OS.
     - name: Collecter les informations du serveur après connexion
       ansible.builtin.setup:
 
+  # Les rôles s'enchaînent du socle système vers K3s puis l'observabilité.
   roles:
     - role: common
     - role: k3s_server
     - role: cloudwatch_agent
 
+# L'agent rejoint le serveur par son adresse privée et récupère le jeton gardé
+# en mémoire par le play précédent, sans l'exposer dans les logs.
 - name: Configurer le nœud agent K3s de l'environnement sélectionné
   hosts: k3s_agents
   gather_facts: false
   become: true
+  # Le token lu sur le serveur est décodé uniquement en mémoire pour générer
+  # la configuration de l'agent.
   vars:
     ansible_connection: amazon.aws.aws_ssm
     ansible_aws_ssm_bucket_name: >-
@@ -96,7 +117,10 @@
     k3s_agent_token: >-
       {{ (hostvars[groups['k3s_servers'][0]].k3s_server_node_token
           | default({'content': ''})).content | b64decode }}
+  # Le tag production empêche d'attacher l'EC2 staging comme agent.
   pre_tasks:
+    # Cette vérification impose le rôle production avant d'utiliser le nœud
+    # comme worker des workloads Helm de production.
     - name: Vérifier le rôle production de l'EC2 agent
       ansible.builtin.assert:
         that:
@@ -106,17 +130,26 @@
           L'agent K3s doit être l'EC2 explicitement dédiée aux workloads de
           production.
 
+    # Réessaie la connexion pendant le démarrage de l'EC2 au lieu d'exécuter les
+    # rôles sur un agent SSM encore indisponible.
+    # L'agent peut devenir joignable après le serveur et possède sa propre attente.
+    # wait_for_connection réessaie le transport SSM pendant cinq minutes ;
+    # check_mode: false force ce contrôle de disponibilité même en simulation.
     - name: Attendre que Systems Manager accepte la connexion
       ansible.builtin.wait_for_connection:
         timeout: 300
       check_mode: false
+    # Les facts de l'agent alimentent les mêmes validations système que le serveur.
     - name: Collecter les informations de l'agent après connexion
       ansible.builtin.setup:
+  # Le rôle agent vérifie ensuite que les deux nœuds sont visibles et Ready.
   roles:
     - role: common
     - role: k3s_agent
     - role: cloudwatch_agent
 
+# Traefik est appliqué en dernier afin que ses contraintes de placement puissent
+# être évaluées sur le cluster complet.
 - name: Configurer Traefik sur le serveur une fois les deux nœuds prêts
   hosts: k3s_servers
   gather_facts: false
@@ -128,6 +161,7 @@
     ansible_aws_ssm_region: >-
       {{ lookup('ansible.builtin.env', 'AWS_REGION') | default('eu-west-3', true) }}
   tasks:
+    # tasks_from sélectionne traefik.yml sans rejouer l'installation du serveur.
     - name: Appliquer les tâches Traefik du rôle serveur
       ansible.builtin.import_role:
         name: k3s_server

@@ -1,4 +1,6 @@
 ---
+# Le rôle reste entièrement optionnel : chaque bloc est ignoré lorsque la
+# collecte CloudWatch est désactivée pour le POC.
 - name: Installer les prérequis de l'agent CloudWatch
   ansible.builtin.apt:
     name:
@@ -11,6 +13,7 @@
     cache_valid_time: 3600
   when: cloudwatch_agent_enabled | bool
 
+# rsyslog doit produire /var/log/syslog avant que l'agent puisse le suivre.
 - name: Garantir le journal système collecté par CloudWatch Agent
   ansible.builtin.systemd_service:
     name: rsyslog
@@ -20,6 +23,8 @@
     - cloudwatch_agent_enabled | bool
     - not ansible_check_mode
 
+# La clé, son empreinte et la signature du paquet sont vérifiées avant toute
+# installation afin de ne pas exécuter un artefact téléchargé non authentifié.
 - name: Préparer le trousseau temporaire de vérification CloudWatch Agent
   ansible.builtin.file:
     path: "{{ cloudwatch_agent_gpg_home }}"
@@ -29,6 +34,7 @@
     mode: "0700"
   when: cloudwatch_agent_enabled | bool
 
+# Les trois téléchargements séparent clé, paquet et signature avant vérification.
 - name: Télécharger la clé de signature officielle CloudWatch Agent
   ansible.builtin.get_url:
     url: "{{ cloudwatch_agent_signing_key_url }}"
@@ -56,6 +62,7 @@
     mode: "0644"
   when: cloudwatch_agent_enabled | bool
 
+# Le trousseau isolé évite de faire confiance aux clés globales déjà présentes.
 - name: Importer la clé de signature CloudWatch Agent
   ansible.builtin.command:
     cmd: >-
@@ -67,6 +74,7 @@
     - cloudwatch_agent_enabled | bool
     - not ansible_check_mode
 
+# L'import ne suffit pas : l'empreinte figée confirme l'identité de la clé reçue.
 - name: Vérifier l’empreinte de la clé CloudWatch Agent
   ansible.builtin.command:
     cmd: >-
@@ -81,6 +89,7 @@
     - cloudwatch_agent_enabled | bool
     - not ansible_check_mode
 
+# gpg relie ensuite le paquet téléchargé à cette clé explicitement vérifiée.
 - name: Vérifier la signature du paquet CloudWatch Agent
   ansible.builtin.command:
     cmd: >-
@@ -92,6 +101,7 @@
     - cloudwatch_agent_enabled | bool
     - not ansible_check_mode
 
+# L'installation reste hors check mode car apt modifierait réellement l'hôte.
 - name: Installer CloudWatch Agent
   ansible.builtin.apt:
     deb: "{{ cloudwatch_agent_package_path }}"
@@ -100,6 +110,8 @@
     - cloudwatch_agent_enabled | bool
     - not ansible_check_mode
 
+# Le template centralise les métriques hôte, StatsD et les journaux à expédier;
+# la commande suivante recharge cette configuration et démarre l'agent.
 - name: Déployer la configuration CloudWatch Agent
   ansible.builtin.template:
     src: amazon-cloudwatch-agent.json.j2
@@ -109,6 +121,7 @@
     mode: "0644"
   when: cloudwatch_agent_enabled | bool
 
+# fetch-config valide, charge le JSON rendu et démarre le service en une commande.
 - name: Appliquer la configuration CloudWatch Agent
   ansible.builtin.command:
     cmd: >-
@@ -120,6 +133,7 @@
     - cloudwatch_agent_enabled | bool
     - not ansible_check_mode
 
+# Un code non nul rend le rôle en échec au lieu de laisser une supervision inactive.
 - name: Vérifier le statut CloudWatch Agent
   ansible.builtin.command:
     cmd: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a status

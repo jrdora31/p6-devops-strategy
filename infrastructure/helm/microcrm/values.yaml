@@ -1,14 +1,19 @@
+# Valeurs communes à tous les environnements. Les fichiers values-*.yaml ne
+# remplacent que le placement, le stockage et l'exposition propres au contexte.
 nameOverride: ""
 fullnameOverride: ""
 
 imagePullSecrets: []
 
+# Identifie l'environnement et la version dans les labels et métriques runtime.
 release:
   environment: development
   version: unreleased
 
+# Les fichiers d'environnement renseignent ce sélecteur pour imposer le nœud cible.
 nodeSelector: {}
 
+# Désactivé en CI lorsque le Secret de registre est créé avant helm upgrade.
 registrySecret:
   enabled: false
   name: microcrm-registry
@@ -16,6 +21,8 @@ registrySecret:
   usernameBase64: ""
   passwordBase64: ""
 
+# Le frontend et le backend partagent le modèle réplicas, anti-affinité,
+# référence d'image, port de Service et ressources garanties/plafonnées.
 frontend:
   replicaCount: 2
   podAntiAffinity:
@@ -58,6 +65,7 @@ backend:
       cpu: 500m
       memory: 512Mi
 
+# Les clés indiquent au Deployment où lire les credentials dans le Secret existant.
 monitoringAuth:
   existingSecret: microcrm-monitoring
   usernameKey: username
@@ -67,6 +75,8 @@ monitoringAuth:
     username: monitoring
     passwordBase64: ""
 
+# Le Canary est inactif par défaut; la CI fournit sa version, ses digests et
+# les poids de trafic au moment du déploiement contrôlé.
 canary:
   enabled: false
   stableWeight: 100
@@ -87,6 +97,8 @@ canary:
       digest: ""
       pullPolicy: IfNotPresent
 
+# Les identifiants réels proviennent d'un Secret existant. La création d'un
+# Secret par le chart reste réservée aux environnements qui l'activent.
 database:
   image:
     repository: postgres
@@ -113,6 +125,7 @@ database:
       cpu: 500m
       memory: 512Mi
 
+# L'exposition est désactivée par défaut et activée par le fichier d'environnement.
 ingress:
   enabled: false
   className: ""

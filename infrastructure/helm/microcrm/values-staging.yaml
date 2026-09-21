@@ -6,6 +6,7 @@ fullnameOverride: microcrm-staging
 release:
   environment: staging
 
+# Force la release d'intégration sur le nœud serveur labellisé staging.
 nodeSelector:
   microcrm.io/environment-role: staging
 
@@ -14,6 +15,7 @@ database:
     size: 2Gi
     storageClass: local-path
 
+# L'hôte documentaire permet à Traefik de distinguer cette release.
 ingress:
   enabled: true
   className: traefik

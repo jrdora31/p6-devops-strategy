@@ -1,3 +1,5 @@
+{{/* En mode Canary, Traefik répartit le trafic entre deux Services.
+La validation refuse une route dont les poids ne représentent pas 100 %. */}}
 {{- if and .Values.ingress.enabled .Values.canary.enabled }}
 {{- if ne (add (int .Values.canary.stableWeight) (int .Values.canary.canaryWeight)) 100 }}
 {{- fail "la somme de canary.stableWeight et canary.canaryWeight doit être égale à 100" }}
@@ -10,6 +12,7 @@ metadata:
     {{- include "microcrm.labels" . | nindent 4 }}
 spec:
   weighted:
+    # Chaque poids nul retire le Service correspondant du rendu Traefik.
     services:
       {{- if gt (int .Values.canary.stableWeight) 0 }}
       - name: {{ include "microcrm.fullname" . }}-frontend
@@ -33,6 +36,7 @@ metadata:
 spec:
   entryPoints:
     - web
+  # La règle Host choisit cette release; le TraefikService choisit ensuite le track.
   routes:
     - kind: Rule
       match: {{ printf "Host(`%s`)" .Values.ingress.host | quote }}
@@ -40,6 +44,8 @@ spec:
         - name: {{ include "microcrm.fullname" . }}-frontend-weighted
           kind: TraefikService
 {{- else if .Values.ingress.enabled }}
+# Sans Canary, un Ingress Kubernetes standard envoie tout le trafic vers le
+# Service frontend stable.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -58,6 +64,7 @@ spec:
   tls:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  # Le fallback stable pointe directement sur le Service frontend standard.
   rules:
     - host: {{ .Values.ingress.host | quote }}
       http:

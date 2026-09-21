@@ -1,3 +1,5 @@
+# Contrat d'entrée du root cluster : contexte AWS, identité du POC, références
+# au state réseau et options de supervision.
 variable "aws_region" {
   description = "Région AWS de l'environnement."
   type        = string

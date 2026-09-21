@@ -1,4 +1,5 @@
 ---
+# Surcharge le chart Traefik fourni par K3s sans gérer une seconde release.
 apiVersion: helm.cattle.io/v1
 kind: HelmChartConfig
 metadata:
@@ -6,6 +7,8 @@ metadata:
   namespace: kube-system
 spec:
   valuesContent: |-
+    # Les en-têtes et paramètres sont exclus pour limiter la collecte de
+    # données potentiellement sensibles.
     accessLog:
       enabled: true
       format: json
@@ -14,6 +17,7 @@ spec:
           defaultMode: drop
         queryParameters:
           defaultMode: drop
+    # Deux réplicas sont demandés et répartis de préférence entre les nœuds.
     deployment:
       replicas: 2
     affinity:

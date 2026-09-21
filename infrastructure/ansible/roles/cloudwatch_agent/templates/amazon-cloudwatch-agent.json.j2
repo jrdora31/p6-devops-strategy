@@ -1,3 +1,5 @@
+{# Regroupe métriques hôte, StatsD et journaux sous le namespace et le préfixe
+   propres à l'environnement. Ce commentaire Jinja n'est pas rendu en JSON. #}
 {
   "agent": {
     "metrics_collection_interval": {{ cloudwatch_agent_metrics_interval }},

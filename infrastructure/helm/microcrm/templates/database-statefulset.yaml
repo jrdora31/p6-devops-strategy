@@ -1,3 +1,5 @@
+# Le StatefulSet fournit une identité et un volume stables à l'unique Pod
+# PostgreSQL du POC, afin de rattacher durablement son PVC après un redémarrage.
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -6,6 +8,7 @@ metadata:
     {{- include "microcrm.labels" . | nindent 4 }}
     app.kubernetes.io/component: database
 spec:
+  # Le Service headless et le sélecteur donnent une identité stable au Pod.
   serviceName: {{ include "microcrm.fullname" . }}-database
   replicas: 1
   selector:
@@ -36,6 +39,8 @@ spec:
         - name: database
           image: {{ include "microcrm.image" .Values.database.image | quote }}
           imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+          # PostgreSQL écrit dans son volume de données; le reste du système de
+          # fichiers reste en lecture seule.
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -59,6 +64,8 @@ spec:
           ports:
             - name: postgresql
               containerPort: 5432
+          # pg_isready pilote séparément la tolérance au démarrage et l'entrée
+          # du Pod dans les endpoints du Service.
           startupProbe:
             exec:
               command: ["sh", "-c", "pg_isready --username=\"$POSTGRES_USER\" --dbname=\"$POSTGRES_DB\""]
@@ -93,6 +100,7 @@ spec:
           emptyDir: {}
       {{- end }}
   {{- if .Values.database.persistence.enabled }}
+  # Chaque release obtient son PVC et sa base, même sur le cluster partagé.
   volumeClaimTemplates:
     - metadata:
         name: data

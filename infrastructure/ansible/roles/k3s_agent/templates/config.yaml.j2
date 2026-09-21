@@ -1,6 +1,8 @@
 ---
+# L'agent rejoint l'API privée du serveur avec le jeton lu par le rôle serveur.
 server: "https://{{ k3s_agent_server_address }}:6443"
 token: "{{ k3s_agent_token }}"
+# Ce label est consommé par les nodeSelector Helm de production.
 node-label:
   - "microcrm-environment={{ cluster_environment }}"
   - "microcrm-managed-by=ansible"

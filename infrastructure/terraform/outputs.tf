@@ -1,3 +1,5 @@
+# Expose à la CI et à Ansible uniquement les identifiants nécessaires pour
+# poursuivre la configuration et vérifier l'infrastructure créée.
 output "aws_region" {
   description = "Région de l'environnement."
   value       = var.aws_region

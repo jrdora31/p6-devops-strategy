@@ -1,3 +1,5 @@
+# Centralise les conventions partagées et associe chaque rôle fonctionnel à
+# l'index stable de l'EC2 correspondante dans le module compute.
 locals {
   common_tags = {
     Project     = "MicroCRM"
@@ -24,13 +26,17 @@ data "terraform_remote_state" "network" {
   }
 }
 
+# Les notifications n'existent que si la supervision est activée et qu'une
+# adresse a été fournie, ce qui évite un abonnement SNS incomplet.
 resource "aws_sns_topic" "poc_alerts" {
+  # count=0 retire entièrement la ressource lorsque l'alerte email est inactive.
   count = var.cloudwatch_agent_enabled && var.alert_email != "" ? 1 : 0
   name  = "${var.project_name}-${var.environment}-alerts"
 
   tags = local.common_tags
 }
 
+# L'abonnement relie l'adresse fournie au topic conditionnel créé juste avant.
 resource "aws_sns_topic_subscription" "poc_alert_email" {
   count     = var.cloudwatch_agent_enabled && var.alert_email != "" ? 1 : 0
   topic_arn = aws_sns_topic.poc_alerts[0].arn
@@ -38,12 +44,16 @@ resource "aws_sns_topic_subscription" "poc_alert_email" {
   endpoint  = var.alert_email
 }
 
+# Ce bucket sert uniquement au transport temporaire utilisé par la connexion
+# Ansible SSM; les EC2 sont créées séparément par le module compute.
 module "ansible_transfer" {
   source = "./modules/ansible_transfer"
 
   name_prefix = "${var.project_name}-${var.environment}"
 }
 
+# Le module réutilise subnet et Security Group du state réseau partagé plutôt
+# que de dupliquer leur ownership dans ce state.
 module "compute" {
   source = "./modules/compute"
 
@@ -59,6 +69,8 @@ module "compute" {
   cloudwatch_log_group_prefix = local.cloudwatch_log_group_prefix
 }
 
+# Le NLB expose une entrée TCP/80 commune. Le routage HTTP et la séparation des
+# environnements restent délégués à Traefik dans le cluster.
 resource "aws_lb" "microcrm" {
   name                             = "${var.project_name}-poc-nlb"
   internal                         = false
@@ -77,6 +89,7 @@ resource "aws_lb_target_group" "http" {
   target_type = "instance"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
+  # Le contrôle TCP prouve que Traefik écoute; il ne valide pas une route HTTP précise.
   health_check {
     enabled             = true
     protocol            = "TCP"
@@ -89,6 +102,8 @@ resource "aws_lb_target_group" "http" {
   tags = local.common_tags
 }
 
+# Des clés de rôle connues au plan pilotent les attachements, même si les IDs
+# EC2 ne deviennent disponibles qu'après leur création.
 resource "aws_lb_target_group_attachment" "k3s" {
   for_each = local.instance_roles
 
@@ -97,6 +112,7 @@ resource "aws_lb_target_group_attachment" "k3s" {
   port             = 80
 }
 
+# Le listener transmet chaque connexion au groupe contenant les deux nœuds K3s.
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.microcrm.arn
   port              = 80
@@ -108,6 +124,8 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+# Les groupes de logs sont créés ensemble et partagent la même rétention courte
+# adaptée au POC.
 locals {
   cloudwatch_log_groups = {
     system     = "${local.cloudwatch_log_group_prefix}/system"
@@ -117,6 +135,7 @@ locals {
 }
 
 resource "aws_cloudwatch_log_group" "poc" {
+  # for_each donne une adresse Terraform stable à chaque catégorie de journaux.
   for_each          = var.cloudwatch_agent_enabled ? local.cloudwatch_log_groups : {}
   name              = each.value
   retention_in_days = 3
@@ -124,6 +143,7 @@ resource "aws_cloudwatch_log_group" "poc" {
   tags = local.common_tags
 }
 
+# Une alarme par rôle surveille les contrôles système EC2 indépendamment de K3s.
 resource "aws_cloudwatch_metric_alarm" "instance_unavailable" {
   for_each            = var.cloudwatch_agent_enabled ? local.instance_roles : {}
   alarm_name          = "${var.project_name}-${each.key}-instance-unavailable"
@@ -146,6 +166,7 @@ resource "aws_cloudwatch_metric_alarm" "instance_unavailable" {
   tags = merge(local.common_tags, { Severity = "critical" })
 }
 
+# La moyenne sur deux périodes réduit les alertes dues à un pic CPU ponctuel.
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   for_each            = var.cloudwatch_agent_enabled ? local.instance_roles : {}
   alarm_name          = "${var.project_name}-${each.key}-cpu-high"
@@ -167,7 +188,10 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   tags = merge(local.common_tags, { Severity = "warning" })
 }
 
+# Les alarmes applicatives ciblent explicitement le track Canary de production.
+# Elles alertent uniquement et ne déclenchent aucune promotion ou annulation.
 resource "aws_cloudwatch_metric_alarm" "authentication_failures" {
+  # Les dimensions isolent production/canary et l'EC2 qui porte ces workloads.
   count               = var.cloudwatch_agent_enabled ? 1 : 0
   alarm_name          = "${var.project_name}-production-canary-authentication-failures"
   alarm_description   = "[HIGH] Échec d'authentification applicative réel sur le Canary. Alerte uniquement; aucun ABORT automatique."
@@ -191,6 +215,7 @@ resource "aws_cloudwatch_metric_alarm" "authentication_failures" {
   tags = merge(local.common_tags, { Severity = "high" })
 }
 
+# Toute erreur serveur Canary sur la fenêtre déclenche une alerte d'observation.
 resource "aws_cloudwatch_metric_alarm" "canary_server_errors" {
   count               = var.cloudwatch_agent_enabled ? 1 : 0
   alarm_name          = "${var.project_name}-production-canary-server-errors"
@@ -215,6 +240,8 @@ resource "aws_cloudwatch_metric_alarm" "canary_server_errors" {
   tags = merge(local.common_tags, { Severity = "high" })
 }
 
+# Le taux d'erreur est calculé à partir de deux métriques brutes; FILL évite
+# qu'une série 5xx absente rende l'expression inexploitable.
 resource "aws_cloudwatch_metric_alarm" "canary_error_rate" {
   count               = var.cloudwatch_agent_enabled ? 1 : 0
   alarm_name          = "${var.project_name}-production-canary-error-rate"
@@ -227,6 +254,7 @@ resource "aws_cloudwatch_metric_alarm" "canary_error_rate" {
   alarm_actions       = local.alarm_actions
 
   metric_query {
+    # Cette série calculée est la seule valeur évaluée par l'alarme.
     id          = "error_rate"
     expression  = "IF(request_count>0,100*FILL(server_errors,0)/request_count,0)"
     label       = "Canary ErrorRate (%)"
@@ -234,6 +262,8 @@ resource "aws_cloudwatch_metric_alarm" "canary_error_rate" {
   }
 
   metric_query {
+    # Les deux séries suivantes restent internes à l'expression et ne sont pas
+    # renvoyées comme résultat principal.
     id          = "request_count"
     return_data = false
 
@@ -274,6 +304,7 @@ resource "aws_cloudwatch_metric_alarm" "canary_error_rate" {
   tags = merge(local.common_tags, { Severity = "high" })
 }
 
+# Le percentile p95 met en évidence une dégradation touchant une minorité de requêtes.
 resource "aws_cloudwatch_metric_alarm" "canary_latency_p95" {
   count               = var.cloudwatch_agent_enabled ? 1 : 0
   alarm_name          = "${var.project_name}-production-canary-latency-p95"
@@ -298,7 +329,10 @@ resource "aws_cloudwatch_metric_alarm" "canary_latency_p95" {
   tags = merge(local.common_tags, { Severity = "warning" })
 }
 
+# Les deux dashboards séparent l'état des EC2 de la comparaison applicative
+# stable/Canary utilisée avant une décision humaine.
 resource "aws_cloudwatch_dashboard" "infrastructure" {
+  # jsonencode produit le JSON attendu par AWS à partir d'une structure HCL typée.
   count          = var.cloudwatch_agent_enabled ? 1 : 0
   dashboard_name = "${var.project_name}-${var.environment}-infrastructure"
 
@@ -428,6 +462,7 @@ resource "aws_cloudwatch_dashboard" "infrastructure" {
   depends_on = [aws_cloudwatch_log_group.poc]
 }
 
+# Ce second dashboard rapproche stable et Canary pour la décision manuelle.
 resource "aws_cloudwatch_dashboard" "application" {
   count          = var.cloudwatch_agent_enabled ? 1 : 0
   dashboard_name = "${var.project_name}-application-production"

@@ -1,3 +1,4 @@
+# Entrées du state réseau partagé; elles évoluent indépendamment des EC2 K3s.
 variable "aws_region" {
   description = "Région AWS du réseau partagé."
   type        = string

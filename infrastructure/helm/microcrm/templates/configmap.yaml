@@ -1,3 +1,4 @@
+# Configuration non sensible partagée par les backends stable et Canary.
 apiVersion: v1
 kind: ConfigMap
 metadata:

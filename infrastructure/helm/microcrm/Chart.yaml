@@ -1,3 +1,4 @@
+# Métadonnées du chart applicatif et contrainte minimale du cluster cible.
 apiVersion: v2
 name: microcrm
 description: Déploiement Helm de MicroCRM avec frontend, backend et PostgreSQL

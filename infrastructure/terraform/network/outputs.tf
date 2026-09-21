@@ -1,3 +1,4 @@
+# Interface publiée dans microcrm-network pour le root cluster principal.
 output "aws_region" {
   description = "Région du réseau partagé."
   value       = var.aws_region

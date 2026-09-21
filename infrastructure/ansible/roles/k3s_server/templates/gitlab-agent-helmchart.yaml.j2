@@ -1,4 +1,6 @@
 ---
+# Le Helm Controller K3s installe une version figée de l'agent sans nécessiter
+# la CLI Helm sur l'EC2.
 apiVersion: helm.cattle.io/v1
 kind: HelmChart
 metadata:
@@ -12,6 +14,7 @@ spec:
   createNamespace: true
   failurePolicy: abort
   timeout: 300s
+  # Le token reste dans un Secret séparé; le chart ne reçoit que son nom.
   valuesContent: |-
     replicas: 1
     config:

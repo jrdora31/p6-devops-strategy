@@ -1,3 +1,5 @@
+# Sélectionne une zone disponible uniquement lorsqu'aucune zone n'est imposée,
+# afin de garder le root réseau utilisable dans plusieurs comptes ou régions.
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -15,6 +17,8 @@ locals {
   }
 }
 
+# Ce root possède le state réseau partagé; le root parent en consomme ensuite
+# les outputs sans reprendre la propriété de ces ressources.
 module "network" {
   source = "../modules/network"
 

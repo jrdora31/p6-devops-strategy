@@ -1,3 +1,4 @@
+# Le backend n'accepte que les appels provenant du frontend de la même release.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -5,6 +6,7 @@ metadata:
   labels:
     {{- include "microcrm.labels" . | nindent 4 }}
 spec:
+  # podSelector désigne les Pods protégés; from désigne les seuls appelants admis.
   podSelector:
     matchLabels:
       app.kubernetes.io/name: {{ include "microcrm.name" . }}
@@ -22,6 +24,8 @@ spec:
         - protocol: TCP
           port: 8080
 ---
+# PostgreSQL reste accessible aux backends stable et, lorsqu'il est actif,
+# Canary; aucun autre composant du namespace n'est autorisé par cette policy.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -29,6 +33,8 @@ metadata:
   labels:
     {{- include "microcrm.labels" . | nindent 4 }}
 spec:
+  # La base accepte le backend stable et ajoute le backend Canary uniquement
+  # pendant l'expérimentation.
   podSelector:
     matchLabels:
       app.kubernetes.io/name: {{ include "microcrm.name" . }}

@@ -1,4 +1,6 @@
 ---
+# Le fichier contient l'adresse du serveur et le jeton d'adhésion. Son contenu
+# est donc masqué dans les logs et écrit avec des permissions restrictives.
 - name: Créer le dossier de configuration K3s agent
   ansible.builtin.file:
     path: "{{ k3s_agent_config_path | dirname }}"
@@ -7,6 +9,8 @@
     group: root
     mode: "0755"
 
+# template remplace les variables de connexion puis notifie le handler seulement
+# si le fichier final change; no_log masque le jeton interpolé.
 - name: Déployer la configuration K3s agent
   ansible.builtin.template:
     src: config.yaml.j2
@@ -18,6 +22,8 @@
   when: not ansible_check_mode
   notify: Redémarrer K3s agent
 
+# L'installation est conditionnée par la version déjà présente pour conserver
+# l'idempotence du rôle et éviter un redémarrage inutile de l'agent.
 - name: Lire la version K3s installée
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s --version
@@ -26,6 +32,7 @@
   changed_when: false
   failed_when: false
 
+# Le téléchargement et l'installation partagent la même condition de version.
 - name: Télécharger le script d'installation officiel K3s
   ansible.builtin.get_url:
     url: "{{ k3s_agent_install_script_url }}"
@@ -35,6 +42,7 @@
     mode: "0755"
   when: k3s_agent_version not in (k3s_agent_installed_version.stdout | default(''))
 
+# INSTALL_K3S_EXEC impose le mode agent et pointe vers le fichier déjà généré.
 - name: Installer la version K3s agent attendue
   ansible.builtin.command:
     cmd: /usr/local/src/k3s-install.sh
@@ -47,6 +55,7 @@
   changed_when: true
   no_log: true
 
+# systemd démarre le service courant et le réactive après un redémarrage EC2.
 - name: Garantir que K3s agent est démarré au boot
   ansible.builtin.systemd_service:
     name: k3s-agent
@@ -54,9 +63,12 @@
     enabled: true
   when: not ansible_check_mode
 
+# Le contrôle final s'exécute depuis le serveur, seul nœud qui possède le
+# contexte kubectl permettant d'observer l'ensemble du cluster.
 - name: Appliquer les handlers K3s agent avant le contrôle du cluster
   ansible.builtin.meta: flush_handlers
 
+# delegate_to exécute kubectl sur le serveur malgré l'exécution du rôle sur l'agent.
 - name: Attendre que les deux nœuds K3s soient prêts
   ansible.builtin.command:
     cmd: >-
@@ -67,6 +79,7 @@
   changed_when: false
   when: not ansible_check_mode
 
+# La sortie name fournit une ligne par nœud, exploitable directement par length.
 - name: Compter les nœuds du cluster K3s
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s kubectl get nodes --output=name
@@ -75,6 +88,7 @@
   changed_when: false
   when: not ansible_check_mode
 
+# L'assertion refuse aussi bien une adhésion manquante qu'un nœud parasite.
 - name: Garantir que le cluster contient exactement deux nœuds
   ansible.builtin.assert:
     that:

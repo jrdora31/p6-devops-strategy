@@ -1,3 +1,4 @@
+# Contrat du réseau partagé : adressage, zone et CIDR autorisés vers le NLB.
 variable "name_prefix" {
   description = "Préfixe commun des ressources réseau."
   type        = string

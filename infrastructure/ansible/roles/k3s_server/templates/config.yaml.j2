@@ -1,6 +1,8 @@
 ---
+# Restreint le kubeconfig et chiffre les Secrets stockés par K3s.
 write-kubeconfig-mode: "0600"
 secrets-encryption: true
+# Ce label est consommé par les nodeSelector Helm de staging.
 node-label:
   - "microcrm-environment={{ cluster_environment }}"
   - "microcrm-managed-by=ansible"

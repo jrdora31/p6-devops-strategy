@@ -1,4 +1,6 @@
 ---
+# La configuration est posée avant l'installation pour que le premier démarrage
+# de K3s applique immédiatement les labels et options attendus.
 - name: Créer le dossier de configuration K3s
   ansible.builtin.file:
     path: "{{ k3s_server_config_path | dirname }}"
@@ -7,6 +9,7 @@
     group: root
     mode: "0755"
 
+# template rend les labels du nœud et notifie le handler seulement si le fichier change.
 - name: Déployer la configuration K3s
   ansible.builtin.template:
     src: config.yaml.j2
@@ -16,6 +19,8 @@
     mode: "0600"
   notify: Redémarrer K3s
 
+# L'installation ne s'exécute que si la version demandée est absente, ce qui
+# maintient le rôle idempotent lors des passages Ansible suivants.
 - name: Lire la version K3s installée
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s --version
@@ -24,6 +29,7 @@
   changed_when: false
   failed_when: false
 
+# La version détectée conditionne à la fois le téléchargement et l'installation.
 - name: Télécharger le script d'installation officiel K3s
   ansible.builtin.get_url:
     url: "{{ k3s_server_install_script_url }}"
@@ -35,6 +41,7 @@
     k3s_server_version not in
     (k3s_server_installed_version.stdout | default(''))
 
+# Les variables d'environnement figent la version et imposent ce fichier de config.
 - name: Installer la version K3s attendue
   ansible.builtin.command:
     cmd: /usr/local/src/k3s-install.sh
@@ -46,9 +53,11 @@
     (k3s_server_installed_version.stdout | default(''))
   changed_when: true
 
+# flush_handlers garantit que les contrôles portent sur la configuration courante.
 - name: Appliquer les handlers avant les contrôles de santé
   ansible.builtin.meta: flush_handlers
 
+# systemd maintient le control-plane actif maintenant et après redémarrage de l'EC2.
 - name: Garantir que K3s est démarré au boot
   ansible.builtin.systemd_service:
     name: k3s
@@ -59,6 +68,7 @@
     k3s_server_version in
     (k3s_server_installed_version.stdout | default(''))
 
+# Le port 6443 doit écouter avant toute requête kubectl, sans encore prouver readyz.
 - name: Attendre l'API Kubernetes locale
   ansible.builtin.wait_for:
     host: 127.0.0.1
@@ -69,6 +79,7 @@
     k3s_server_version in
     (k3s_server_installed_version.stdout | default(''))
 
+# slurp renvoie le contenu encodé en base64 dans hostvars; no_log empêche sa fuite.
 - name: Lire le jeton d'adhésion des agents K3s
   ansible.builtin.slurp:
     src: /var/lib/rancher/k3s/server/node-token
@@ -76,6 +87,8 @@
   no_log: true
   when: not ansible_check_mode
 
+# Le GitLab Agent dépend d'une API Kubernetes réellement opérationnelle. Ce
+# bloc tente une récupération unique puis collecte un diagnostic en cas d'échec.
 - name: Stabiliser K3s avant de configurer le GitLab Agent
   when: not ansible_check_mode
   tags:
@@ -83,6 +96,7 @@
   block:
     - name: Attendre que l'API Kubernetes soit réellement prête
       block:
+        # readyz vérifie les composants internes de l'API, au-delà du simple port ouvert.
         - name: Interroger le point de contrôle Kubernetes readyz
           ansible.builtin.command:
             cmd: /usr/local/bin/k3s kubectl get --raw=/readyz
@@ -94,6 +108,7 @@
             k3s_server_api_initial_ready.rc == 0 and
             'ok' in k3s_server_api_initial_ready.stdout
       rescue:
+        # Le rescue autorise une seule récupération contrôlée avant le diagnostic final.
         - name: Redémarrer K3s une seule fois après une API durablement indisponible
           ansible.builtin.systemd_service:
             name: k3s
@@ -117,6 +132,7 @@
             k3s_server_api_recovered.rc == 0 and
             'ok' in k3s_server_api_recovered.stdout
 
+    # kubectl wait confirme que le nœud peut réellement accepter des workloads.
     - name: Vérifier que le serveur Kubernetes est prêt
       ansible.builtin.command:
         argv:
@@ -132,6 +148,7 @@
       delay: 10
       until: k3s_server_node_check.rc == 0
   rescue:
+    # Le rescue collecte plusieurs angles de diagnostic sans masquer l'échec initial.
     - name: Relever l'état du service K3s après échec
       ansible.builtin.command:
         argv:
@@ -203,6 +220,8 @@
           tentative unique de redémarrage. Consulter le diagnostic précédent ;
           ne pas poursuivre le déploiement du GitLab Agent.
 
+# Les manifestes déposés dans ce répertoire sont pris en charge par le Helm
+# Controller intégré à K3s pour installer le GitLab Agent dans le cluster.
 - name: Garantir le dossier des manifestes auto-déployés K3s
   ansible.builtin.file:
     path: "{{ k3s_server_gitlab_agent_manifest_path | dirname }}"
@@ -211,6 +230,7 @@
     group: root
     mode: "0755"
 
+# apply rend la création idempotente et changed_when distingue created/configured.
 - name: Garantir le namespace du GitLab Agent
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s kubectl apply --filename -
@@ -227,6 +247,7 @@
     'configured' in k3s_server_gitlab_agent_namespace_apply.stdout
   when: not ansible_check_mode
 
+# La phase Active évite de créer le Secret pendant l'initialisation du namespace.
 - name: Attendre que le namespace du GitLab Agent soit actif
   ansible.builtin.command:
     argv:
@@ -239,6 +260,7 @@
   changed_when: false
   when: not ansible_check_mode
 
+# Une dernière lecture readyz protège l'opération sensible contre une API instable.
 - name: Vérifier l'état réel de l'API Kubernetes avant le Secret
   ansible.builtin.command:
     cmd: /usr/local/bin/k3s kubectl get --raw=/readyz
@@ -251,6 +273,8 @@
     'ok' in k3s_server_api_ready.stdout
   when: not ansible_check_mode
 
+# Le manifeste contenant le jeton n'existe que le temps du kubectl apply et
+# est supprimé par le bloc always, y compris si l'application échoue.
 - name: Installer le Secret du GitLab Agent sans l'écrire durablement sur l'hôte
   when: not ansible_check_mode
   no_log: true
@@ -281,6 +305,7 @@
         path: /run/microcrm-gitlab-agent-secret.yaml
         state: absent
 
+# Le manifeste persistant décrit la release; il ne contient pas le token lui-même.
 - name: Déclarer le chart GitLab Agent au Helm Controller K3s
   ansible.builtin.template:
     src: gitlab-agent-helmchart.yaml.j2
@@ -289,6 +314,7 @@
     group: root
     mode: "0644"
 
+# Le sélecteur cible uniquement la release attendue et bloque jusqu'au Pod Ready.
 - name: Attendre que le GitLab Agent soit prêt
   ansible.builtin.command:
     cmd: >-

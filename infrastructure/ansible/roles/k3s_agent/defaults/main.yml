@@ -1,4 +1,5 @@
 ---
+# Valeurs surchargeables du rôle agent; la version reste alignée sur le serveur.
 k3s_agent_version: v1.33.13+k3s1
 k3s_agent_install_script_url: https://get.k3s.io
 k3s_agent_config_path: /etc/rancher/k3s/config.yaml

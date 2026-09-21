@@ -1,3 +1,5 @@
+# Le Service headless fournit au StatefulSet PostgreSQL une identité réseau
+# stable sans ajouter de load balancing applicatif.
 apiVersion: v1
 kind: Service
 metadata:

@@ -5,6 +5,7 @@ fullnameOverride: microcrm-prod
 release:
   environment: production
 
+# Force tous les workloads de la release sur le nœud labellisé production.
 nodeSelector:
   microcrm.io/environment-role: production
 
@@ -18,6 +19,7 @@ ingress:
   className: traefik
   host: microcrm.example.invalid
 
+# Les poids sont utilisés uniquement lorsque la CI active le mode Canary.
 canary:
   stableWeight: 90
   canaryWeight: 10

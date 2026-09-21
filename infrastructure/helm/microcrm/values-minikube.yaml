@@ -1,3 +1,5 @@
+# Les images sont déjà chargées dans Minikube; Kubernetes ne doit pas tenter
+# de les récupérer depuis un registre distant.
 frontend:
   image:
     repository: microcrm-frontend
@@ -10,10 +12,12 @@ backend:
     tag: local
     pullPolicy: Never
 
+# Le stockage local réduit suffit aux essais sur le cluster de développement.
 database:
   persistence:
     size: 1Gi
 
+# Minikube utilise l'Ingress Controller nginx au lieu de Traefik.
 ingress:
   enabled: true
   className: nginx

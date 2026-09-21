@@ -11,6 +11,7 @@ resource "aws_s3_bucket" "this" {
   }
 }
 
+# Le bucket n'est jamais public et chiffre les objets temporaires au repos.
 resource "aws_s3_bucket_public_access_block" "this" {
   bucket = aws_s3_bucket.this.id
 
@@ -21,6 +22,7 @@ resource "aws_s3_bucket_public_access_block" "this" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
+  # S3 chiffre automatiquement chaque objet transféré sans action d'Ansible.
   bucket = aws_s3_bucket.this.id
 
   rule {
@@ -31,6 +33,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
 }
 
 resource "aws_s3_bucket_versioning" "this" {
+  # Le versioning est inutile pour des artefacts éphémères supprimés sous 24 h.
   bucket = aws_s3_bucket.this.id
 
   versioning_configuration {
@@ -38,6 +41,7 @@ resource "aws_s3_bucket_versioning" "this" {
   }
 }
 
+# Une expiration courte évite d'accumuler les modules transférés par Ansible.
 resource "aws_s3_bucket_lifecycle_configuration" "this" {
   bucket = aws_s3_bucket.this.id
 

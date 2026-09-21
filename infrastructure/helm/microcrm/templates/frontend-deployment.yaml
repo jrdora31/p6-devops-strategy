@@ -1,3 +1,5 @@
+# Le frontend stable est déployé séparément du Canary et reçoit l'adresse du
+# Service backend stable pour relayer les appels /api.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8,6 +10,7 @@ metadata:
     {{- include "microcrm.releaseLabels" (dict "track" "stable" "version" .Values.release.version) | nindent 4 }}
 spec:
   replicas: {{ .Values.frontend.replicaCount }}
+  # RollingUpdate évite une interruption volontaire lors d'un changement d'image.
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -55,6 +58,7 @@ spec:
         - name: frontend
           image: {{ include "microcrm.image" .Values.frontend.image | quote }}
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          # Caddy reste non-root tout en conservant la capacité d'écouter sur 80.
           securityContext:
             runAsNonRoot: true
             runAsUser: 100
@@ -67,9 +71,12 @@ spec:
           ports:
             - name: http
               containerPort: 80
+          # Le nom DNS du Service découple le frontend des Pods backend courants.
           env:
             - name: BACKEND_ADDRESS
               value: {{ printf "%s-backend:8080" (include "microcrm.fullname" .) | quote }}
+          # Les trois sondes distinguent démarrage lent, aptitude au trafic et
+          # état bloqué nécessitant un redémarrage.
           startupProbe:
             httpGet:
               path: /

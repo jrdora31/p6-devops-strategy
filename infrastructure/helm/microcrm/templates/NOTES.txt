@@ -1,3 +1,4 @@
+{{/* Affiche après installation les commandes adaptées au mode d'exposition. */}}
 1. Vérifiez les Pods :
    kubectl get pods -n {{ .Release.Namespace }}
 

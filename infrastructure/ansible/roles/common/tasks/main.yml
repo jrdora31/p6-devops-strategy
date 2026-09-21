@@ -1,4 +1,6 @@
 ---
+# Les rôles K3s et CloudWatch sont validés uniquement sur l'OS et l'architecture
+# testés par le projet.
 - name: Vérifier le système attendu par le rôle
   ansible.builtin.assert:
     that:
@@ -7,6 +9,7 @@
       - ansible_facts.architecture == 'x86_64'
     fail_msg: "Le POC attend Debian 12 amd64 ; aucun autre système n'est configuré automatiquement."
 
+# Installe le socle minimal utilisé ensuite par les scripts et modules Ansible.
 - name: Installer les prérequis communs
   ansible.builtin.apt:
     name:
