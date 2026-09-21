@@ -185,6 +185,7 @@ resource "aws_cloudwatch_metric_alarm" "authentication_failures" {
     Environment = "production"
     Track       = "canary"
     InstanceId  = module.compute.instance_id[1]
+    metric_type = "counter"
   }
 
   tags = merge(local.common_tags, { Severity = "high" })
@@ -208,6 +209,7 @@ resource "aws_cloudwatch_metric_alarm" "canary_server_errors" {
     Environment = "production"
     Track       = "canary"
     InstanceId  = module.compute.instance_id[1]
+    metric_type = "counter"
   }
 
   tags = merge(local.common_tags, { Severity = "high" })
@@ -245,6 +247,7 @@ resource "aws_cloudwatch_metric_alarm" "canary_error_rate" {
         Environment = "production"
         Track       = "canary"
         InstanceId  = module.compute.instance_id[1]
+        metric_type = "counter"
       }
     }
   }
@@ -263,6 +266,7 @@ resource "aws_cloudwatch_metric_alarm" "canary_error_rate" {
         Environment = "production"
         Track       = "canary"
         InstanceId  = module.compute.instance_id[1]
+        metric_type = "counter"
       }
     }
   }
@@ -288,6 +292,7 @@ resource "aws_cloudwatch_metric_alarm" "canary_latency_p95" {
     Environment = "production"
     Track       = "canary"
     InstanceId  = module.compute.instance_id[1]
+    metric_type = "timing"
   }
 
   tags = merge(local.common_tags, { Severity = "warning" })
@@ -437,14 +442,14 @@ resource "aws_cloudwatch_dashboard" "application" {
         type = "metric", x = 0, y = 2, width = 12, height = 6,
         properties = {
           title   = "Requests et versions", region = var.aws_region, view = "timeSeries", period = 60,
-          metrics = [[{ expression = "SEARCH('{${local.metrics_namespace},Environment,Track,Version,InstanceId} MetricName=\"RequestCount\" Environment=\"production\" InstanceId=\"${module.compute.instance_id[1]}\"', 'Sum', 60)", id = "requests", label = "" }]]
+          metrics = [[{ expression = "SEARCH('{${local.metrics_namespace},Environment,Track,Version,InstanceId,metric_type} MetricName=\"RequestCount\" Environment=\"production\" InstanceId=\"${module.compute.instance_id[1]}\" metric_type=\"counter\"', 'Sum', 60)", id = "requests", label = "" }]]
         }
       },
       {
         type = "metric", x = 12, y = 2, width = 12, height = 6,
         properties = {
           title   = "HTTP 5xx", region = var.aws_region, view = "timeSeries", period = 60,
-          metrics = [[{ expression = "SEARCH('{${local.metrics_namespace},Environment,Track,Version,InstanceId} MetricName=\"ServerErrorCount\" Environment=\"production\" InstanceId=\"${module.compute.instance_id[1]}\"', 'Sum', 60)", id = "errors", label = "" }]]
+          metrics = [[{ expression = "SEARCH('{${local.metrics_namespace},Environment,Track,Version,InstanceId,metric_type} MetricName=\"ServerErrorCount\" Environment=\"production\" InstanceId=\"${module.compute.instance_id[1]}\" metric_type=\"counter\"', 'Sum', 60)", id = "errors", label = "" }]]
         }
       },
       {
@@ -452,11 +457,11 @@ resource "aws_cloudwatch_dashboard" "application" {
         properties = {
           title = "ErrorRate (%)", region = var.aws_region, view = "timeSeries", period = 60, yAxis = { left = { min = 0 } },
           metrics = [
-            [local.metrics_namespace, "RequestCount", "Environment", "production", "Track", "stable", "InstanceId", module.compute.instance_id[1], { id = "stable_requests", visible = false }],
-            [".", "ServerErrorCount", ".", ".", ".", ".", ".", ".", { id = "stable_errors", visible = false }],
+            [local.metrics_namespace, "RequestCount", "Environment", "production", "Track", "stable", "InstanceId", module.compute.instance_id[1], "metric_type", "counter", { id = "stable_requests", visible = false, stat = "Sum" }],
+            [".", "ServerErrorCount", ".", ".", ".", ".", ".", ".", ".", ".", { id = "stable_errors", visible = false, stat = "Sum" }],
             [{ expression = "IF(stable_requests>0,100*FILL(stable_errors,0)/stable_requests,0)", id = "stable_error_rate", label = "STABLE" }],
-            [local.metrics_namespace, "RequestCount", "Environment", "production", "Track", "canary", "InstanceId", module.compute.instance_id[1], { id = "canary_requests", visible = false }],
-            [".", "ServerErrorCount", ".", ".", ".", ".", ".", ".", { id = "canary_errors", visible = false }],
+            [local.metrics_namespace, "RequestCount", "Environment", "production", "Track", "canary", "InstanceId", module.compute.instance_id[1], "metric_type", "counter", { id = "canary_requests", visible = false, stat = "Sum" }],
+            [".", "ServerErrorCount", ".", ".", ".", ".", ".", ".", ".", ".", { id = "canary_errors", visible = false, stat = "Sum" }],
             [{ expression = "IF(canary_requests>0,100*FILL(canary_errors,0)/canary_requests,0)", id = "canary_error_rate", label = "CANARY" }]
           ]
         }
@@ -466,8 +471,8 @@ resource "aws_cloudwatch_dashboard" "application" {
         properties = {
           title = "Latency p95 (ms)", region = var.aws_region, view = "timeSeries", period = 60, stat = "p95",
           metrics = [
-            [local.metrics_namespace, "Latency", "Environment", "production", "Track", "stable", "InstanceId", module.compute.instance_id[1], { label = "STABLE" }],
-            [".", ".", ".", ".", ".", "canary", ".", ".", { label = "CANARY" }]
+            [local.metrics_namespace, "Latency", "Environment", "production", "Track", "stable", "InstanceId", module.compute.instance_id[1], "metric_type", "timing", { label = "STABLE" }],
+            [".", ".", ".", ".", ".", "canary", ".", ".", ".", ".", { label = "CANARY" }]
           ]
         }
       },
@@ -476,8 +481,8 @@ resource "aws_cloudwatch_dashboard" "application" {
         properties = {
           title = "AuthenticationFailureCount", region = var.aws_region, view = "timeSeries", period = 60, stat = "Sum",
           metrics = [
-            [local.metrics_namespace, "AuthenticationFailureCount", "Environment", "production", "Track", "stable", "InstanceId", module.compute.instance_id[1], { label = "STABLE" }],
-            [".", ".", ".", ".", ".", "canary", ".", ".", { label = "CANARY" }]
+            [local.metrics_namespace, "AuthenticationFailureCount", "Environment", "production", "Track", "stable", "InstanceId", module.compute.instance_id[1], "metric_type", "counter", { label = "STABLE" }],
+            [".", ".", ".", ".", ".", "canary", ".", ".", ".", ".", { label = "CANARY" }]
           ]
         }
       },
