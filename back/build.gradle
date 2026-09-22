@@ -20,6 +20,9 @@ repositories {
 // Corrige les CVE critiques de Tomcat 10.1.55 tout en conservant la gestion
 // cohérente de la famille Tomcat par le BOM Spring Boot.
 ext['tomcat.version'] = '10.1.59'
+// Corrige la vulnérabilité signalée sur le pilote JDBC 42.7.11 tout en
+// conservant la gestion de la dépendance runtime par le BOM Spring Boot.
+ext['postgresql.version'] = '42.7.12'
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
