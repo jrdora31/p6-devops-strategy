@@ -7,9 +7,6 @@ Il couvre la qualité du pipeline, la sécurité, CloudWatch, le NLB, les répli
 PostgreSQL, le Canary et les indicateurs DORA. CloudWatch répond ici au besoin
 fonctionnel attribué à ELK : afficher des métriques, journaux et alertes.
 
-**À compléter :** aucun clic requis. Présenter le document comme une évaluation
-du POC, et non comme une qualification de production.
-
 ## 2. Méthode et limites de la baseline
 
 La baseline du commit `526bd96cddd2903676988b56dfeb2778667aa435`
@@ -26,19 +23,21 @@ reproductible actuelle du POC.
 | Couverture frontend — branches | 9,52 % | 9,52 % | stable |
 | Définitions de jobs CI | 4 | 42 | périmètre automatisé élargi ; tous ne s'exécutent pas sur chaque trigger |
 | Contrôles sécurité automatisés | aucun | Gitleaks, Trivy et SonarQube | détection avant livraison |
-| Durée de pipeline comparable | non mesurée | à relever | référence actuelle uniquement |
+| Durée des pipelines push `dev` | non mesurée | moyenne 10 min 57 s ; médiane 10 min 37 s sur 7 pipelines | référence actuelle, aucun gain historique calculable |
 
-**À compléter dans GitLab :** ouvrir **Build > Pipelines**, choisir trois
-pipelines `dev` réussies déclenchées par un push, relever leur durée, trier les
-trois valeurs et reporter la valeur du milieu comme médiane. Ne pas annoncer un
-gain de durée puisque la valeur historique n'existe pas.
+La [capture des pipelines push `dev`](evidence/performance/pipeline_push_dev_durations_22_09_26.png)
+montre les durées `10:30`, `10:36`, `10:37`, `11:12`, `11:00`, `12:19` et
+`10:22`. La moyenne vaut `(630 + 636 + 637 + 672 + 660 + 739 + 622) / 7`, soit
+`656,57 s` ou `10 min 56,57 s`, arrondie à `10 min 57 s`. La médiane est
+`10 min 37 s`. La capture est une liste de pipelines **push**, malgré son nom
+initial qui mentionnait Web.
 
 ## 3. Sécurité : résultats et corrections
 
-Les artefacts du commit `dd5e87fd` constituent l'état CI avant correction :
-65 occurrences HIGH, 46 identifiants distincts, 0 CRITICAL corrigible et
-0 secret. La [synthèse sécurité](evidence/security/SECURITY_EVIDENCE_2026-09-22.md)
-et la [décision CVE-2026-56854](evidence/security/CVE-2026-56854-decision.md)
+Les artefacts du commit `71f7d64`, générés par la pipeline réussie
+`#2870894000`, constituent l'état CI après correction. La
+[synthèse sécurité](evidence/security/SECURITY_EVIDENCE_2026-09-22.md) et la
+[décision CVE-2026-56854](evidence/security/CVE-2026-56854-decision.md)
 conservent le détail et les limites.
 
 Corrections vérifiées localement le 22 septembre 2026 :
@@ -46,24 +45,21 @@ Corrections vérifiées localement le 22 septembre 2026 :
 - PostgreSQL JDBC `42.7.11` vers `42.7.12` : 8 tests backend, `bootJar` et
   résolution de dépendance réussis ;
 - Angular `17.3.8` vers `20.3.31` : 14 tests et build de production réussis ;
-- image backend reconstruite après mise à jour Alpine : Trivy retourne
-  0 HIGH et 0 CRITICAL sur les paquets et le JAR ;
-- image frontend Caddy actualisée : Alpine retourne 0 HIGH/CRITICAL, mais le
-  binaire Caddy contient encore 17 HIGH, dont `CVE-2026-56854`, et 0 CRITICAL.
+- dépôt et image backend : Trivy retourne 0 HIGH et 0 CRITICAL ;
+- image frontend : 16 occurrences HIGH, 15 identifiants distincts et
+  0 CRITICAL dans Caddy après application de l'ignore nominatif ;
+- Gitleaks et les scans de secrets des images : 0 secret ;
+- IaC : 3 constats HIGH correspondant aux décisions d'architecture du POC.
 
-La correction est donc importante mais reste **partielle** tant que les HIGH du
-binaire Caddy ne sont pas corrigés par une image amont ou couverts par des
-décisions de risque explicites. `apk upgrade` ne peut pas remplacer les
-bibliothèques Go compilées dans ce binaire.
+Les trois rapports de vulnérabilités passent de 65 à 16 occurrences HIGH, soit
+une baisse de 49 occurrences ou 75,4 %. Un scan local sans l'ignorefile retourne
+17 HIGH : les 16 du rapport CI et `CVE-2026-56854`. La correction reste donc
+**partielle** tant que les HIGH du binaire Caddy ne sont pas corrigés par une
+image amont ou couverts par des décisions de risque explicites.
 
-**À compléter après le push :** ouvrir la nouvelle MR dans GitLab, puis
-**Build > Pipelines**. Ouvrir successivement `quality:gitleaks`,
-`quality:trivy:repository`, `quality:trivy:iac`,
-`quality:trivy:kubernetes`, `release:trivy:image:frontend` et
-`release:trivy:image:backend`. Dans chaque job, cliquer sur **Browse** ou
-**Download artifacts**, archiver les nouveaux rapports dans
-`docs/quality/evidence/security/`, puis remplacer ici les résultats locaux par
-les totaux de cette pipeline.
+Ces artefacts n'ont pas besoin d'être remplacés à chaque pipeline documentaire.
+Un nouvel export est utile si les dépendances, les Dockerfiles ou les règles de
+scan changent, ou une dernière fois pour archiver la pipeline finale de la MR.
 
 ## 4. CloudWatch : métriques, journaux et alertes
 
@@ -74,12 +70,13 @@ leur interprétation sont regroupées dans la
 Les 5xx et le taux d'erreur visibles proviennent d'un test synthétique ; ils ne
 doivent pas être présentés comme un incident réel.
 
-**À compléter dans AWS :** ouvrir **CloudWatch > Dashboards >
-microcrm-application-production**, choisir la période du test Canary, afficher
-chaque widget stable/Canary puis faire une capture avec la période visible.
-Ouvrir ensuite **CloudWatch > Log groups**, sélectionner
-`/microcrm/poc/kubernetes` puis `/microcrm/poc/traefik`, et utiliser **Logs
-Insights** pour rechercher `ERROR`, `AuthenticationFailure` et les statuts 5xx.
+![Dashboard CloudWatch MicroCRM avec requêtes, erreurs, latence, authentification et logs](evidence/performance/dashboard_cloudwatch_microcrm_application_production_21_09_26.png)
+
+Cette vue unique montre les séries stable et Canary, les erreurs 5xx, le taux
+d'erreur, la latence p95, les échecs d'authentification et les erreurs
+applicatives récentes. Les erreurs ont été provoquées manuellement pour valider
+le fonctionnement des widgets et des journaux ; elles ne correspondent pas à
+une dégradation spontanée du service.
 
 ## 5. NLB, réplicas, PostgreSQL et Canary
 
@@ -105,12 +102,13 @@ entre les deux EC2.
 Preuves complémentaires : [tests du POC](evidence/performance/TESTS_MICROCRM_2026-09-16.md),
 [Canary réussi](evidence/performance/canary_succeed_1.4.0.png),
 [comptage 90/10](evidence/performance/résultat_comptage_canary_90_10.png) et
-[cibles NLB saines](evidence/performance/NLB_target_group_healthy.png).
+[cibles NLB saines](evidence/performance/nlb_target_group_healthy_22_09_26.png).
 
-**À compléter dans AWS :** ouvrir **EC2 > Target Groups >
-microcrm-poc-http > Targets** et refaire une capture montrant les deux cibles
-`Healthy` avec la date. Aucun nouveau test de charge ou de panne n'est requis
-pour le périmètre actuel ; toute conclusion de failover doit rester absente.
+![Target group NLB avec deux cibles saines](evidence/performance/nlb_target_group_healthy_22_09_26.png)
+
+La capture montre deux cibles enregistrées, deux `Healthy` et zéro `Unhealthy`.
+Elle prouve leur état au moment de la consultation, pas le comportement lors de
+la perte volontaire d'une cible.
 
 ## 6. Indicateurs DORA
 
@@ -127,36 +125,60 @@ Le job non bloquant `pages:dora` interroge l'API GitLab avec
 
 Sans échantillon, la valeur correcte est `N/A`, jamais zéro.
 
-**À compléter dans GitLab :** ouvrir **Build > Pipelines > #2868146927 >
-pages:dora**, vérifier que le job est réussi, cliquer sur **Download artifacts**
-et copier les trois fichiers de `public/` dans
-`docs/quality/evidence/performance/dora/`. Reporter ensuite les quatre valeurs
-ci-dessus en précisant la taille de l'échantillon.
+La merge request de `chore/modifications` vers `dev` est en cours. Après sa
+pipeline finale, télécharger l'artifact de `pages:dora`, archiver les fichiers
+de `public/` dans `docs/quality/evidence/performance/dora/`, puis reporter ici
+les quatre valeurs et leurs échantillons.
 
 ## 7. Gains et recommandations d'amélioration continue
 
-| Problème initial | Réponse mise en œuvre | Résultat vérifiable | Suite prioritaire |
-|---|---|---|---|
-| transmission manuelle des images | Registry, digests et bundle immuable | RC et finale réutilisent les mêmes digests | conserver les preuves de release |
-| contrôles sécurité tardifs | Gitleaks, Trivy et SonarQube | rapports liés au commit | suivre les HIGH Caddy |
-| déploiements peu traçables | Terraform, Ansible, Helm et environnements GitLab | jobs et environnements visibles | terminer le bootstrap dans une phase future |
-| risque de diffusion d'une version | Canary 90/10, vérification et promotion | routage et smoke tests prouvés | automatiser une fenêtre d'observation |
-| absence de métriques | CloudWatch et DORA | dashboards et exports | augmenter l'historique DORA |
-| sauvegarde non opérationnelle | cible documentée hors POC | limite explicite | implémenter/tester avant production |
+### Gains obtenus
 
-**À compléter :** après téléchargement des artifacts DORA et sécurité, remplacer
-les formulations générales par les valeurs de la dernière pipeline. Prioriser
-d'abord sécurité et sauvegarde/restauration, puis l'amélioration du reporting.
+Les indicateurs absents de l'audit initial sont indiqués comme non mesurés ; ils
+ne sont pas reconstruits a posteriori.
+
+| Indicateur | Avant — audit initial | Après — état actuel |
+|---|---|---|
+| Contrôles automatisés avant livraison | Tests et builds uniquement ; scan d'images manuel déclaré par les Ops | Tests, SonarQube, Gitleaks et scans Trivy automatisés |
+| Déploiement | Manuel via Docker selon le sondage Ops ; absent de la CI | Terraform, Ansible et Helm dans la CI ; Canary et promotion contrôlés manuellement |
+| Délai des changements | Non mesuré | 1,75 jour en production ; 2,82 jours en staging |
+| Fréquence de déploiement | Non mesurée | 1,24 par semaine en production ; 2,72 en staging |
+| Taux d'échec des déploiements | Non mesuré | 0 % en production ; 4 % en staging |
+| Temps de restauration | Non mesuré | `N/A` en production ; 0,61 minute en staging |
+| Traçabilité des déploiements | Aucun déploiement dans la CI auditée | Environnements GitLab et manifeste reliant version, commit, pipeline et digests |
+| Reconstruction de l'environnement | Non documentée dans le dépôt audité | Infrastructure et configuration via Terraform/Ansible ; bootstrap externe incomplet |
+| Versionnage des images | Images locales sans digest immuable | Version sémantique, SHA et digests immuables |
+| Santé des services | Aucun healthcheck dans l'état audité | Probes startup, readiness et liveness définies dans Helm |
+| Validation après déploiement | Non documentée dans la CI auditée | Contrôle des rollouts et smoke tests Kubernetes/HTTP |
+| Visibilité sur l'exécution | Aucun rapport ni artifact conservé par la CI | Artifacts GitLab, métriques, logs et alarmes CloudWatch |
+
+### Recommandations d'amélioration continue
+
+1. **Traiter les HIGH Caddy restants.** Mettre à jour l'image officielle dès
+   qu'elle embarque les versions Go corrigées ; documenter les risques acceptés
+   entre-temps.
+2. **Finaliser la mesure DORA.** Archiver l'export de la pipeline finale et
+   conserver `N/A` lorsqu'aucun incident ou déploiement ne permet le calcul.
+3. **Étendre les tests applicatifs.** Ajouter un parcours E2E CRUD et un scan
+   DAST passif sur staging avant d'envisager un contrôle bloquant.
+4. **Mesurer la résilience.** Compléter le test séquentiel par un test concurrent
+   léger et, hors POC, par un exercice de perte de cible NLB.
+5. **Durcir les données.** Tester sauvegarde/restauration et prévoir une cible
+   PostgreSQL haute disponibilité avant une vraie production.
+6. **Réduire les opérations manuelles.** Terminer ultérieurement le bootstrap
+   GitLab/AWS et automatiser une fenêtre d'observation CloudWatch du Canary.
 
 ## 8. Conclusion
 
-Le POC démontre une CI/CD plus étendue, davantage de tests, une meilleure
-couverture, des images traçables, un déploiement Canary observé et une route NLB
-disponible durant le test. Il ne démontre pas une capacité sous charge, un
-failover, une haute disponibilité PostgreSQL ou un gain historique de durée.
-Les dernières preuves à joindre sont la médiane de trois pipelines comparables,
-les exports DORA et les artefacts de sécurité générés après le prochain push.
+Le POC démontre une chaîne CI/CD couvrant l'intégration, la sécurité, la
+construction, la release et le déploiement. Les tests et la couverture ont
+progressé, les occurrences HIGH des trois rapports Trivy ont diminué de 75,4 %,
+et les images sont promues par digest sans reconstruction. CloudWatch rend
+visibles les requêtes, les erreurs, la latence, l'authentification et les logs ;
+le NLB a répondu 50 fois sur 50 avec un p95 de 111,27 ms et ses deux cibles sont
+saines sur la capture.
 
-**À compléter pour la remise :** vérifier tous les liens de cette page, ajouter
-les fichiers téléchargés aux sous-dossiers `evidence`, puis exporter ou afficher
-ce Markdown dans le support choisi pour la soutenance.
+Les limites restent explicites : le test HTTP est séquentiel, aucun failover
+n'a été provoqué, PostgreSQL n'est pas hautement disponible et les HIGH Caddy
+restants doivent encore être traités ou acceptés. Les valeurs DORA seront
+intégrées à partir de la pipeline finale de la merge request en cours.
