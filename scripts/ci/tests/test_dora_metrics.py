@@ -216,8 +216,11 @@ def test_cli_writes_comparative_html_json_and_csv(tmp_path: Path) -> None:
 
     assert "STAGING" in html_output
     assert "PRODUCTION" in html_output
-    assert "Interprétation" in html_output
-    assert "Limites de la mesure" in html_output
+    assert html_output.count('class="metric"') == 4
+    assert 'class="dashboard"' in html_output
+    assert "Périmètre" not in html_output
+    assert "<th>Note</th>" not in html_output
+    assert "Mesure calculée" not in html_output
     assert "N/A" in html_output
     assert set(json_output["environments"]) == {"staging", "production"}
     assert len(csv_rows) == 8

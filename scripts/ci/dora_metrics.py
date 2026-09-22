@@ -23,10 +23,10 @@ DEFAULT_ENVIRONMENT_SPEC = (
     "staging=aws-poc-staging,production=aws-poc-production"
 )
 METRIC_LABELS = {
-    "deployment_frequency": "Deployment Frequency",
-    "lead_time_for_changes": "Lead Time for Changes",
-    "change_failure_rate": "Change Failure Rate",
-    "time_to_restore_service": "Mean Time To Restore",
+    "deployment_frequency": "Fréquence de déploiement",
+    "lead_time_for_changes": "Délai des changements",
+    "change_failure_rate": "Taux d'échec des changements",
+    "time_to_restore_service": "Temps moyen de restauration",
 }
 
 INCIDENT_DEPLOYMENT_PATTERN = re.compile(
@@ -519,26 +519,29 @@ def calculate_report(
 
 
 def render_html(report: dict[str, Any]) -> str:
-    """Produit une page GitLab Pages comparative et autonome."""
-    metric_sections = []
+    """Produit un dashboard GitLab Pages compact et autonome."""
+    metric_cards = []
+    environment_order = sorted(
+        report["environments"],
+        key=lambda name: (name != "production", name),
+    )
     for metric_name, metric_label in METRIC_LABELS.items():
-        rows = []
-        for logical_name, environment_report in report["environments"].items():
+        environment_blocks = []
+        for logical_name in environment_order:
+            environment_report = report["environments"][logical_name]
             metric = environment_report["metrics"][metric_name]
-            note = metric.get("limit") or "Mesure calculée"
-            rows.append(
-                "<tr>"
-                f"<th scope=\"row\">{html.escape(logical_name.upper())}</th>"
-                f"<td class=\"value\">{html.escape(display_value(metric))}</td>"
-                f"<td>{metric['sample_size']}</td>"
-                f"<td>{html.escape(note)}</td>"
-                "</tr>"
+            environment_blocks.append(
+                "<div class=\"environment\">"
+                f"<span class=\"environment-name\">{html.escape(logical_name.upper())}</span>"
+                f"<strong class=\"value\">{html.escape(display_value(metric))}</strong>"
+                f"<span class=\"sample\">Échantillon : {metric['sample_size']}</span>"
+                "</div>"
             )
-        metric_sections.append(
-            f"<section class=\"metric\"><h2>{html.escape(metric_label)}</h2>"
-            "<table><thead><tr><th>Environnement</th><th>Valeur</th>"
-            "<th>Échantillon</th><th>Note</th></tr></thead>"
-            f"<tbody>{''.join(rows)}</tbody></table></section>"
+        metric_cards.append(
+            "<section class=\"metric\">"
+            f"<h2>DORA — {html.escape(metric_label)}</h2>"
+            f"<div class=\"metric-values\">{''.join(environment_blocks)}</div>"
+            "</section>"
         )
 
     scope = report["scope"]
@@ -546,34 +549,27 @@ def render_html(report: dict[str, Any]) -> str:
         f"{item['name'].upper()} = {item['gitlab_environment']}"
         for item in scope["environments"]
     )
-    interpretation_items = "".join(
-        f"<li>{html.escape(item)}</li>" for item in report["interpretation"]
-    )
-    limitation_items = "".join(
-        f"<li>{html.escape(item)}</li>" for item in report["limitations"]
-    )
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MicroCRM — métriques DORA</title>
 <style>
-body{{margin:0;font-family:system-ui,sans-serif;background:#f4f6f8;color:#17202a}}main{{max-width:1100px;margin:auto;padding:2rem}}
-.warning{{padding:1rem;border-left:5px solid #d97706;background:#fff7ed}}.metric{{margin:1.5rem 0}}
-table{{border-collapse:collapse;width:100%;background:white}}th,td{{padding:.75rem;border:1px solid #d1d5db;text-align:left;vertical-align:top}}
-thead th{{background:#ede9fe}}.value{{font-weight:700;color:#5b21b6}}code{{background:#e5e7eb;padding:.1rem .3rem}}
-.text-section{{background:white;padding:1rem 1.25rem;margin:1.5rem 0;border-radius:8px}}li{{margin:.55rem 0}}
-</style></head><body><main><h1>MicroCRM — comparaison des métriques DORA</h1>
-<p>Généré le {html.escape(report['generated_at'])} depuis l’API GitLab.</p>
-<p class="warning"><strong>Périmètre :</strong> {html.escape(scope['warning'])}</p>
-{''.join(metric_sections)}
-<section class="text-section"><h2>Interprétation</h2><ul>{interpretation_items}</ul></section>
-<section class="text-section"><h2>Limites de la mesure</h2><ul>{limitation_items}</ul></section>
-<h2>Méthode</h2><table><tbody>
-<tr><th>Environnements</th><td><code>{html.escape(environment_list)}</code></td></tr>
-<tr><th>Période commune</th><td>{html.escape(scope['period_start'])} → {html.escape(scope['period_end'])}</td></tr>
-<tr><th>Début du suivi des incidents</th><td>{html.escape(scope['incident_tracking_start'])}</td></tr>
-<tr><th>Début effectif de la stabilité</th><td>{html.escape(scope['stability_period_start'])}</td></tr>
-</tbody></table>
-<p><a href="dora-metrics.json">Données JSON</a> · <a href="dora-metrics.csv">Export CSV</a></p>
+*{{box-sizing:border-box}}html,body{{height:100%;margin:0}}body{{font-family:Inter,system-ui,sans-serif;background:#eef1f5;color:#252a34}}
+main{{height:100%;padding:14px 16px;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:12px;overflow:hidden}}
+header{{display:flex;align-items:end;justify-content:space-between;gap:20px}}h1{{font-size:1.35rem;margin:0}}.period{{margin:0;color:#667085;font-size:.82rem;text-align:right}}
+.dashboard{{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;min-height:0}}
+.metric{{min-width:0;background:#fff;border:1px solid #d8dde6;border-radius:7px;box-shadow:0 1px 3px #1018281a;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr)}}
+.metric h2{{font-size:.78rem;line-height:1.2;margin:0;padding:10px 11px;border-bottom:1px solid #eaecf0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+.metric-values{{display:grid;grid-template-rows:repeat(2,minmax(0,1fr));min-height:0}}
+.environment{{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;text-align:center;min-height:0}}
+.environment+ .environment{{border-top:1px solid #eaecf0}}.environment-name{{font-size:.7rem;font-weight:700;letter-spacing:.08em;color:#667085}}
+.value{{font-size:clamp(1.55rem,3.1vw,3.2rem);line-height:1.05;margin:.18em 0;font-weight:750;color:#303540;white-space:nowrap}}
+.sample{{font-size:.7rem;color:#7b8190}}footer{{display:flex;justify-content:space-between;align-items:center;gap:16px;color:#667085;font-size:.72rem;white-space:nowrap}}
+footer p{{margin:0;overflow:hidden;text-overflow:ellipsis}}a{{color:#175cd3;text-decoration:none}}a:hover{{text-decoration:underline}}
+@media(max-width:900px){{main{{overflow:auto;height:auto;min-height:100%}}.dashboard{{grid-template-columns:repeat(2,minmax(0,1fr))}}.metric{{min-height:250px}}}}
+</style></head><body><main>
+<header><h1>MicroCRM — DORA</h1><p class="period">{html.escape(scope['period_start'][:10])} → {html.escape(scope['period_end'][:10])}</p></header>
+<div class="dashboard">{''.join(metric_cards)}</div>
+<footer><p>{html.escape(environment_list)} · Généré le {html.escape(report['generated_at'])}</p><p><a href="dora-metrics.json">JSON</a> · <a href="dora-metrics.csv">CSV</a></p></footer>
 </main></body></html>"""
 
 
