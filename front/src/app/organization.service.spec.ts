@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 
 import { OrganizationService } from './organization.service';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { API_BASE_URL } from './config';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('OrganizationService', () => {
   let service: OrganizationService;
@@ -10,7 +11,7 @@ describe('OrganizationService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule]
+      providers: [provideHttpClient(withInterceptorsFromDi()), provideHttpClientTesting()]
     });
     service = TestBed.inject(OrganizationService);
     http = TestBed.inject(HttpTestingController);

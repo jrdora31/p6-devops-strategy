@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -7,8 +7,7 @@ import { Organization, OrganizationService } from '../organization.service';
 
 @Component({
   selector: 'app-organization-details',
-  standalone: true,
-  imports: [NgIf, FormsModule, AsyncPipe, NgFor, RouterLink, DatePipe],
+  imports: [NgIf, FormsModule, NgFor, RouterLink, DatePipe],
   templateUrl: './organization-details.component.html',
   styleUrl: './organization-details.component.css'
 })

@@ -13,7 +13,6 @@ interface DeploymentInfo {
 
 @Component({
   selector: 'app-main-dashboard',
-  standalone: true,
   imports: [RouterLink, NgFor, NgIf, NgClass, DatePipe, UpperCasePipe],
   templateUrl: './main-dashboard.component.html',
   styleUrl: './main-dashboard.component.css'
