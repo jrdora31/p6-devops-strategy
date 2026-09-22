@@ -19,6 +19,15 @@ from pathlib import Path
 from typing import Any
 
 OUTPUT_DIRECTORY = Path("public")
+DEFAULT_ENVIRONMENT_SPEC = (
+    "staging=aws-poc-staging,production=aws-poc-production"
+)
+METRIC_LABELS = {
+    "deployment_frequency": "Deployment Frequency",
+    "lead_time_for_changes": "Lead Time for Changes",
+    "change_failure_rate": "Change Failure Rate",
+    "time_to_restore_service": "Mean Time To Restore",
+}
 
 INCIDENT_DEPLOYMENT_PATTERN = re.compile(
     r"^DORA_DEPLOYMENT_ID:\s*(\d+)\s*$", re.IGNORECASE | re.MULTILINE
@@ -40,6 +49,25 @@ def isoformat(value: datetime) -> str:
     return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def parse_environment_mapping(specification: str) -> dict[str, str]:
+    """Convertit ``staging=nom,production=nom`` en mapping validé."""
+    mapping: dict[str, str] = {}
+    for raw_item in specification.split(","):
+        item = raw_item.strip()
+        if not item or "=" not in item:
+            raise ValueError(
+                "--environments doit utiliser le format "
+                "staging=nom,production=nom"
+            )
+        logical_name, gitlab_name = (part.strip() for part in item.split("=", 1))
+        if not logical_name or not gitlab_name or logical_name in mapping:
+            raise ValueError("Mapping d'environnements invalide ou dupliqué")
+        mapping[logical_name] = gitlab_name
+    if len(set(mapping.values())) != len(mapping):
+        raise ValueError("Chaque environnement GitLab doit être unique")
+    return mapping
+
+
 class GitLabClient:
     """Client REST minimal avec pagination et sans dépendance externe."""
 
@@ -52,7 +80,9 @@ class GitLabClient:
         page = "1"
         results: list[dict[str, Any]] = []
         while page:
-            query = urllib.parse.urlencode({**parameters, "per_page": "100", "page": page})
+            query = urllib.parse.urlencode(
+                {**parameters, "per_page": "100", "page": page}
+            )
             url = f"{self.api_url}/projects/{self.project_id}/{endpoint}?{query}"
             request = urllib.request.Request(
                 url,
@@ -63,7 +93,9 @@ class GitLabClient:
                     payload = json.load(response)
                     page = response.headers.get("X-Next-Page", "")
             except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
-                raise RuntimeError(f"Échec de lecture de l'API GitLab ({endpoint})") from error
+                raise RuntimeError(
+                    f"Échec de lecture de l'API GitLab ({endpoint})"
+                ) from error
             if not isinstance(payload, list):
                 raise RuntimeError(f"Réponse GitLab inattendue ({endpoint})")
             results.extend(payload)
@@ -80,10 +112,10 @@ def deployment_finished_at(deployment: dict[str, Any]) -> datetime | None:
     )
 
 
-def collect_gitlab_data(
+def collect_environment_data(
     client: GitLabClient, environment: str, start: datetime
 ) -> dict[str, Any]:
-    """Collecte les sources brutes nécessaires aux calculs."""
+    """Collecte deployments et MR pour un environnement paramétré."""
     deployments = client.get_all(
         "deployments",
         {
@@ -102,7 +134,20 @@ def collect_gitlab_data(
         deployment_merge_requests[deployment_id] = client.get_all(
             f"deployments/{deployment_id}/merge_requests", {}
         )
+    return {
+        "deployments": deployments,
+        "deployment_merge_requests": deployment_merge_requests,
+    }
 
+
+def collect_gitlab_data(
+    client: GitLabClient, environments: dict[str, str], start: datetime
+) -> dict[str, Any]:
+    """Collecte chaque environnement et les incidents communs une seule fois."""
+    environment_sources = {
+        gitlab_name: collect_environment_data(client, gitlab_name, start)
+        for gitlab_name in environments.values()
+    }
     incidents = client.get_all(
         "issues",
         {
@@ -114,11 +159,7 @@ def collect_gitlab_data(
             "sort": "asc",
         },
     )
-    return {
-        "deployments": deployments,
-        "deployment_merge_requests": deployment_merge_requests,
-        "incidents": incidents,
-    }
+    return {"environments": environment_sources, "incidents": incidents}
 
 
 def successful_deployments(
@@ -160,26 +201,39 @@ def lead_time_samples(
 
 
 def incident_deployment_id(incident: dict[str, Any]) -> int | None:
-    """Extrait le deployment relié par le contrat DORA de l'incident."""
+    """Extrait l'IID du deployment relié par le contrat DORA de l'incident."""
     match = INCIDENT_DEPLOYMENT_PATTERN.search(incident.get("description") or "")
     return int(match.group(1)) if match else None
 
 
 def tracked_incidents(
-    source: dict[str, Any], stability_start: datetime, end: datetime
+    incidents_source: list[dict[str, Any]], stability_start: datetime, end: datetime
 ) -> list[dict[str, Any]]:
     """Sélectionne et annote les incidents suivis sur la période."""
     incidents = []
-    for incident in source.get("incidents", []):
+    for incident in incidents_source:
         created = parse_timestamp(incident.get("created_at"))
         if created is None or not stability_start <= created <= end:
             continue
-        incidents.append({**incident, "dora_deployment_id": incident_deployment_id(incident)})
+        incidents.append(
+            {**incident, "dora_deployment_id": incident_deployment_id(incident)}
+        )
     return incidents
 
 
+def incidents_for_deployments(
+    incidents: list[dict[str, Any]], deployment_ids: set[int]
+) -> list[dict[str, Any]]:
+    """Isole les incidents attribuables aux deployments d'un environnement."""
+    return [
+        incident
+        for incident in incidents
+        if incident["dora_deployment_id"] in deployment_ids
+    ]
+
+
 def restore_samples(incidents: list[dict[str, Any]]) -> list[float]:
-    """Retourne les durées des incidents clôturés."""
+    """Retourne les durées des incidents attribués et clôturés."""
     samples = []
     for incident in incidents:
         created = parse_timestamp(incident.get("created_at"))
@@ -200,23 +254,40 @@ def stability_deployments(
     ]
 
 
-def failure_ids(incidents: list[dict[str, Any]], deployment_ids: set[int]) -> set[int]:
+def deployment_ids(deployments: list[dict[str, Any]]) -> set[int]:
+    """Retourne les IID visibles dans l'historique GitLab des deployments."""
+    return {
+        int(deployment.get("iid", deployment["id"])) for deployment in deployments
+    }
+
+
+def failure_ids(incidents: list[dict[str, Any]], valid_ids: set[int]) -> set[int]:
     """Retourne les deployments réussis ayant causé un incident suivi."""
     return {
         incident["dora_deployment_id"]
         for incident in incidents
-        if incident["dora_deployment_id"] in deployment_ids
+        if incident["dora_deployment_id"] in valid_ids
     }
 
 
 def frequency_metric(successful_count: int, period_days: float) -> dict[str, Any]:
-    """Construit la métrique de fréquence."""
+    """Construit la fréquence sans convertir une absence de données en zéro."""
+    if not successful_count:
+        return {
+            "value": None,
+            "unit": "successful_deployments_per_week",
+            "successful_deployments": 0,
+            "sample_size": 0,
+            "status": "not_calculable",
+            "limit": "Aucun deployment réussi sur la période.",
+        }
     return {
         "value": round(successful_count * 7 / period_days, 2),
         "unit": "successful_deployments_per_week",
         "successful_deployments": successful_count,
         "sample_size": successful_count,
         "status": "measured",
+        "limit": None,
     }
 
 
@@ -251,7 +322,7 @@ def failure_metric(failed_count: int, deployment_count: int) -> dict[str, Any]:
             "deployment_denominator": 0,
             "sample_size": 0,
             "status": "not_calculable",
-            "limit": "Aucun déploiement réussi depuis le début du suivi des incidents.",
+            "limit": "Aucun deployment réussi depuis le début du suivi des incidents.",
         }
     return {
         "value": round(failed_count / deployment_count * 100, 2),
@@ -264,14 +335,15 @@ def failure_metric(failed_count: int, deployment_count: int) -> dict[str, Any]:
     }
 
 
-def calculate_metrics(
+def calculate_environment_metrics(
     source: dict[str, Any],
+    incidents_source: list[dict[str, Any]],
     environment: str,
     start: datetime,
     end: datetime,
     incident_tracking_start: datetime,
 ) -> dict[str, Any]:
-    """Calcule les métriques selon les conventions documentées du projet."""
+    """Calcule les quatre métriques avec la même logique pour chaque environnement."""
     successful = successful_deployments(source, start, end)
     period_days = max((end - start).total_seconds() / 86400, 1)
     lead_samples = lead_time_samples(
@@ -279,32 +351,20 @@ def calculate_metrics(
     )
     stability_start = max(start, incident_tracking_start)
     stable_deployments = stability_deployments(successful, stability_start, start)
-    stability_ids = {
-        int(deployment.get("iid", deployment["id"]))
-        for deployment in stable_deployments
-    }
-    incidents = tracked_incidents(source, stability_start, end)
-    failed_change_ids = failure_ids(incidents, stability_ids)
-    restore_duration_samples = restore_samples(incidents)
+    stable_ids = deployment_ids(stable_deployments)
+    incidents = tracked_incidents(incidents_source, stability_start, end)
+    environment_incidents = incidents_for_deployments(incidents, stable_ids)
+    failed_change_ids = failure_ids(environment_incidents, stable_ids)
+    restore_duration_samples = restore_samples(environment_incidents)
 
     return {
-        "schema_version": 1,
-        "generated_at": isoformat(end),
-        "scope": {
-            "environment": environment,
-            "environment_kind": "staging_poc_proxy",
-            "period_start": isoformat(start),
-            "period_end": isoformat(end),
-            "incident_tracking_start": isoformat(incident_tracking_start),
-            "warning": (
-                "Mesures du POC sur staging ; elles ne représentent pas "
-                "un historique de production réel."
-            ),
-        },
+        "gitlab_environment": environment,
         "metrics": {
             "deployment_frequency": frequency_metric(len(successful), period_days),
             "lead_time_for_changes": median_metric(
-                lead_samples, "seconds", "Aucune MR fusionnée reliée aux déploiements."
+                lead_samples,
+                "seconds",
+                "Aucune MR fusionnée reliée aux deployments de cet environnement.",
             ),
             "change_failure_rate": failure_metric(
                 len(failed_change_ids), len(stable_deployments)
@@ -312,21 +372,22 @@ def calculate_metrics(
             "time_to_restore_service": median_metric(
                 restore_duration_samples,
                 "seconds",
-                "Aucun incident clôturé sur la période suivie.",
+                "Aucun incident clôturé relié à un deployment de cet environnement.",
             ),
         },
         "quality": {
-            "incidents_total": len(incidents),
-            "incidents_without_deployment_id": sum(
-                incident["dora_deployment_id"] is None for incident in incidents
-            ),
+            "successful_deployments": len(successful),
+            "stability_deployments": len(stable_deployments),
+            "linked_incidents": len(environment_incidents),
+            "closed_linked_incidents": len(restore_duration_samples),
         },
     }
 
 
 def display_value(metric: dict[str, Any]) -> str:
+    """Formate une valeur pour HTML, CSV et interprétation."""
     if metric["value"] is None:
-        return "Non calculable"
+        return "N/A"
     if metric["unit"] == "seconds":
         seconds = float(metric["value"])
         if seconds >= 86400:
@@ -339,44 +400,185 @@ def display_value(metric: dict[str, Any]) -> str:
     return f"{metric['value']:.2f} / semaine"
 
 
-def render_html(report: dict[str, Any]) -> str:
-    labels = {
-        "deployment_frequency": "Fréquence de déploiement",
-        "lead_time_for_changes": "Lead time des changements",
-        "change_failure_rate": "Taux d'échec des changements",
-        "time_to_restore_service": "Temps de restauration",
-    }
-    cards = []
-    for key, label in labels.items():
-        metric = report["metrics"][key]
-        limit = f"<p class=\"limit\">{html.escape(metric['limit'])}</p>" if metric.get("limit") else ""
-        cards.append(
-            f"<article><h2>{html.escape(label)}</h2>"
-            f"<p class=\"value\">{html.escape(display_value(metric))}</p>"
-            f"<p>Échantillon : {metric['sample_size']}</p>{limit}</article>"
+def environment_metric_summary(
+    logical_name: str, metric_name: str, metric: dict[str, Any]
+) -> str:
+    """Produit une synthèse factuelle d'une métrique et de son échantillon."""
+    label = logical_name.upper()
+    if metric["value"] is None:
+        return f"{label} : N/A ({metric['limit']})"
+    value = display_value(metric)
+    if metric_name == "deployment_frequency":
+        return f"{label} : {value}, sur {metric['sample_size']} deployments réussis"
+    if metric_name == "lead_time_for_changes":
+        return f"{label} : médiane de {value}, sur {metric['sample_size']} MR"
+    if metric_name == "change_failure_rate":
+        return (
+            f"{label} : {value}, soit {metric['failed_deployments']} deployments "
+            f"en échec de changement sur {metric['deployment_denominator']}"
         )
+    return (
+        f"{label} : médiane de {value}, sur {metric['sample_size']} incidents "
+        "clôturés et attribués"
+    )
+
+
+def build_interpretation(environments: dict[str, Any]) -> list[str]:
+    """Génère quatre constats strictement dérivés des valeurs calculées."""
+    interpretation = []
+    for metric_name, metric_label in METRIC_LABELS.items():
+        summaries = [
+            environment_metric_summary(
+                logical_name,
+                metric_name,
+                environment_report["metrics"][metric_name],
+            )
+            for logical_name, environment_report in environments.items()
+        ]
+        interpretation.append(f"{metric_label} — " + " ; ".join(summaries) + ".")
+    return interpretation
+
+
+def calculate_report(
+    source: dict[str, Any],
+    environments: dict[str, str],
+    start: datetime,
+    end: datetime,
+    incident_tracking_start: datetime,
+) -> dict[str, Any]:
+    """Assemble le rapport comparatif sur une fenêtre temporelle commune."""
+    reports: dict[str, Any] = {}
+    environment_sources = source.get("environments", {})
+    incidents_source = source.get("incidents", [])
+    for logical_name, gitlab_name in environments.items():
+        if gitlab_name not in environment_sources:
+            raise ValueError(f"Données absentes pour l'environnement {gitlab_name}")
+        reports[logical_name] = calculate_environment_metrics(
+            environment_sources[gitlab_name],
+            incidents_source,
+            gitlab_name,
+            start,
+            end,
+            incident_tracking_start,
+        )
+
+    stability_start = max(start, incident_tracking_start)
+    incidents = tracked_incidents(incidents_source, stability_start, end)
+    report = {
+        "schema_version": 2,
+        "generated_at": isoformat(end),
+        "scope": {
+            "environment_kind": "microcrm_poc_comparison",
+            "environments": [
+                {"name": logical_name, "gitlab_environment": gitlab_name}
+                for logical_name, gitlab_name in environments.items()
+            ],
+            "period_start": isoformat(start),
+            "period_end": isoformat(end),
+            "incident_tracking_start": isoformat(incident_tracking_start),
+            "stability_period_start": isoformat(stability_start),
+            "warning": (
+                "Mesures des environnements logiques staging et production du POC "
+                "MicroCRM ; elles ne représentent pas une production utilisée par "
+                "de vrais utilisateurs."
+            ),
+        },
+        "environments": reports,
+        "quality": {
+            "tracked_incidents": len(incidents),
+            "incidents_without_deployment_id": sum(
+                incident["dora_deployment_id"] is None for incident in incidents
+            ),
+        },
+        "interpretation": build_interpretation(reports),
+        "limitations": [
+            (
+                "Le périmètre couvre staging et l'environnement logique production "
+                "du POC MicroCRM, pas un historique réel de production utilisé par "
+                "des clients."
+            ),
+            (
+                "Les petits échantillons rendent les médianes et pourcentages "
+                "sensibles à chaque deployment ou incident."
+            ),
+            (
+                "Le Change Failure Rate est le nombre de deployments réussis "
+                "distincts référencés par au moins un incident GitLab dora via "
+                "DORA_DEPLOYMENT_ID, divisé par les deployments réussis de "
+                "l'environnement sur la période de stabilité."
+            ),
+            (
+                "Le MTTR est la médiane création-clôture des incidents dora clôturés "
+                "dont DORA_DEPLOYMENT_ID correspond à un deployment réussi du même "
+                "environnement sur la période de stabilité. Sans incident clôturé "
+                "attribuable, la valeur est N/A."
+            ),
+        ],
+    }
+    return report
+
+
+def render_html(report: dict[str, Any]) -> str:
+    """Produit une page GitLab Pages comparative et autonome."""
+    metric_sections = []
+    for metric_name, metric_label in METRIC_LABELS.items():
+        rows = []
+        for logical_name, environment_report in report["environments"].items():
+            metric = environment_report["metrics"][metric_name]
+            note = metric.get("limit") or "Mesure calculée"
+            rows.append(
+                "<tr>"
+                f"<th scope=\"row\">{html.escape(logical_name.upper())}</th>"
+                f"<td class=\"value\">{html.escape(display_value(metric))}</td>"
+                f"<td>{metric['sample_size']}</td>"
+                f"<td>{html.escape(note)}</td>"
+                "</tr>"
+            )
+        metric_sections.append(
+            f"<section class=\"metric\"><h2>{html.escape(metric_label)}</h2>"
+            "<table><thead><tr><th>Environnement</th><th>Valeur</th>"
+            "<th>Échantillon</th><th>Note</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table></section>"
+        )
+
     scope = report["scope"]
+    environment_list = ", ".join(
+        f"{item['name'].upper()} = {item['gitlab_environment']}"
+        for item in scope["environments"]
+    )
+    interpretation_items = "".join(
+        f"<li>{html.escape(item)}</li>" for item in report["interpretation"]
+    )
+    limitation_items = "".join(
+        f"<li>{html.escape(item)}</li>" for item in report["limitations"]
+    )
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MicroCRM — métriques DORA</title>
 <style>
 body{{margin:0;font-family:system-ui,sans-serif;background:#f4f6f8;color:#17202a}}main{{max-width:1100px;margin:auto;padding:2rem}}
-.warning{{padding:1rem;border-left:5px solid #d97706;background:#fff7ed}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:2rem 0}}
-article{{background:white;border-radius:10px;padding:1.25rem;box-shadow:0 2px 8px #0001}}h2{{font-size:1rem}}.value{{font-size:1.7rem;font-weight:700;color:#5b21b6}}.limit{{color:#9a3412}}
-table{{border-collapse:collapse;width:100%;background:white}}th,td{{padding:.7rem;border:1px solid #d1d5db;text-align:left}}code{{background:#e5e7eb;padding:.1rem .3rem}}
-</style></head><body><main><h1>MicroCRM — métriques DORA</h1>
+.warning{{padding:1rem;border-left:5px solid #d97706;background:#fff7ed}}.metric{{margin:1.5rem 0}}
+table{{border-collapse:collapse;width:100%;background:white}}th,td{{padding:.75rem;border:1px solid #d1d5db;text-align:left;vertical-align:top}}
+thead th{{background:#ede9fe}}.value{{font-weight:700;color:#5b21b6}}code{{background:#e5e7eb;padding:.1rem .3rem}}
+.text-section{{background:white;padding:1rem 1.25rem;margin:1.5rem 0;border-radius:8px}}li{{margin:.55rem 0}}
+</style></head><body><main><h1>MicroCRM — comparaison des métriques DORA</h1>
 <p>Généré le {html.escape(report['generated_at'])} depuis l’API GitLab.</p>
 <p class="warning"><strong>Périmètre :</strong> {html.escape(scope['warning'])}</p>
-<div class="grid">{''.join(cards)}</div>
-<h2>Méthode</h2><table><tr><th>Élément</th><th>Valeur</th></tr>
-<tr><td>Environnement</td><td><code>{html.escape(scope['environment'])}</code></td></tr>
-<tr><td>Période</td><td>{html.escape(scope['period_start'])} → {html.escape(scope['period_end'])}</td></tr>
-<tr><td>Début du suivi des incidents</td><td>{html.escape(scope['incident_tracking_start'])}</td></tr></table>
+{''.join(metric_sections)}
+<section class="text-section"><h2>Interprétation</h2><ul>{interpretation_items}</ul></section>
+<section class="text-section"><h2>Limites de la mesure</h2><ul>{limitation_items}</ul></section>
+<h2>Méthode</h2><table><tbody>
+<tr><th>Environnements</th><td><code>{html.escape(environment_list)}</code></td></tr>
+<tr><th>Période commune</th><td>{html.escape(scope['period_start'])} → {html.escape(scope['period_end'])}</td></tr>
+<tr><th>Début du suivi des incidents</th><td>{html.escape(scope['incident_tracking_start'])}</td></tr>
+<tr><th>Début effectif de la stabilité</th><td>{html.escape(scope['stability_period_start'])}</td></tr>
+</tbody></table>
 <p><a href="dora-metrics.json">Données JSON</a> · <a href="dora-metrics.csv">Export CSV</a></p>
 </main></body></html>"""
 
 
 def write_outputs(report: dict[str, Any], output_directory: Path) -> None:
+    """Écrit les trois formats en conservant les noms utilisés par GitLab Pages."""
     output_directory.mkdir(parents=True, exist_ok=True)
     json_path = safe_path(output_directory / "dora-metrics.json")
     with open(json_path, "w", encoding="utf-8") as stream:
@@ -385,11 +587,34 @@ def write_outputs(report: dict[str, Any], output_directory: Path) -> None:
     csv_path = safe_path(output_directory / "dora-metrics.csv")
     with open(csv_path, "w", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream)
-        writer.writerow(["metric", "value", "unit", "sample_size", "status", "limit"])
-        for name, metric in report["metrics"].items():
-            writer.writerow(
-                [name, metric["value"], metric["unit"], metric["sample_size"], metric["status"], metric.get("limit") or ""]
-            )
+        writer.writerow(
+            [
+                "environment",
+                "gitlab_environment",
+                "metric",
+                "value",
+                "display_value",
+                "unit",
+                "sample_size",
+                "status",
+                "limit",
+            ]
+        )
+        for logical_name, environment_report in report["environments"].items():
+            for metric_name, metric in environment_report["metrics"].items():
+                writer.writerow(
+                    [
+                        logical_name,
+                        environment_report["gitlab_environment"],
+                        metric_name,
+                        metric["value"] if metric["value"] is not None else "",
+                        display_value(metric),
+                        metric["unit"],
+                        metric["sample_size"],
+                        metric["status"],
+                        metric.get("limit") or "",
+                    ]
+                )
 
     html_path = safe_path(output_directory / "index.html")
     with open(html_path, "w", encoding="utf-8") as stream:
@@ -406,11 +631,24 @@ def safe_path(path: Path) -> Path:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Génère le rapport DORA statique de MicroCRM.")
-    parser.add_argument("--environment", default=os.getenv("DORA_ENVIRONMENT", "aws-poc-staging"))
-    parser.add_argument("--days", type=int, default=int(os.getenv("DORA_PERIOD_DAYS", "90")))
-    parser.add_argument("--incident-tracking-start", default=os.getenv("DORA_INCIDENT_TRACKING_START", "2026-08-11T00:00:00Z"))
-    parser.add_argument("--fixture", type=Path, help="Données locales de test, sans appel réseau.")
+    parser = argparse.ArgumentParser(
+        description="Génère le rapport DORA comparatif de MicroCRM."
+    )
+    parser.add_argument(
+        "--environments",
+        default=os.getenv("DORA_ENVIRONMENTS", DEFAULT_ENVIRONMENT_SPEC),
+        help="Mapping logique=GitLab séparé par des virgules.",
+    )
+    parser.add_argument(
+        "--days", type=int, default=int(os.getenv("DORA_PERIOD_DAYS", "90"))
+    )
+    parser.add_argument(
+        "--incident-tracking-start",
+        default=os.getenv("DORA_INCIDENT_TRACKING_START", "2026-08-11T00:00:00Z"),
+    )
+    parser.add_argument(
+        "--fixture", type=Path, help="Données locales de test, sans appel réseau."
+    )
     parser.add_argument("--now", help="Date de fin forcée pour un test reproductible.")
     return parser
 
@@ -428,6 +666,7 @@ def main() -> int:
     start = end - timedelta(days=arguments.days)
 
     try:
+        environments = parse_environment_mapping(arguments.environments)
         output_directory = safe_path(OUTPUT_DIRECTORY)
         if arguments.fixture:
             fixture_path = safe_path(arguments.fixture)
@@ -437,15 +676,22 @@ def main() -> int:
             api_url = os.getenv("CI_API_V4_URL")
             project_id = os.getenv("CI_PROJECT_ID")
             if not token or not api_url or not project_id:
-                print("DORA_GITLAB_TOKEN, CI_API_V4_URL et CI_PROJECT_ID sont requis", file=sys.stderr)
+                print(
+                    "DORA_GITLAB_TOKEN, CI_API_V4_URL et CI_PROJECT_ID sont requis",
+                    file=sys.stderr,
+                )
                 return 2
-            source = collect_gitlab_data(GitLabClient(api_url, project_id, token), arguments.environment, start)
-    except (OSError, ValueError, RuntimeError) as error:
+            source = collect_gitlab_data(
+                GitLabClient(api_url, project_id, token), environments, start
+            )
+        report = calculate_report(
+            source, environments, start, end, incident_start
+        )
+        write_outputs(report, output_directory)
+    except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as error:
         print(str(error), file=sys.stderr)
         return 1
 
-    report = calculate_metrics(source, arguments.environment, start, end, incident_start)
-    write_outputs(report, output_directory)
     print(f"Rapport DORA généré dans {output_directory}")
     return 0
 
