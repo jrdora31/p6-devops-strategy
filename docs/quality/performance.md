@@ -59,7 +59,7 @@ image amont ou couverts par des décisions de risque explicites.
 
 Ces artefacts n'ont pas besoin d'être remplacés à chaque pipeline documentaire.
 Un nouvel export est utile si les dépendances, les Dockerfiles ou les règles de
-scan changent, ou une dernière fois pour archiver la pipeline finale de la MR.
+scan changent.
 
 ## 4. CloudWatch : métriques, journaux et alertes
 
@@ -125,10 +125,19 @@ Le job non bloquant `pages:dora` interroge l'API GitLab avec
 
 Sans échantillon, la valeur correcte est `N/A`, jamais zéro.
 
-La merge request de `chore/modifications` vers `dev` est en cours. Après sa
-pipeline finale, télécharger l'artifact de `pages:dora`, archiver les fichiers
-de `public/` dans `docs/quality/evidence/performance/dora/`, puis reporter ici
-les quatre valeurs et leurs échantillons.
+Le dashboard généré le 22 septembre 2026 couvre la période du 24 juin au
+22 septembre 2026 :
+
+| Indicateur | Production | Échantillon | Staging | Échantillon |
+|---|---:|---:|---:|---:|
+| Fréquence de déploiement | 1,24 par semaine | 16 | 2,72 par semaine | 35 |
+| Délai des changements | 1,75 jour | 27 | 2,82 jours | 97 |
+| Taux d'échec des changements | 0 % | 16 | 4 % | 25 |
+| Temps de restauration | `N/A` | 0 | 0,61 minute | 1 |
+
+Le temps de restauration production reste `N/A` parce qu'aucun incident relié
+n'est disponible sur la période. La valeur staging repose sur un seul incident
+et doit donc être interprétée avec prudence.
 
 ## 7. Gains et recommandations d'amélioration continue
 
@@ -157,8 +166,8 @@ ne sont pas reconstruits a posteriori.
 1. **Traiter les HIGH Caddy restants.** Mettre à jour l'image officielle dès
    qu'elle embarque les versions Go corrigées ; documenter les risques acceptés
    entre-temps.
-2. **Finaliser la mesure DORA.** Archiver l'export de la pipeline finale et
-   conserver `N/A` lorsqu'aucun incident ou déploiement ne permet le calcul.
+2. **Pérenniser la mesure DORA.** Conserver les exports HTML, JSON et CSV des
+   pipelines périodiques et maintenir `N/A` lorsqu'aucun échantillon n'existe.
 3. **Étendre les tests applicatifs.** Ajouter un parcours E2E CRUD et un scan
    DAST passif sur staging avant d'envisager un contrôle bloquant.
 4. **Mesurer la résilience.** Compléter le test séquentiel par un test concurrent
@@ -180,5 +189,6 @@ saines sur la capture.
 
 Les limites restent explicites : le test HTTP est séquentiel, aucun failover
 n'a été provoqué, PostgreSQL n'est pas hautement disponible et les HIGH Caddy
-restants doivent encore être traités ou acceptés. Les valeurs DORA seront
-intégrées à partir de la pipeline finale de la merge request en cours.
+restants doivent encore être traités ou acceptés. Sur 90 jours, DORA mesure
+1,24 déploiement par semaine en production et 2,72 en staging ; le temps de
+restauration production reste non calculable faute d'incident relié.
