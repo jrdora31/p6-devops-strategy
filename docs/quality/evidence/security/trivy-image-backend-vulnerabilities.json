@@ -3,38 +3,38 @@
   "Trivy": {
     "Version": "0.70.0"
   },
-  "ReportID": "01a0c485-5874-7b82-bab3-3bf37f47d032",
-  "CreatedAt": "2026-09-21T15:11:08.4047604Z",
-  "ArtifactID": "sha256:14e42324dd18831466178088c08e36cdc4bb772054f95dbf50c35920bb6839c1",
-  "ArtifactName": "registry.gitlab.com/project_6_group/microcrm/backend:dd5e87fd51ac041ae66b4a79c5473559238950fe",
+  "ReportID": "01a0c8cb-f790-7001-93d0-85e41ad3b156",
+  "CreatedAt": "2026-09-22T11:06:45.5200033Z",
+  "ArtifactID": "sha256:41318f26d7a7108bb1ea5e0daa957b6084abe83405a06e7a655b57c92e9f7ea3",
+  "ArtifactName": "registry.gitlab.com/project_6_group/microcrm/backend:71f7d64e58ccfa194d652cd2b58e6feca8aaba3c",
   "ArtifactType": "container_image",
   "Metadata": {
-    "Size": 272795136,
+    "Size": 286041088,
     "OS": {
       "Family": "alpine",
       "Name": "3.23.5"
     },
-    "ImageID": "sha256:3a774a686a73c99e6e79d7afd13d87986bdbcfc7de80acb05810dca3d94f6935",
+    "ImageID": "sha256:b065ae5dc01e058acad0f2dc476c5447a4f4d591a11e1e86b970caa09b7e58e8",
     "DiffIDs": [
       "sha256:31ad4a471c6852bfec14d757cc75a566c82a9769f12c3918cf6bf52cc0eeb3d0",
       "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07",
       "sha256:0e04bb53876f9341ace2969204c0e1dc5734c8a41c8f8cd14f4cbab0ce1941cd",
       "sha256:a2796c74836f25d848070dc0ed6ba094489eb8675c6663543a7daf9e83469ffd",
       "sha256:c5c1224a5e9eb511af186d12593c63651a8474042469712928e6f7739571f8ef",
-      "sha256:3dd2cd48ca89ad139552d0808f7df81f02d0d06d0d406f98fb2a9ed2e9186a69",
-      "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9",
+      "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a",
+      "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2",
       "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
     ],
     "RepoTags": [
-      "registry.gitlab.com/project_6_group/microcrm/backend:dd5e87fd51ac041ae66b4a79c5473559238950fe"
+      "registry.gitlab.com/project_6_group/microcrm/backend:71f7d64e58ccfa194d652cd2b58e6feca8aaba3c"
     ],
     "RepoDigests": [
-      "registry.gitlab.com/project_6_group/microcrm/backend@sha256:8bb2e54a24abfee11f5f3344b63444319fe48a9b4de265d7cdf25c0755ed9a2a"
+      "registry.gitlab.com/project_6_group/microcrm/backend@sha256:284322cd2437cf61cca8a52c7322dad2c17e0ac6e1f94396441ce3f525f9c596"
     ],
-    "Reference": "registry.gitlab.com/project_6_group/microcrm/backend:dd5e87fd51ac041ae66b4a79c5473559238950fe",
+    "Reference": "registry.gitlab.com/project_6_group/microcrm/backend:71f7d64e58ccfa194d652cd2b58e6feca8aaba3c",
     "ImageConfig": {
       "architecture": "amd64",
-      "created": "2026-09-21T14:57:25.0985594Z",
+      "created": "2026-09-22T10:30:53.6401206Z",
       "history": [
         {
           "created": "2026-06-22T19:20:09.106506185Z",
@@ -98,40 +98,40 @@
           "empty_layer": true
         },
         {
-          "created": "2026-09-21T14:57:23.7489701Z",
-          "created_by": "RUN /bin/sh -c addgroup -S microcrm     \u0026\u0026 adduser -S -G microcrm microcrm # buildkit",
+          "created": "2026-09-22T10:30:51.0999241Z",
+          "created_by": "RUN /bin/sh -c apk upgrade --no-cache     \u0026\u0026 addgroup -S microcrm     \u0026\u0026 adduser -S -G microcrm microcrm # buildkit",
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-21T14:57:24.8739407Z",
+          "created": "2026-09-22T10:30:52.9889932Z",
           "created_by": "COPY back/build/libs/microcrm-0.0.1-SNAPSHOT.jar /app/microcrm.jar # buildkit",
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-21T14:57:25.0985594Z",
+          "created": "2026-09-22T10:30:53.6401206Z",
           "created_by": "USER microcrm",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
         },
         {
-          "created": "2026-09-21T14:57:25.0985594Z",
+          "created": "2026-09-22T10:30:53.6401206Z",
           "created_by": "WORKDIR /app",
           "comment": "buildkit.dockerfile.v0"
         },
         {
-          "created": "2026-09-21T14:57:25.0985594Z",
+          "created": "2026-09-22T10:30:53.6401206Z",
           "created_by": "EXPOSE map[8080/tcp:{}]",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
         },
         {
-          "created": "2026-09-21T14:57:25.0985594Z",
+          "created": "2026-09-22T10:30:53.6401206Z",
           "created_by": "HEALTHCHECK \u0026{[\"CMD-SHELL\" \"wget --quiet --output-document=- http://127.0.0.1:8080/ \u003e/dev/null || exit 1\"] \"10s\" \"3s\" \"15s\" '\\x03'}",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
         },
         {
-          "created": "2026-09-21T14:57:25.0985594Z",
+          "created": "2026-09-22T10:30:53.6401206Z",
           "created_by": "ENTRYPOINT [\"java\" \"-jar\" \"/app/microcrm.jar\"]",
           "comment": "buildkit.dockerfile.v0",
           "empty_layer": true
@@ -146,8 +146,8 @@
           "sha256:0e04bb53876f9341ace2969204c0e1dc5734c8a41c8f8cd14f4cbab0ce1941cd",
           "sha256:a2796c74836f25d848070dc0ed6ba094489eb8675c6663543a7daf9e83469ffd",
           "sha256:c5c1224a5e9eb511af186d12593c63651a8474042469712928e6f7739571f8ef",
-          "sha256:3dd2cd48ca89ad139552d0808f7df81f02d0d06d0d406f98fb2a9ed2e9186a69",
-          "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9",
+          "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a",
+          "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2",
           "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
         ]
       },
@@ -204,12 +204,12 @@
         "DiffID": "sha256:c5c1224a5e9eb511af186d12593c63651a8474042469712928e6f7739571f8ef"
       },
       {
-        "Size": 10752,
-        "DiffID": "sha256:3dd2cd48ca89ad139552d0808f7df81f02d0d06d0d406f98fb2a9ed2e9186a69"
+        "Size": 13256704,
+        "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
       },
       {
         "Size": 64088576,
-        "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+        "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
       },
       {
         "Size": 1024,
@@ -219,7 +219,7 @@
   },
   "Results": [
     {
-      "Target": "registry.gitlab.com/project_6_group/microcrm/backend:dd5e87fd51ac041ae66b4a79c5473559238950fe (alpine 3.23.5)",
+      "Target": "registry.gitlab.com/project_6_group/microcrm/backend:71f7d64e58ccfa194d652cd2b58e6feca8aaba3c (alpine 3.23.5)",
       "Class": "os-pkgs",
       "Type": "alpine",
       "Packages": [
@@ -395,16 +395,16 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "alpine-release@3.23.5-r0",
+          "ID": "alpine-release@3.23.6-r0",
           "Name": "alpine-release",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/alpine-release@3.23.5-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "58b001445238c53e"
+            "PURL": "pkg:apk/alpine/alpine-release@3.23.6-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "91524cfdd8621878"
           },
-          "Version": "3.23.5-r0",
+          "Version": "3.23.6-r0",
           "Arch": "x86_64",
           "SrcName": "alpine-base",
-          "SrcVersion": "3.23.5-r0",
+          "SrcVersion": "3.23.6-r0",
           "Licenses": [
             "MIT"
           ],
@@ -413,9 +413,9 @@
             "alpine-keys@2.6-r0"
           ],
           "Layer": {
-            "DiffID": "sha256:31ad4a471c6852bfec14d757cc75a566c82a9769f12c3918cf6bf52cc0eeb3d0"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:37f737cfc477560795ce10cbe468fb86e9e7aabb",
+          "Digest": "sha1:9a222ee46b43276b7e607f66dab5faf915d13984",
           "InstalledFiles": [
             "etc/alpine-release",
             "etc/issue",
@@ -426,31 +426,31 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "apk-tools@3.0.6-r0",
+          "ID": "apk-tools@3.0.8-r0",
           "Name": "apk-tools",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/apk-tools@3.0.6-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "c719faa075d9da13"
+            "PURL": "pkg:apk/alpine/apk-tools@3.0.8-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "437cfb31b68155db"
           },
-          "Version": "3.0.6-r0",
+          "Version": "3.0.8-r0",
           "Arch": "x86_64",
           "SrcName": "apk-tools",
-          "SrcVersion": "3.0.6-r0",
+          "SrcVersion": "3.0.8-r0",
           "Licenses": [
             "GPL-2.0-only"
           ],
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "DependsOn": [
-            "ca-certificates-bundle@20260611-r0",
-            "libapk@3.0.6-r0",
-            "libcrypto3@3.5.7-r0",
+            "ca-certificates-bundle@20260909-r0",
+            "libapk@3.0.8-r0",
+            "libcrypto3@3.5.8-r0",
             "musl@1.2.5-r23",
             "zlib@1.3.2-r0"
           ],
           "Layer": {
-            "DiffID": "sha256:31ad4a471c6852bfec14d757cc75a566c82a9769f12c3918cf6bf52cc0eeb3d0"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:86f3b3ef94d1cb213a4ed1187b34a6bb9f593033",
+          "Digest": "sha1:fa7a8422abbbb5e179033cee5455124007817b22",
           "InstalledFiles": [
             "sbin/apk"
           ],
@@ -549,16 +549,16 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "ca-certificates@20260611-r0",
+          "ID": "ca-certificates@20260909-r0",
           "Name": "ca-certificates",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/ca-certificates@20260611-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "aea269ef856f835"
+            "PURL": "pkg:apk/alpine/ca-certificates@20260909-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "3c61cd240abc22a7"
           },
-          "Version": "20260611-r0",
+          "Version": "20260909-r0",
           "Arch": "x86_64",
           "SrcName": "ca-certificates",
-          "SrcVersion": "20260611-r0",
+          "SrcVersion": "20260909-r0",
           "Licenses": [
             "MPL-2.0",
             "MIT"
@@ -566,13 +566,13 @@
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "DependsOn": [
             "busybox-binsh@1.37.0-r30",
-            "libcrypto3@3.5.7-r0",
+            "libcrypto3@3.5.8-r0",
             "musl@1.2.5-r23"
           ],
           "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:99993992c0b045c9914c5148257c33eb74993615",
+          "Digest": "sha1:6604a5ff627e040ee093762ca0fb88d74b08e106",
           "InstalledFiles": [
             "etc/ca-certificates.conf",
             "etc/apk/protected_paths.d/ca-certificates.list",
@@ -588,7 +588,6 @@
             "usr/share/ca-certificates/mozilla/Amazon_Root_CA_2.crt",
             "usr/share/ca-certificates/mozilla/Amazon_Root_CA_3.crt",
             "usr/share/ca-certificates/mozilla/Amazon_Root_CA_4.crt",
-            "usr/share/ca-certificates/mozilla/Atos_TrustedRoot_2011.crt",
             "usr/share/ca-certificates/mozilla/Atos_TrustedRoot_Root_CA_ECC_TLS_2021.crt",
             "usr/share/ca-certificates/mozilla/Atos_TrustedRoot_Root_CA_RSA_TLS_2021.crt",
             "usr/share/ca-certificates/mozilla/Autoridad_de_Certificacion_Firmaprofesional_CIF_A62634068.crt",
@@ -654,6 +653,8 @@
             "usr/share/ca-certificates/mozilla/QuoVadis_Root_CA_1_G3.crt",
             "usr/share/ca-certificates/mozilla/QuoVadis_Root_CA_2_G3.crt",
             "usr/share/ca-certificates/mozilla/QuoVadis_Root_CA_3_G3.crt",
+            "usr/share/ca-certificates/mozilla/SECOM_TLS_ECC_Root_CA_2024.crt",
+            "usr/share/ca-certificates/mozilla/SECOM_TLS_RSA_Root_CA_2024.crt",
             "usr/share/ca-certificates/mozilla/SSL.com_EV_Root_Certification_Authority_ECC.crt",
             "usr/share/ca-certificates/mozilla/SSL.com_EV_Root_Certification_Authority_RSA_R2.crt",
             "usr/share/ca-certificates/mozilla/SSL.com_Root_Certification_Authority_ECC.crt",
@@ -678,6 +679,8 @@
             "usr/share/ca-certificates/mozilla/TWCA_Root_Certification_Authority.crt",
             "usr/share/ca-certificates/mozilla/Telekom_Security_TLS_ECC_Root_2020.crt",
             "usr/share/ca-certificates/mozilla/Telekom_Security_TLS_RSA_Root_2023.crt",
+            "usr/share/ca-certificates/mozilla/Telia_EC_TLS_Root_CA_v3.crt",
+            "usr/share/ca-certificates/mozilla/Telia_RSA_TLS_Root_CA_v3.crt",
             "usr/share/ca-certificates/mozilla/Telia_Root_CA_v2.crt",
             "usr/share/ca-certificates/mozilla/TrustAsia_Global_Root_CA_G3.crt",
             "usr/share/ca-certificates/mozilla/TrustAsia_Global_Root_CA_G4.crt",
@@ -691,7 +694,6 @@
             "usr/share/ca-certificates/mozilla/certSIGN_Root_CA_G2.crt",
             "usr/share/ca-certificates/mozilla/e-Szigno_Root_CA_2017.crt",
             "usr/share/ca-certificates/mozilla/e-Szigno_TLS_Root_CA_2023.crt",
-            "usr/share/ca-certificates/mozilla/ePKI_Root_Certification_Authority.crt",
             "usr/share/ca-certificates/mozilla/emSign_ECC_Root_CA_-_C3.crt",
             "usr/share/ca-certificates/mozilla/emSign_ECC_Root_CA_-_G3.crt",
             "usr/share/ca-certificates/mozilla/emSign_Root_CA_-_C1.crt",
@@ -702,25 +704,25 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "ca-certificates-bundle@20260611-r0",
+          "ID": "ca-certificates-bundle@20260909-r0",
           "Name": "ca-certificates-bundle",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/ca-certificates-bundle@20260611-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "a9a37912fbf01124"
+            "PURL": "pkg:apk/alpine/ca-certificates-bundle@20260909-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "56ee61c571f493d"
           },
-          "Version": "20260611-r0",
+          "Version": "20260909-r0",
           "Arch": "x86_64",
           "SrcName": "ca-certificates",
-          "SrcVersion": "20260611-r0",
+          "SrcVersion": "20260909-r0",
           "Licenses": [
             "MPL-2.0",
             "MIT"
           ],
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "Layer": {
-            "DiffID": "sha256:31ad4a471c6852bfec14d757cc75a566c82a9769f12c3918cf6bf52cc0eeb3d0"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:41204225abcd63eeb1a73766e6a2e8e894b7423b",
+          "Digest": "sha1:0b7f24b8a713bf4bb869de377505a5040239a7bc",
           "InstalledFiles": [
             "etc/ssl/cert.pem",
             "etc/ssl/certs/ca-certificates.crt",
@@ -734,7 +736,7 @@
           "Name": "coreutils",
           "Identifier": {
             "PURL": "pkg:apk/alpine/coreutils@9.8-r1?arch=x86_64\u0026distro=3.23.5",
-            "UID": "f8982939db8bcdce"
+            "UID": "427347b45b47da83"
           },
           "Version": "9.8-r1",
           "Arch": "x86_64",
@@ -751,7 +753,7 @@
             "coreutils-fmt@9.8-r1",
             "coreutils-sha512sum@9.8-r1",
             "libattr@2.5.2-r2",
-            "libcrypto3@3.5.7-r0",
+            "libcrypto3@3.5.8-r0",
             "musl@1.2.5-r23",
             "utmps-libs@0.1.3.1-r0"
           ],
@@ -924,7 +926,7 @@
           "Name": "coreutils-sha512sum",
           "Identifier": {
             "PURL": "pkg:apk/alpine/coreutils-sha512sum@9.8-r1?arch=x86_64\u0026distro=3.23.5",
-            "UID": "dd2f7d1377dbbfe1"
+            "UID": "1c00242a805459b5"
           },
           "Version": "9.8-r1",
           "Arch": "x86_64",
@@ -935,7 +937,7 @@
           ],
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "DependsOn": [
-            "libcrypto3@3.5.7-r0",
+            "libcrypto3@3.5.8-r0",
             "musl@1.2.5-r23"
           ],
           "Layer": {
@@ -1094,7 +1096,7 @@
           "Name": "fontconfig",
           "Identifier": {
             "PURL": "pkg:apk/alpine/fontconfig@2.17.1-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "67b4a772157fadbd"
+            "UID": "8e3e067d10028d76"
           },
           "Version": "2.17.1-r0",
           "Arch": "x86_64",
@@ -1106,8 +1108,8 @@
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "DependsOn": [
             "busybox-binsh@1.37.0-r30",
-            "freetype@2.14.1-r0",
-            "libexpat@2.8.1-r0",
+            "freetype@2.14.3-r0",
+            "libexpat@2.8.4-r0",
             "musl@1.2.5-r23"
           ],
           "Layer": {
@@ -1199,16 +1201,16 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "freetype@2.14.1-r0",
+          "ID": "freetype@2.14.3-r0",
           "Name": "freetype",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/freetype@2.14.1-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "d0ae0a3d160c9ff2"
+            "PURL": "pkg:apk/alpine/freetype@2.14.3-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "bfc9b8cf530ca476"
           },
-          "Version": "2.14.1-r0",
+          "Version": "2.14.3-r0",
           "Arch": "x86_64",
           "SrcName": "freetype",
-          "SrcVersion": "2.14.1-r0",
+          "SrcVersion": "2.14.3-r0",
           "Licenses": [
             "FTL",
             "GPL-2.0-or-later"
@@ -1222,12 +1224,12 @@
             "zlib@1.3.2-r0"
           ],
           "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:e227f29a00edd7ed5b1e62a050da6532183e60be",
+          "Digest": "sha1:830add7bff72b4656dbe08b5b5704ddbc162660a",
           "InstalledFiles": [
             "usr/lib/libfreetype.so.6",
-            "usr/lib/libfreetype.so.6.20.4"
+            "usr/lib/libfreetype.so.6.20.6"
           ],
           "AnalyzedBy": "apk"
         },
@@ -1397,7 +1399,7 @@
           "Name": "gnupg-keyboxd",
           "Identifier": {
             "PURL": "pkg:apk/alpine/gnupg-keyboxd@2.4.9-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "edd839e77d0b834e"
+            "UID": "d732720c77c14be"
           },
           "Version": "2.4.9-r0",
           "Arch": "x86_64",
@@ -1414,7 +1416,7 @@
             "libksba@1.6.7-r0",
             "musl@1.2.5-r23",
             "npth@1.8-r0",
-            "sqlite-libs@3.51.2-r0"
+            "sqlite-libs@3.53.4-r0"
           ],
           "Layer": {
             "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
@@ -1507,7 +1509,7 @@
           "Name": "gnutls",
           "Identifier": {
             "PURL": "pkg:apk/alpine/gnutls@3.8.13-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "af5086f1af438769"
+            "UID": "9866b98b63a0f4eb"
           },
           "Version": "3.8.13-r0",
           "Arch": "x86_64",
@@ -1525,7 +1527,7 @@
             "libunistring@1.4.1-r0",
             "musl@1.2.5-r23",
             "nettle@3.10.2-r0",
-            "p11-kit@0.25.5-r2",
+            "p11-kit@0.26.2-r0",
             "zlib@1.3.2-r0",
             "zstd-libs@1.5.7-r2"
           ],
@@ -1544,7 +1546,7 @@
           "Name": "gpg",
           "Identifier": {
             "PURL": "pkg:apk/alpine/gpg@2.4.9-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "ad0865cea81308f4"
+            "UID": "60324d02cf628034"
           },
           "Version": "2.4.9-r0",
           "Arch": "x86_64",
@@ -1564,7 +1566,7 @@
             "libgpg-error@1.55-r0",
             "musl@1.2.5-r23",
             "npth@1.8-r0",
-            "sqlite-libs@3.51.2-r0",
+            "sqlite-libs@3.53.4-r0",
             "zlib@1.3.2-r0"
           ],
           "Layer": {
@@ -1712,30 +1714,30 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "libapk@3.0.6-r0",
+          "ID": "libapk@3.0.8-r0",
           "Name": "libapk",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/libapk@3.0.6-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "843500ddf1c91d19"
+            "PURL": "pkg:apk/alpine/libapk@3.0.8-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "fb5e89a1747d84c2"
           },
-          "Version": "3.0.6-r0",
+          "Version": "3.0.8-r0",
           "Arch": "x86_64",
           "SrcName": "apk-tools",
-          "SrcVersion": "3.0.6-r0",
+          "SrcVersion": "3.0.8-r0",
           "Licenses": [
             "GPL-2.0-only"
           ],
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "DependsOn": [
-            "libcrypto3@3.5.7-r0",
-            "libssl3@3.5.7-r0",
+            "libcrypto3@3.5.8-r0",
+            "libssl3@3.5.8-r0",
             "musl@1.2.5-r23",
             "zlib@1.3.2-r0"
           ],
           "Layer": {
-            "DiffID": "sha256:31ad4a471c6852bfec14d757cc75a566c82a9769f12c3918cf6bf52cc0eeb3d0"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:f064c8318c4f7f17da6a490921ce0d5e709fc063",
+          "Digest": "sha1:2913286d1d02641d392289ba525850be6856df11",
           "InstalledFiles": [
             "usr/lib/libapk.so.3.0.0"
           ],
@@ -1827,16 +1829,16 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "libcrypto3@3.5.7-r0",
+          "ID": "libcrypto3@3.5.8-r0",
           "Name": "libcrypto3",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/libcrypto3@3.5.7-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "6154ae3cc122c0b8"
+            "PURL": "pkg:apk/alpine/libcrypto3@3.5.8-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "6f720d761ae51746"
           },
-          "Version": "3.5.7-r0",
+          "Version": "3.5.8-r0",
           "Arch": "x86_64",
           "SrcName": "openssl",
-          "SrcVersion": "3.5.7-r0",
+          "SrcVersion": "3.5.8-r0",
           "Licenses": [
             "Apache-2.0"
           ],
@@ -1845,9 +1847,9 @@
             "musl@1.2.5-r23"
           ],
           "Layer": {
-            "DiffID": "sha256:31ad4a471c6852bfec14d757cc75a566c82a9769f12c3918cf6bf52cc0eeb3d0"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:2b46c87dd1bb8fc2bf5518616ddc5ca28870f828",
+          "Digest": "sha1:c5d20a5036bd12c5130652879054be658429c1d5",
           "InstalledFiles": [
             "etc/ssl/ct_log_list.cnf",
             "etc/ssl/ct_log_list.cnf.dist",
@@ -1863,16 +1865,16 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "libexpat@2.8.1-r0",
+          "ID": "libexpat@2.8.4-r0",
           "Name": "libexpat",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/libexpat@2.8.1-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "937779c088749efc"
+            "PURL": "pkg:apk/alpine/libexpat@2.8.4-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "51a3d1625fce6c46"
           },
-          "Version": "2.8.1-r0",
+          "Version": "2.8.4-r0",
           "Arch": "x86_64",
           "SrcName": "expat",
-          "SrcVersion": "2.8.1-r0",
+          "SrcVersion": "2.8.4-r0",
           "Licenses": [
             "MIT"
           ],
@@ -1881,12 +1883,12 @@
             "musl@1.2.5-r23"
           ],
           "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:cd9253f45e3c299b3750038b784e2960567cfc4e",
+          "Digest": "sha1:210a2cb0f4e47680c45eafd7d5902e9003640e1f",
           "InstalledFiles": [
             "usr/lib/libexpat.so.1",
-            "usr/lib/libexpat.so.1.12.1"
+            "usr/lib/libexpat.so.1.12.4"
           ],
           "AnalyzedBy": "apk"
         },
@@ -2101,7 +2103,7 @@
           "Name": "libldap",
           "Identifier": {
             "PURL": "pkg:apk/alpine/libldap@2.6.13-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "5cee83c6dbb2719"
+            "UID": "cd1c51792d9c3ce5"
           },
           "Version": "2.6.13-r0",
           "Arch": "x86_64",
@@ -2112,9 +2114,9 @@
           ],
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "DependsOn": [
-            "libcrypto3@3.5.7-r0",
+            "libcrypto3@3.5.8-r0",
             "libsasl@2.1.28-r9",
-            "libssl3@3.5.7-r0",
+            "libssl3@3.5.8-r0",
             "musl@1.2.5-r23"
           ],
           "Layer": {
@@ -2228,28 +2230,28 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "libssl3@3.5.7-r0",
+          "ID": "libssl3@3.5.8-r0",
           "Name": "libssl3",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/libssl3@3.5.7-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "f1aee6071ea99047"
+            "PURL": "pkg:apk/alpine/libssl3@3.5.8-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "1aafb9a42f29e87a"
           },
-          "Version": "3.5.7-r0",
+          "Version": "3.5.8-r0",
           "Arch": "x86_64",
           "SrcName": "openssl",
-          "SrcVersion": "3.5.7-r0",
+          "SrcVersion": "3.5.8-r0",
           "Licenses": [
             "Apache-2.0"
           ],
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "DependsOn": [
-            "libcrypto3@3.5.7-r0",
+            "libcrypto3@3.5.8-r0",
             "musl@1.2.5-r23"
           ],
           "Layer": {
-            "DiffID": "sha256:31ad4a471c6852bfec14d757cc75a566c82a9769f12c3918cf6bf52cc0eeb3d0"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:3d2a94cb6df45e919a7d0fc7bf2fe4d1b973ab52",
+          "Digest": "sha1:07184887491e0feffa57184419b1387450047bb9",
           "InstalledFiles": [
             "usr/lib/libssl.so.3"
           ],
@@ -2317,7 +2319,7 @@
           "Name": "mkfontscale",
           "Identifier": {
             "PURL": "pkg:apk/alpine/mkfontscale@1.2.3-r1?arch=x86_64\u0026distro=3.23.5",
-            "UID": "dc8db28836dd0ca2"
+            "UID": "2b79c311b8870c69"
           },
           "Version": "1.2.3-r1",
           "Arch": "x86_64",
@@ -2329,7 +2331,7 @@
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "DependsOn": [
             "busybox-binsh@1.37.0-r30",
-            "freetype@2.14.1-r0",
+            "freetype@2.14.3-r0",
             "libfontenc@1.1.8-r0",
             "musl@1.2.5-r23",
             "zlib@1.3.2-r0"
@@ -2612,45 +2614,45 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "openssl@3.5.7-r0",
+          "ID": "openssl@3.5.8-r0",
           "Name": "openssl",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/openssl@3.5.7-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "ad9335f519120b94"
+            "PURL": "pkg:apk/alpine/openssl@3.5.8-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "4eb5a41d371ee2a0"
           },
-          "Version": "3.5.7-r0",
+          "Version": "3.5.8-r0",
           "Arch": "x86_64",
           "SrcName": "openssl",
-          "SrcVersion": "3.5.7-r0",
+          "SrcVersion": "3.5.8-r0",
           "Licenses": [
             "Apache-2.0"
           ],
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "DependsOn": [
-            "libcrypto3@3.5.7-r0",
-            "libssl3@3.5.7-r0",
+            "libcrypto3@3.5.8-r0",
+            "libssl3@3.5.8-r0",
             "musl@1.2.5-r23"
           ],
           "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:2c44c8aecc93d3f72ee8e4bcb6a9980d69690379",
+          "Digest": "sha1:d834dba2be2923416ed372371e545610c49d679f",
           "InstalledFiles": [
             "usr/bin/openssl"
           ],
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "p11-kit@0.25.5-r2",
+          "ID": "p11-kit@0.26.2-r0",
           "Name": "p11-kit",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/p11-kit@0.25.5-r2?arch=x86_64\u0026distro=3.23.5",
-            "UID": "a37e699e84a4d85b"
+            "PURL": "pkg:apk/alpine/p11-kit@0.26.2-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "e24da90c96c3e2d2"
           },
-          "Version": "0.25.5-r2",
+          "Version": "0.26.2-r0",
           "Arch": "x86_64",
           "SrcName": "p11-kit",
-          "SrcVersion": "0.25.5-r2",
+          "SrcVersion": "0.26.2-r0",
           "Licenses": [
             "BSD-3-Clause"
           ],
@@ -2661,30 +2663,30 @@
             "musl@1.2.5-r23"
           ],
           "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:b03c9c498fc8b875d694659827c39e791b0dce51",
+          "Digest": "sha1:683edfbab6c9d2f63312dd1dfa602dacb6195f78",
           "InstalledFiles": [
             "etc/pkcs11/pkcs11.conf.example",
             "usr/bin/p11-kit",
             "usr/lib/libp11-kit.so.0",
-            "usr/lib/libp11-kit.so.0.4.1",
+            "usr/lib/libp11-kit.so.0.4.8",
             "usr/libexec/p11-kit/p11-kit-remote",
             "usr/libexec/p11-kit/trust-extract-compat"
           ],
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "p11-kit-trust@0.25.5-r2",
+          "ID": "p11-kit-trust@0.26.2-r0",
           "Name": "p11-kit-trust",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/p11-kit-trust@0.25.5-r2?arch=x86_64\u0026distro=3.23.5",
-            "UID": "47b284956b81b70b"
+            "PURL": "pkg:apk/alpine/p11-kit-trust@0.26.2-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "f8876153c84efc17"
           },
-          "Version": "0.25.5-r2",
+          "Version": "0.26.2-r0",
           "Arch": "x86_64",
           "SrcName": "p11-kit",
-          "SrcVersion": "0.25.5-r2",
+          "SrcVersion": "0.26.2-r0",
           "Licenses": [
             "BSD-3-Clause"
           ],
@@ -2692,12 +2694,12 @@
           "DependsOn": [
             "libtasn1@4.21.0-r0",
             "musl@1.2.5-r23",
-            "p11-kit@0.25.5-r2"
+            "p11-kit@0.26.2-r0"
           ],
           "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:566b28378ea154f29cc0c26050403949573a7cd1",
+          "Digest": "sha1:a6ce88d56687e1af3bea92de7d9e3f63495f6817",
           "InstalledFiles": [
             "usr/bin/trust",
             "usr/lib/pkcs11/p11-kit-trust.so",
@@ -2792,16 +2794,16 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "sqlite-libs@3.51.2-r0",
+          "ID": "sqlite-libs@3.53.4-r0",
           "Name": "sqlite-libs",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/sqlite-libs@3.51.2-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "c9d4561699315154"
+            "PURL": "pkg:apk/alpine/sqlite-libs@3.53.4-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "1c93b81967bde91a"
           },
-          "Version": "3.51.2-r0",
+          "Version": "3.53.4-r0",
           "Arch": "x86_64",
           "SrcName": "sqlite",
-          "SrcVersion": "3.51.2-r0",
+          "SrcVersion": "3.53.4-r0",
           "Licenses": [
             "blessing"
           ],
@@ -2810,12 +2812,12 @@
             "musl@1.2.5-r23"
           ],
           "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:8a0cec5c2bed73f54151897852ecf7c748d0ddea",
+          "Digest": "sha1:dd3310a9307ae01dabb0018770bf7b2968eff199",
           "InstalledFiles": [
             "usr/lib/libsqlite3.so.0",
-            "usr/lib/libsqlite3.so.3.51.2"
+            "usr/lib/libsqlite3.so.3.53.4"
           ],
           "AnalyzedBy": "apk"
         },
@@ -2824,7 +2826,7 @@
           "Name": "ssl_client",
           "Identifier": {
             "PURL": "pkg:apk/alpine/ssl_client@1.37.0-r30?arch=x86_64\u0026distro=3.23.5",
-            "UID": "b95632d8ece05f0c"
+            "UID": "92299c558ff421b3"
           },
           "Version": "1.37.0-r30",
           "Arch": "x86_64",
@@ -2835,8 +2837,8 @@
           ],
           "Maintainer": "Sören Tempel \u003csoeren+alpine@soeren-tempel.net\u003e",
           "DependsOn": [
-            "libcrypto3@3.5.7-r0",
-            "libssl3@3.5.7-r0",
+            "libcrypto3@3.5.8-r0",
+            "libssl3@3.5.8-r0",
             "musl@1.2.5-r23"
           ],
           "Layer": {
@@ -2849,24 +2851,24 @@
           "AnalyzedBy": "apk"
         },
         {
-          "ID": "tzdata@2026b-r0",
+          "ID": "tzdata@2026d-r0",
           "Name": "tzdata",
           "Identifier": {
-            "PURL": "pkg:apk/alpine/tzdata@2026b-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "86f2dfb9a4acee39"
+            "PURL": "pkg:apk/alpine/tzdata@2026d-r0?arch=x86_64\u0026distro=3.23.5",
+            "UID": "2273547e990b1e0d"
           },
-          "Version": "2026b-r0",
+          "Version": "2026d-r0",
           "Arch": "x86_64",
           "SrcName": "tzdata",
-          "SrcVersion": "2026b-r0",
+          "SrcVersion": "2026d-r0",
           "Licenses": [
             "Public-Domain"
           ],
           "Maintainer": "Natanael Copa \u003cncopa@alpinelinux.org\u003e",
           "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
+            "DiffID": "sha256:0d6d50571010bf3be706d0ac7e1e524fed7f85e91ce07dbcc3788defb1ce358a"
           },
-          "Digest": "sha1:2624b59cfb8182dfb3de19043c6867cd1b3e1779",
+          "Digest": "sha1:8158b502b500e84d07b45447a7baa121067868ba",
           "InstalledFiles": [
             "usr/share/zoneinfo/CET",
             "usr/share/zoneinfo/CST6CDT",
@@ -3560,720 +3562,6 @@
           ],
           "AnalyzedBy": "apk"
         }
-      ],
-      "Vulnerabilities": [
-        {
-          "VulnerabilityID": "CVE-2026-14456",
-          "PkgID": "libcrypto3@3.5.7-r0",
-          "PkgName": "libcrypto3",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/libcrypto3@3.5.7-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "6154ae3cc122c0b8"
-          },
-          "InstalledVersion": "3.5.7-r0",
-          "FixedVersion": "3.5.8-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:31ad4a471c6852bfec14d757cc75a566c82a9769f12c3918cf6bf52cc0eeb3d0"
-          },
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-14456",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:2986585e8cd41380d0bdac63536f8e3c02f07f9e3d4ec48e3b1b8b2f461ddc4d",
-          "Title": "openssl: OpenSSL: Denial of Service via unbounded memory growth in QUIC server",
-          "Description": "Issue summary: When an OpenSSL QUIC server (Listener SSL object) processes\nvalid QUIC Initial packets for unknown destination connection IDs, it\ncan allocate and queue new incoming channels without enforcing any limit.\n\nImpact summary: A remote peer that can make many Initial packets reach the\nserver listener faster than the application accepts connections, can cause the\nmemory allocated to store the per-channel state to grow without any limits,\npotentially making the QUIC listener unavailable and causing Denial of Service.\n\nCWE: CWE-770: Allocation of Resources Without Limits or Throttling\n\nDescription: The function that handles inbound QUIC packets uses\nConnection-Id from the packet header to find an existing connection\n(QUIC channel). If no existing connection is found and the packet\ntype is INITIAL, the function treats the packet as a new connection. It\nallocates a new channel object and inserts it into a queue where it\nwaits to be accepted by the local application with SSL_accept(3ossl).\nThe memory occupied by these initial channel objects may grow\nwithout bounds if the application is not able to call SSL_accept()\nfrequently enough to serve these inbound connection requests.\n\nThe issue is present since OpenSSL 3.5 when the QUIC server implementation\nwas added.\n\nThe fix introduces a limit for pending connections. The default limit is set\nto 256 pending connections (waiting to be accepted by the local application).\nApplications may change the default by calling SSL_set_value_uint(3ossl).\n\nFIPS impact: no\nThe FIPS module is not affected as the QUIC implementation is outside of\nthe OpenSSL FIPS module boundary.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-770"
-          ],
-          "VendorSeverity": {
-            "alma": 3,
-            "amazon": 3,
-            "oracle-oval": 3,
-            "photon": 3,
-            "redhat": 3,
-            "rocky": 3,
-            "ubuntu": 2
-          },
-          "CVSS": {
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-              "V3Score": 7.5
-            }
-          },
-          "References": [
-            "http://www.openwall.com/lists/oss-security/2026/08/13/4",
-            "https://access.redhat.com/errata/RHSA-2026:67154",
-            "https://access.redhat.com/errata/RHSA-2026:67165",
-            "https://access.redhat.com/security/cve/CVE-2026-14456",
-            "https://bugzilla.redhat.com/2515348",
-            "https://bugzilla.redhat.com/2517559",
-            "https://bugzilla.redhat.com/2517560",
-            "https://bugzilla.redhat.com/2517561",
-            "https://bugzilla.redhat.com/2517562",
-            "https://bugzilla.redhat.com/2517564",
-            "https://bugzilla.redhat.com/2517565",
-            "https://bugzilla.redhat.com/2517566",
-            "https://bugzilla.redhat.com/2517570",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2515348",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517559",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517560",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517561",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517562",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517564",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517565",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517566",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517570",
-            "https://creativecommons.org/licenses/by/4.0/",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-14456",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-14457",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-18798",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-54874",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63072",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63073",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63074",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63075",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63076",
-            "https://errata.almalinux.org/10/ALSA-2026-67154.html",
-            "https://errata.rockylinux.org/RLSA-2026:67165",
-            "https://github.com/openssl/openssl/commit/08e7756c3900bcfd77a720e7b74e27d6e4ed01a9",
-            "https://github.com/openssl/openssl/commit/4084152e040329ca0194c4c1750b9b46d00a5b6b",
-            "https://github.com/openssl/openssl/commit/f2f1465f2d2e5c61dfeac4d20fd093797d821139",
-            "https://linux.oracle.com/cve/CVE-2026-14456.html",
-            "https://linux.oracle.com/errata/ELSA-2026-67165-0.html",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-14456",
-            "https://openssl-library.org/news/secadv/20260813.txt",
-            "https://ubuntu.com/security/notices/USN-8678-1",
-            "https://www.cve.org/CVERecord?id=CVE-2026-14456"
-          ],
-          "PublishedDate": "2026-08-13T15:19:31.82Z",
-          "LastModifiedDate": "2026-08-28T19:46:29.323Z"
-        },
-        {
-          "VulnerabilityID": "CVE-2026-66046",
-          "PkgID": "libexpat@2.8.1-r0",
-          "PkgName": "libexpat",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/libexpat@2.8.1-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "937779c088749efc"
-          },
-          "InstalledVersion": "2.8.1-r0",
-          "FixedVersion": "2.8.4-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
-          },
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-66046",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:ec79e2c549a35e837ad36af44d6801de9fc24b6c4e9dd714ee1f4d2d9a157307",
-          "Title": "expat: Expat: Denial of Service via quadratic complexity in attribute processing",
-          "Description": "Expat through 2.8.3 contains a denial of service vulnerability caused by quadratic algorithmic complexity in the storeAtts() function in xmlparse.c, where processing N specified attributes with non-normalized values triggers an O(N^2) linear scan of elementType-\u003edefaultAtts to determine CDATA status. A remote unauthenticated attacker can supply a single well-formed XML document of a few megabytes to an application parsing untrusted XML to cause excessive CPU consumption, resulting in denial of service without requiring authentication, external entity resolution, or non-default parser options.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-407"
-          ],
-          "VendorSeverity": {
-            "amazon": 3,
-            "azure": 3,
-            "redhat": 3,
-            "ubuntu": 2
-          },
-          "CVSS": {
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-              "V3Score": 7.5
-            }
-          },
-          "References": [
-            "https://access.redhat.com/security/cve/CVE-2026-66046",
-            "https://github.com/libexpat/libexpat/pull/1321",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-66046",
-            "https://www.cve.org/CVERecord?id=CVE-2026-66046",
-            "https://www.vulncheck.com/advisories/expat-denial-of-service-via-storeatts-quadratic-complexity"
-          ],
-          "PublishedDate": "2026-08-18T15:16:57Z",
-          "LastModifiedDate": "2026-09-18T15:07:24.37Z"
-        },
-        {
-          "VulnerabilityID": "CVE-2026-76956",
-          "PkgID": "libexpat@2.8.1-r0",
-          "PkgName": "libexpat",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/libexpat@2.8.1-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "937779c088749efc"
-          },
-          "InstalledVersion": "2.8.1-r0",
-          "FixedVersion": "2.8.4-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
-          },
-          "SeveritySource": "nvd",
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-76956",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:02cc4a7b06e1a65c50ab772192556118ad47782f5497873afc65005a2b68743d",
-          "Title": "libexpat: libexpat: Denial of Service via hash flooding attack with crafted XML",
-          "Description": "In libexpat 2.8.2 and 2.8.3 before 2.8.4, misinterpretation of getentropy's return code leads to insufficient entropy, which results in being vulnerable to hash flooding attacks, causing a denial of service via crafted XML content.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-394"
-          ],
-          "VendorSeverity": {
-            "azure": 2,
-            "nvd": 3,
-            "redhat": 2
-          },
-          "CVSS": {
-            "nvd": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-              "V3Score": 7.5
-            },
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
-              "V3Score": 5.9
-            }
-          },
-          "References": [
-            "https://access.redhat.com/security/cve/CVE-2026-76956",
-            "https://github.com/libexpat/libexpat/pull/1326",
-            "https://github.com/libexpat/libexpat/pull/1329",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-76956",
-            "https://www.cve.org/CVERecord?id=CVE-2026-76956"
-          ],
-          "PublishedDate": "2026-08-20T05:16:29.61Z",
-          "LastModifiedDate": "2026-09-08T21:08:20.697Z"
-        },
-        {
-          "VulnerabilityID": "CVE-2026-76957",
-          "PkgID": "libexpat@2.8.1-r0",
-          "PkgName": "libexpat",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/libexpat@2.8.1-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "937779c088749efc"
-          },
-          "InstalledVersion": "2.8.1-r0",
-          "FixedVersion": "2.8.4-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
-          },
-          "SeveritySource": "nvd",
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-76957",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:740df27a328ff1cca71fd4801cc31cca673db243be6e231a5b55d93fe107184e",
-          "Title": "libexpat: libexpat: Memory corruption vulnerability allows arbitrary code execution or denial of service",
-          "Description": "libexpat before 2.8.4 lacks handler call depth tracking with custom encoding callbacks. Thus, a use-after-free can occur. NOTE: this is similar to CVE-2026-50219, CVE-2026-56131 and CVE-2026-56412.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-416"
-          ],
-          "VendorSeverity": {
-            "amazon": 3,
-            "azure": 2,
-            "nvd": 3,
-            "redhat": 2,
-            "ubuntu": 2
-          },
-          "CVSS": {
-            "nvd": {
-              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
-              "V3Score": 7.8
-            },
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L",
-              "V3Score": 4.9
-            }
-          },
-          "References": [
-            "https://access.redhat.com/security/cve/CVE-2026-76957",
-            "https://github.com/libexpat/libexpat/pull/1322",
-            "https://github.com/libexpat/libexpat/pull/1329",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-76957",
-            "https://www.cve.org/CVERecord?id=CVE-2026-76957"
-          ],
-          "PublishedDate": "2026-08-20T05:16:29.747Z",
-          "LastModifiedDate": "2026-09-08T20:56:31.86Z"
-        },
-        {
-          "VulnerabilityID": "CVE-2026-14456",
-          "PkgID": "libssl3@3.5.7-r0",
-          "PkgName": "libssl3",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/libssl3@3.5.7-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "f1aee6071ea99047"
-          },
-          "InstalledVersion": "3.5.7-r0",
-          "FixedVersion": "3.5.8-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:31ad4a471c6852bfec14d757cc75a566c82a9769f12c3918cf6bf52cc0eeb3d0"
-          },
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-14456",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:ba2850adcfb3ed004e8eb975a43214a452572115f5da3d1e89ad084947132699",
-          "Title": "openssl: OpenSSL: Denial of Service via unbounded memory growth in QUIC server",
-          "Description": "Issue summary: When an OpenSSL QUIC server (Listener SSL object) processes\nvalid QUIC Initial packets for unknown destination connection IDs, it\ncan allocate and queue new incoming channels without enforcing any limit.\n\nImpact summary: A remote peer that can make many Initial packets reach the\nserver listener faster than the application accepts connections, can cause the\nmemory allocated to store the per-channel state to grow without any limits,\npotentially making the QUIC listener unavailable and causing Denial of Service.\n\nCWE: CWE-770: Allocation of Resources Without Limits or Throttling\n\nDescription: The function that handles inbound QUIC packets uses\nConnection-Id from the packet header to find an existing connection\n(QUIC channel). If no existing connection is found and the packet\ntype is INITIAL, the function treats the packet as a new connection. It\nallocates a new channel object and inserts it into a queue where it\nwaits to be accepted by the local application with SSL_accept(3ossl).\nThe memory occupied by these initial channel objects may grow\nwithout bounds if the application is not able to call SSL_accept()\nfrequently enough to serve these inbound connection requests.\n\nThe issue is present since OpenSSL 3.5 when the QUIC server implementation\nwas added.\n\nThe fix introduces a limit for pending connections. The default limit is set\nto 256 pending connections (waiting to be accepted by the local application).\nApplications may change the default by calling SSL_set_value_uint(3ossl).\n\nFIPS impact: no\nThe FIPS module is not affected as the QUIC implementation is outside of\nthe OpenSSL FIPS module boundary.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-770"
-          ],
-          "VendorSeverity": {
-            "alma": 3,
-            "amazon": 3,
-            "oracle-oval": 3,
-            "photon": 3,
-            "redhat": 3,
-            "rocky": 3,
-            "ubuntu": 2
-          },
-          "CVSS": {
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-              "V3Score": 7.5
-            }
-          },
-          "References": [
-            "http://www.openwall.com/lists/oss-security/2026/08/13/4",
-            "https://access.redhat.com/errata/RHSA-2026:67154",
-            "https://access.redhat.com/errata/RHSA-2026:67165",
-            "https://access.redhat.com/security/cve/CVE-2026-14456",
-            "https://bugzilla.redhat.com/2515348",
-            "https://bugzilla.redhat.com/2517559",
-            "https://bugzilla.redhat.com/2517560",
-            "https://bugzilla.redhat.com/2517561",
-            "https://bugzilla.redhat.com/2517562",
-            "https://bugzilla.redhat.com/2517564",
-            "https://bugzilla.redhat.com/2517565",
-            "https://bugzilla.redhat.com/2517566",
-            "https://bugzilla.redhat.com/2517570",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2515348",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517559",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517560",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517561",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517562",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517564",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517565",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517566",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517570",
-            "https://creativecommons.org/licenses/by/4.0/",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-14456",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-14457",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-18798",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-54874",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63072",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63073",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63074",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63075",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63076",
-            "https://errata.almalinux.org/10/ALSA-2026-67154.html",
-            "https://errata.rockylinux.org/RLSA-2026:67165",
-            "https://github.com/openssl/openssl/commit/08e7756c3900bcfd77a720e7b74e27d6e4ed01a9",
-            "https://github.com/openssl/openssl/commit/4084152e040329ca0194c4c1750b9b46d00a5b6b",
-            "https://github.com/openssl/openssl/commit/f2f1465f2d2e5c61dfeac4d20fd093797d821139",
-            "https://linux.oracle.com/cve/CVE-2026-14456.html",
-            "https://linux.oracle.com/errata/ELSA-2026-67165-0.html",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-14456",
-            "https://openssl-library.org/news/secadv/20260813.txt",
-            "https://ubuntu.com/security/notices/USN-8678-1",
-            "https://www.cve.org/CVERecord?id=CVE-2026-14456"
-          ],
-          "PublishedDate": "2026-08-13T15:19:31.82Z",
-          "LastModifiedDate": "2026-08-28T19:46:29.323Z"
-        },
-        {
-          "VulnerabilityID": "CVE-2026-14456",
-          "PkgID": "openssl@3.5.7-r0",
-          "PkgName": "openssl",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/openssl@3.5.7-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "ad9335f519120b94"
-          },
-          "InstalledVersion": "3.5.7-r0",
-          "FixedVersion": "3.5.8-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
-          },
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-14456",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:5d4ffafcca9bb6a977ea02cabc04992768376c328b7fac7023a16e80d858f20c",
-          "Title": "openssl: OpenSSL: Denial of Service via unbounded memory growth in QUIC server",
-          "Description": "Issue summary: When an OpenSSL QUIC server (Listener SSL object) processes\nvalid QUIC Initial packets for unknown destination connection IDs, it\ncan allocate and queue new incoming channels without enforcing any limit.\n\nImpact summary: A remote peer that can make many Initial packets reach the\nserver listener faster than the application accepts connections, can cause the\nmemory allocated to store the per-channel state to grow without any limits,\npotentially making the QUIC listener unavailable and causing Denial of Service.\n\nCWE: CWE-770: Allocation of Resources Without Limits or Throttling\n\nDescription: The function that handles inbound QUIC packets uses\nConnection-Id from the packet header to find an existing connection\n(QUIC channel). If no existing connection is found and the packet\ntype is INITIAL, the function treats the packet as a new connection. It\nallocates a new channel object and inserts it into a queue where it\nwaits to be accepted by the local application with SSL_accept(3ossl).\nThe memory occupied by these initial channel objects may grow\nwithout bounds if the application is not able to call SSL_accept()\nfrequently enough to serve these inbound connection requests.\n\nThe issue is present since OpenSSL 3.5 when the QUIC server implementation\nwas added.\n\nThe fix introduces a limit for pending connections. The default limit is set\nto 256 pending connections (waiting to be accepted by the local application).\nApplications may change the default by calling SSL_set_value_uint(3ossl).\n\nFIPS impact: no\nThe FIPS module is not affected as the QUIC implementation is outside of\nthe OpenSSL FIPS module boundary.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-770"
-          ],
-          "VendorSeverity": {
-            "alma": 3,
-            "amazon": 3,
-            "oracle-oval": 3,
-            "photon": 3,
-            "redhat": 3,
-            "rocky": 3,
-            "ubuntu": 2
-          },
-          "CVSS": {
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-              "V3Score": 7.5
-            }
-          },
-          "References": [
-            "http://www.openwall.com/lists/oss-security/2026/08/13/4",
-            "https://access.redhat.com/errata/RHSA-2026:67154",
-            "https://access.redhat.com/errata/RHSA-2026:67165",
-            "https://access.redhat.com/security/cve/CVE-2026-14456",
-            "https://bugzilla.redhat.com/2515348",
-            "https://bugzilla.redhat.com/2517559",
-            "https://bugzilla.redhat.com/2517560",
-            "https://bugzilla.redhat.com/2517561",
-            "https://bugzilla.redhat.com/2517562",
-            "https://bugzilla.redhat.com/2517564",
-            "https://bugzilla.redhat.com/2517565",
-            "https://bugzilla.redhat.com/2517566",
-            "https://bugzilla.redhat.com/2517570",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2515348",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517559",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517560",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517561",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517562",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517564",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517565",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517566",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2517570",
-            "https://creativecommons.org/licenses/by/4.0/",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-14456",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-14457",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-18798",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-54874",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63072",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63073",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63074",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63075",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-63076",
-            "https://errata.almalinux.org/10/ALSA-2026-67154.html",
-            "https://errata.rockylinux.org/RLSA-2026:67165",
-            "https://github.com/openssl/openssl/commit/08e7756c3900bcfd77a720e7b74e27d6e4ed01a9",
-            "https://github.com/openssl/openssl/commit/4084152e040329ca0194c4c1750b9b46d00a5b6b",
-            "https://github.com/openssl/openssl/commit/f2f1465f2d2e5c61dfeac4d20fd093797d821139",
-            "https://linux.oracle.com/cve/CVE-2026-14456.html",
-            "https://linux.oracle.com/errata/ELSA-2026-67165-0.html",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-14456",
-            "https://openssl-library.org/news/secadv/20260813.txt",
-            "https://ubuntu.com/security/notices/USN-8678-1",
-            "https://www.cve.org/CVERecord?id=CVE-2026-14456"
-          ],
-          "PublishedDate": "2026-08-13T15:19:31.82Z",
-          "LastModifiedDate": "2026-08-28T19:46:29.323Z"
-        },
-        {
-          "VulnerabilityID": "CVE-2026-2100",
-          "PkgID": "p11-kit@0.25.5-r2",
-          "PkgName": "p11-kit",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/p11-kit@0.25.5-r2?arch=x86_64\u0026distro=3.23.5",
-            "UID": "a37e699e84a4d85b"
-          },
-          "InstalledVersion": "0.25.5-r2",
-          "FixedVersion": "0.26.2-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
-          },
-          "SeveritySource": "nvd",
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-2100",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:307f204f276706b0edfd194a112d98620d24c17fb0bd55909aac833a110c25fa",
-          "Title": "p11-kit: NULL dereference via C_DeriveKey with specific NULL parameters",
-          "Description": "A flaw was found in p11-kit. A remote attacker could exploit this vulnerability by calling the C_DeriveKey function on a remote token with specific IBM kyber or IBM btc derive mechanism parameters set to NULL. This could lead to the RPC-client attempting to return an uninitialized value, potentially resulting in a NULL dereference or undefined behavior. This issue may cause an application level denial of service or other unpredictable system states.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-824"
-          ],
-          "VendorSeverity": {
-            "alma": 2,
-            "nvd": 3,
-            "oracle-oval": 2,
-            "redhat": 2,
-            "rocky": 2
-          },
-          "CVSS": {
-            "nvd": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-              "V3Score": 7.5
-            },
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
-              "V3Score": 5.3
-            }
-          },
-          "References": [
-            "https://access.redhat.com/errata/RHSA-2026:18143",
-            "https://access.redhat.com/errata/RHSA-2026:18599",
-            "https://access.redhat.com/errata/RHSA-2026:21275",
-            "https://access.redhat.com/errata/RHSA-2026:22634",
-            "https://access.redhat.com/errata/RHSA-2026:27998",
-            "https://access.redhat.com/errata/RHSA-2026:58981",
-            "https://access.redhat.com/errata/RHSA-2026:7065",
-            "https://access.redhat.com/security/cve/CVE-2026-2100",
-            "https://bugzilla.redhat.com/2437308",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2437308",
-            "https://creativecommons.org/licenses/by/4.0/",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-2100",
-            "https://errata.almalinux.org/10/ALSA-2026-18143.html",
-            "https://errata.rockylinux.org/RLSA-2026:18599",
-            "https://github.com/p11-glue/p11-kit/pull/740",
-            "https://github.com/p11-glue/p11-kit/releases/tag/0.26.2",
-            "https://linux.oracle.com/cve/CVE-2026-2100.html",
-            "https://linux.oracle.com/errata/ELSA-2026-18599.html",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-2100",
-            "https://www.cve.org/CVERecord?id=CVE-2026-2100"
-          ],
-          "PublishedDate": "2026-03-26T21:17:04.247Z",
-          "LastModifiedDate": "2026-09-06T04:18:29.577Z"
-        },
-        {
-          "VulnerabilityID": "CVE-2026-2100",
-          "PkgID": "p11-kit-trust@0.25.5-r2",
-          "PkgName": "p11-kit-trust",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/p11-kit-trust@0.25.5-r2?arch=x86_64\u0026distro=3.23.5",
-            "UID": "47b284956b81b70b"
-          },
-          "InstalledVersion": "0.25.5-r2",
-          "FixedVersion": "0.26.2-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
-          },
-          "SeveritySource": "nvd",
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-2100",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:53ef6735e26e639e77c5522d0ec830836c60e15dac443b8ca6db2630c40bfc23",
-          "Title": "p11-kit: NULL dereference via C_DeriveKey with specific NULL parameters",
-          "Description": "A flaw was found in p11-kit. A remote attacker could exploit this vulnerability by calling the C_DeriveKey function on a remote token with specific IBM kyber or IBM btc derive mechanism parameters set to NULL. This could lead to the RPC-client attempting to return an uninitialized value, potentially resulting in a NULL dereference or undefined behavior. This issue may cause an application level denial of service or other unpredictable system states.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-824"
-          ],
-          "VendorSeverity": {
-            "alma": 2,
-            "nvd": 3,
-            "oracle-oval": 2,
-            "redhat": 2,
-            "rocky": 2
-          },
-          "CVSS": {
-            "nvd": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-              "V3Score": 7.5
-            },
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
-              "V3Score": 5.3
-            }
-          },
-          "References": [
-            "https://access.redhat.com/errata/RHSA-2026:18143",
-            "https://access.redhat.com/errata/RHSA-2026:18599",
-            "https://access.redhat.com/errata/RHSA-2026:21275",
-            "https://access.redhat.com/errata/RHSA-2026:22634",
-            "https://access.redhat.com/errata/RHSA-2026:27998",
-            "https://access.redhat.com/errata/RHSA-2026:58981",
-            "https://access.redhat.com/errata/RHSA-2026:7065",
-            "https://access.redhat.com/security/cve/CVE-2026-2100",
-            "https://bugzilla.redhat.com/2437308",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2437308",
-            "https://creativecommons.org/licenses/by/4.0/",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-2100",
-            "https://errata.almalinux.org/10/ALSA-2026-18143.html",
-            "https://errata.rockylinux.org/RLSA-2026:18599",
-            "https://github.com/p11-glue/p11-kit/pull/740",
-            "https://github.com/p11-glue/p11-kit/releases/tag/0.26.2",
-            "https://linux.oracle.com/cve/CVE-2026-2100.html",
-            "https://linux.oracle.com/errata/ELSA-2026-18599.html",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-2100",
-            "https://www.cve.org/CVERecord?id=CVE-2026-2100"
-          ],
-          "PublishedDate": "2026-03-26T21:17:04.247Z",
-          "LastModifiedDate": "2026-09-06T04:18:29.577Z"
-        },
-        {
-          "VulnerabilityID": "CVE-2026-11822",
-          "PkgID": "sqlite-libs@3.51.2-r0",
-          "PkgName": "sqlite-libs",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/sqlite-libs@3.51.2-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "c9d4561699315154"
-          },
-          "InstalledVersion": "3.51.2-r0",
-          "FixedVersion": "3.53.4-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
-          },
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-11822",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:47940305d7baeac2072f7e29e37731cf24bec96aea72a2947976422f8067de64",
-          "Title": "sqlite: SQLite: Arbitrary code execution via crafted FTS5 full-text search data",
-          "Description": "SQLite before 3.53.2 contains memory corruption vulnerabilities in the FTS5 full-text search extension that allow attackers to cause process crashes, memory exhaustion, or arbitrary code execution by supplying a crafted database with malformed FTS5 page data. Attackers can trigger an out-of-bounds read in fts5LeafSeek() via an attacker-controlled loop bound and a heap buffer overflow write in fts5ChunkIterate() through a crafted continuation page causing an integer underflow, exploitable when an FTS5 MATCH query is executed against the malicious database.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-122"
-          ],
-          "VendorSeverity": {
-            "alma": 3,
-            "amazon": 3,
-            "azure": 3,
-            "bitnami": 3,
-            "oracle-oval": 3,
-            "photon": 3,
-            "redhat": 3,
-            "rocky": 3,
-            "ubuntu": 2
-          },
-          "CVSS": {
-            "bitnami": {
-              "V40Vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
-              "V40Score": 8.5
-            },
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
-              "V3Score": 7.8
-            }
-          },
-          "References": [
-            "https://access.redhat.com/errata/RHSA-2026:58936",
-            "https://access.redhat.com/errata/RHSA-2026:61242",
-            "https://access.redhat.com/security/cve/CVE-2026-11822",
-            "https://bugzilla.redhat.com/2487258",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2487258",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2487269",
-            "https://creativecommons.org/licenses/by/4.0/",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-11822",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-11824",
-            "https://errata.almalinux.org/8/ALSA-2026-61242.html",
-            "https://errata.rockylinux.org/RLSA-2026:58936",
-            "https://linux.oracle.com/cve/CVE-2026-11822.html",
-            "https://linux.oracle.com/errata/ELSA-2026-61242-0.html",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-11822",
-            "https://sqlite.org/releaselog/3_53_2.html",
-            "https://sqlite.org/src/info/061febcf41ca",
-            "https://sqlite.org/src/info/4a5ad516ea93",
-            "https://ubuntu.com/security/notices/USN-8480-1",
-            "https://www.cve.org/CVERecord?id=CVE-2026-11822",
-            "https://www.vulncheck.com/advisories/sqlite-before-memory-corruption-in-fts5-extension"
-          ],
-          "PublishedDate": "2026-06-09T20:16:32.15Z",
-          "LastModifiedDate": "2026-07-23T09:10:00.113Z"
-        },
-        {
-          "VulnerabilityID": "CVE-2026-11824",
-          "PkgID": "sqlite-libs@3.51.2-r0",
-          "PkgName": "sqlite-libs",
-          "PkgIdentifier": {
-            "PURL": "pkg:apk/alpine/sqlite-libs@3.51.2-r0?arch=x86_64\u0026distro=3.23.5",
-            "UID": "c9d4561699315154"
-          },
-          "InstalledVersion": "3.51.2-r0",
-          "FixedVersion": "3.53.4-r0",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:751fe7c90841e5c1a9f465ef72cd52a86d5b6ebaa5cd2491cac866d856e12c07"
-          },
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-11824",
-          "DataSource": {
-            "ID": "alpine",
-            "Name": "Alpine Secdb",
-            "URL": "https://secdb.alpinelinux.org/"
-          },
-          "Fingerprint": "sha256:0474b4e0a506e788fc5a0e700707fa44ed6600b42d053ba41ea1caaa345ce699",
-          "Title": "sqlite: SQLite: Arbitrary code execution and crash via heap-based buffer overflow in FTS5",
-          "Description": "SQLite before 3.53.2 contains a heap-based buffer overflow vulnerability in the FTS5 full-text search extension that allows attackers to cause a crash or execute arbitrary code by supplying a crafted database with malicious continuation page metadata specifying a szLeaf value smaller than 4. Attackers can trigger an integer underflow in fts5ChunkIterate() causing an inflated remaining byte count during FTS5 MATCH query processing, leading to a heap buffer overflow of attacker-controlled data in applications compiled with SQLITE_ENABLE_FTS5.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-122"
-          ],
-          "VendorSeverity": {
-            "alma": 3,
-            "amazon": 3,
-            "azure": 3,
-            "bitnami": 3,
-            "oracle-oval": 3,
-            "photon": 3,
-            "redhat": 3,
-            "rocky": 3,
-            "ubuntu": 2
-          },
-          "CVSS": {
-            "bitnami": {
-              "V40Vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
-              "V40Score": 8.5
-            },
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
-              "V3Score": 7.8
-            }
-          },
-          "References": [
-            "https://access.redhat.com/errata/RHSA-2026:58936",
-            "https://access.redhat.com/errata/RHSA-2026:58938",
-            "https://access.redhat.com/security/cve/CVE-2026-11824",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2487258",
-            "https://bugzilla.redhat.com/show_bug.cgi?id=2487269",
-            "https://creativecommons.org/licenses/by/4.0/",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-11822",
-            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-11824",
-            "https://errata.almalinux.org/8/ALSA-2026-58938.html",
-            "https://errata.rockylinux.org/RLSA-2026:58936",
-            "https://linux.oracle.com/cve/CVE-2026-11824.html",
-            "https://linux.oracle.com/errata/ELSA-2026-58938.html",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-11824",
-            "https://sqlite.org/releaselog/3_53_2.html",
-            "https://sqlite.org/src/info/061febcf41ca",
-            "https://sqlite.org/src/info/4a5ad516ea93",
-            "https://ubuntu.com/security/notices/USN-8480-1",
-            "https://www.cve.org/CVERecord?id=CVE-2026-11824",
-            "https://www.vulncheck.com/advisories/sqlite-before-heap-buffer-overflow-via-fts5-fts5chunkiterate"
-          ],
-          "PublishedDate": "2026-06-09T20:16:32.3Z",
-          "LastModifiedDate": "2026-07-23T09:10:00.113Z"
-        }
       ]
     },
     {
@@ -4289,7 +3577,7 @@
           },
           "Version": "1.5.34",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/logback-classic-1.5.34.jar",
           "AnalyzedBy": "jar"
@@ -4302,7 +3590,7 @@
           },
           "Version": "1.5.34",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/logback-core-1.5.34.jar",
           "AnalyzedBy": "jar"
@@ -4315,7 +3603,7 @@
           },
           "Version": "2.21",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jackson-annotations-2.21.jar",
           "AnalyzedBy": "jar"
@@ -4328,7 +3616,7 @@
           },
           "Version": "2.21.4",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jackson-core-2.21.4.jar",
           "AnalyzedBy": "jar"
@@ -4341,7 +3629,7 @@
           },
           "Version": "2.21.4",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jackson-databind-2.21.4.jar",
           "AnalyzedBy": "jar"
@@ -4354,7 +3642,7 @@
           },
           "Version": "2.21.4",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jackson-datatype-jdk8-2.21.4.jar",
           "AnalyzedBy": "jar"
@@ -4367,7 +3655,7 @@
           },
           "Version": "2.21.4",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jackson-datatype-jsr310-2.21.4.jar",
           "AnalyzedBy": "jar"
@@ -4380,7 +3668,7 @@
           },
           "Version": "2.21.4",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jackson-module-parameter-names-2.21.4.jar",
           "AnalyzedBy": "jar"
@@ -4393,7 +3681,7 @@
           },
           "Version": "1.7.3",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/classmate-1.7.3.jar",
           "AnalyzedBy": "jar"
@@ -4406,7 +3694,7 @@
           },
           "Version": "2.9.0",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/json-path-2.9.0.jar",
           "AnalyzedBy": "jar"
@@ -4419,7 +3707,7 @@
           },
           "Version": "5.9",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/opencsv-5.9.jar",
           "AnalyzedBy": "jar"
@@ -4432,7 +3720,7 @@
           },
           "Version": "4.1.2",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/istack-commons-runtime-4.1.2.jar",
           "AnalyzedBy": "jar"
@@ -4445,7 +3733,7 @@
           },
           "Version": "6.3.3",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/HikariCP-6.3.3.jar",
           "AnalyzedBy": "jar"
@@ -4458,7 +3746,7 @@
           },
           "Version": "2.18.0",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/commons-io-2.18.0.jar",
           "AnalyzedBy": "jar"
@@ -4471,7 +3759,7 @@
           },
           "Version": "1.15.12",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/micrometer-commons-1.15.12.jar",
           "AnalyzedBy": "jar"
@@ -4484,7 +3772,7 @@
           },
           "Version": "1.15.12",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/micrometer-observation-1.15.12.jar",
           "AnalyzedBy": "jar"
@@ -4497,7 +3785,7 @@
           },
           "Version": "3.2.0",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jandex-3.2.0.jar",
           "AnalyzedBy": "jar"
@@ -4510,7 +3798,7 @@
           },
           "Version": "2.1.4",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jakarta.activation-api-2.1.4.jar",
           "AnalyzedBy": "jar"
@@ -4523,7 +3811,7 @@
           },
           "Version": "2.1.1",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jakarta.annotation-api-2.1.1.jar",
           "AnalyzedBy": "jar"
@@ -4536,7 +3824,7 @@
           },
           "Version": "2.0.1",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jakarta.inject-api-2.0.1.jar",
           "AnalyzedBy": "jar"
@@ -4549,7 +3837,7 @@
           },
           "Version": "3.1.0",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jakarta.persistence-api-3.1.0.jar",
           "AnalyzedBy": "jar"
@@ -4562,7 +3850,7 @@
           },
           "Version": "2.0.1",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jakarta.transaction-api-2.0.1.jar",
           "AnalyzedBy": "jar"
@@ -4575,7 +3863,7 @@
           },
           "Version": "4.0.5",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jakarta.xml.bind-api-4.0.5.jar",
           "AnalyzedBy": "jar"
@@ -4588,7 +3876,7 @@
           },
           "Version": "2.3.1",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jaxb-api-2.3.1.jar",
           "AnalyzedBy": "jar"
@@ -4601,7 +3889,7 @@
           },
           "Version": "1.17.8",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/byte-buddy-1.17.8.jar",
           "AnalyzedBy": "jar"
@@ -4614,7 +3902,7 @@
           },
           "Version": "2.5.2",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/accessors-smart-2.5.2.jar",
           "AnalyzedBy": "jar"
@@ -4627,7 +3915,7 @@
           },
           "Version": "2.5.2",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/json-smart-2.5.2.jar",
           "AnalyzedBy": "jar"
@@ -4640,7 +3928,7 @@
           },
           "Version": "4.13.2",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/antlr4-runtime-4.13.2.jar",
           "AnalyzedBy": "jar"
@@ -4653,7 +3941,7 @@
           },
           "Version": "4.4",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/commons-collections4-4.4.jar",
           "AnalyzedBy": "jar"
@@ -4666,7 +3954,7 @@
           },
           "Version": "3.17.0",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/commons-lang3-3.17.0.jar",
           "AnalyzedBy": "jar"
@@ -4679,7 +3967,7 @@
           },
           "Version": "1.13.0",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/commons-text-1.13.0.jar",
           "AnalyzedBy": "jar"
@@ -4692,7 +3980,7 @@
           },
           "Version": "2.24.3",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/log4j-api-2.24.3.jar",
           "AnalyzedBy": "jar"
@@ -4705,7 +3993,7 @@
           },
           "Version": "2.24.3",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/log4j-to-slf4j-2.24.3.jar",
           "AnalyzedBy": "jar"
@@ -4718,7 +4006,7 @@
           },
           "Version": "10.1.59",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/tomcat-embed-core-10.1.59.jar",
           "AnalyzedBy": "jar"
@@ -4731,7 +4019,7 @@
           },
           "Version": "10.1.59",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/tomcat-embed-el-10.1.59.jar",
           "AnalyzedBy": "jar"
@@ -4744,7 +4032,7 @@
           },
           "Version": "10.1.59",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/tomcat-embed-websocket-10.1.59.jar",
           "AnalyzedBy": "jar"
@@ -4757,7 +4045,7 @@
           },
           "Version": "1.9.25.1",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/aspectjweaver-1.9.25.1.jar",
           "AnalyzedBy": "jar"
@@ -4770,7 +4058,7 @@
           },
           "Version": "1.3",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/evo-inflector-1.3.jar",
           "AnalyzedBy": "jar"
@@ -4783,7 +4071,7 @@
           },
           "Version": "2.0.3",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/angus-activation-2.0.3.jar",
           "AnalyzedBy": "jar"
@@ -4796,7 +4084,7 @@
           },
           "Version": "4.0.9",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jaxb-core-4.0.9.jar",
           "AnalyzedBy": "jar"
@@ -4809,7 +4097,7 @@
           },
           "Version": "4.0.9",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jaxb-runtime-4.0.9.jar",
           "AnalyzedBy": "jar"
@@ -4822,7 +4110,7 @@
           },
           "Version": "4.0.9",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/txw2-4.0.9.jar",
           "AnalyzedBy": "jar"
@@ -4835,7 +4123,7 @@
           },
           "Version": "7.0.3.Final",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/hibernate-commons-annotations-7.0.3.Final.jar",
           "AnalyzedBy": "jar"
@@ -4848,7 +4136,7 @@
           },
           "Version": "6.6.53.Final",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/hibernate-core-6.6.53.Final.jar",
           "AnalyzedBy": "jar"
@@ -4861,7 +4149,7 @@
           },
           "Version": "3.6.3.Final",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jboss-logging-3.6.3.Final.jar",
           "AnalyzedBy": "jar"
@@ -4874,7 +4162,7 @@
           },
           "Version": "4.31.1",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/liquibase-core-4.31.1.jar",
           "AnalyzedBy": "jar"
@@ -4887,7 +4175,7 @@
           },
           "Version": "9.7.1",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/asm-9.7.1.jar",
           "AnalyzedBy": "jar"
@@ -4895,14 +4183,14 @@
         {
           "Name": "org.postgresql:postgresql",
           "Identifier": {
-            "PURL": "pkg:maven/org.postgresql/postgresql@42.7.11",
-            "UID": "5951a246152ab580"
+            "PURL": "pkg:maven/org.postgresql/postgresql@42.7.12",
+            "UID": "12e4587176190f77"
           },
-          "Version": "42.7.11",
+          "Version": "42.7.12",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
-          "FilePath": "app/microcrm.jar/BOOT-INF/lib/postgresql-42.7.11.jar",
+          "FilePath": "app/microcrm.jar/BOOT-INF/lib/postgresql-42.7.12.jar",
           "AnalyzedBy": "jar"
         },
         {
@@ -4913,7 +4201,7 @@
           },
           "Version": "2.0.18",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/jul-to-slf4j-2.0.18.jar",
           "AnalyzedBy": "jar"
@@ -4926,7 +4214,7 @@
           },
           "Version": "2.0.18",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/slf4j-api-2.0.18.jar",
           "AnalyzedBy": "jar"
@@ -4939,7 +4227,7 @@
           },
           "Version": "3.5.16",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-boot-3.5.16.jar",
           "AnalyzedBy": "jar"
@@ -4952,7 +4240,7 @@
           },
           "Version": "3.5.16",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-boot-autoconfigure-3.5.16.jar",
           "AnalyzedBy": "jar"
@@ -4965,7 +4253,7 @@
           },
           "Version": "3.5.16",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-boot-jarmode-tools-3.5.16.jar",
           "AnalyzedBy": "jar"
@@ -4978,7 +4266,7 @@
           },
           "Version": "3.5.13",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-data-commons-3.5.13.jar",
           "AnalyzedBy": "jar"
@@ -4991,7 +4279,7 @@
           },
           "Version": "3.5.13",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-data-jpa-3.5.13.jar",
           "AnalyzedBy": "jar"
@@ -5004,7 +4292,7 @@
           },
           "Version": "4.5.13",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-data-rest-core-4.5.13.jar",
           "AnalyzedBy": "jar"
@@ -5017,7 +4305,7 @@
           },
           "Version": "4.5.13",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-data-rest-webmvc-4.5.13.jar",
           "AnalyzedBy": "jar"
@@ -5030,7 +4318,7 @@
           },
           "Version": "2.5.3",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-hateoas-2.5.3.jar",
           "AnalyzedBy": "jar"
@@ -5043,7 +4331,7 @@
           },
           "Version": "3.0.0",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-plugin-core-3.0.0.jar",
           "AnalyzedBy": "jar"
@@ -5056,7 +4344,7 @@
           },
           "Version": "6.5.11",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-security-config-6.5.11.jar",
           "AnalyzedBy": "jar"
@@ -5069,7 +4357,7 @@
           },
           "Version": "6.5.11",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-security-core-6.5.11.jar",
           "AnalyzedBy": "jar"
@@ -5082,7 +4370,7 @@
           },
           "Version": "6.5.11",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-security-crypto-6.5.11.jar",
           "AnalyzedBy": "jar"
@@ -5095,7 +4383,7 @@
           },
           "Version": "6.5.11",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-security-web-6.5.11.jar",
           "AnalyzedBy": "jar"
@@ -5108,7 +4396,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-aop-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5121,7 +4409,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-aspects-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5134,7 +4422,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-beans-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5147,7 +4435,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-context-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5160,7 +4448,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-core-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5173,7 +4461,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-expression-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5186,7 +4474,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-jcl-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5199,7 +4487,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-jdbc-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5212,7 +4500,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-orm-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5225,7 +4513,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-tx-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5238,7 +4526,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-web-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5251,7 +4539,7 @@
           },
           "Version": "6.2.19",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-webmvc-6.2.19.jar",
           "AnalyzedBy": "jar"
@@ -5264,7 +4552,7 @@
           },
           "Version": "2.4",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/snakeyaml-2.4.jar",
           "AnalyzedBy": "jar"
@@ -5277,80 +4565,10 @@
           },
           "Version": "0.2.0",
           "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
+            "DiffID": "sha256:c0ba776e40598349ed97abbd0734560d577439ed0bc760ab46c2f9d930f16ba2"
           },
           "FilePath": "app/microcrm.jar/BOOT-INF/lib/spring-boot-data-fixtures-0.2.0.jar",
           "AnalyzedBy": "jar"
-        }
-      ],
-      "Vulnerabilities": [
-        {
-          "VulnerabilityID": "CVE-2026-54291",
-          "VendorIDs": [
-            "GHSA-j92g-9f8w-j867"
-          ],
-          "PkgName": "org.postgresql:postgresql",
-          "PkgPath": "app/microcrm.jar/BOOT-INF/lib/postgresql-42.7.11.jar",
-          "PkgIdentifier": {
-            "PURL": "pkg:maven/org.postgresql/postgresql@42.7.11",
-            "UID": "5951a246152ab580"
-          },
-          "InstalledVersion": "42.7.11",
-          "FixedVersion": "42.7.12",
-          "Status": "fixed",
-          "Layer": {
-            "DiffID": "sha256:49b2e55c601578fb7a20048cd2f4a52e102d93993f0bcb9982664f27eae128b9"
-          },
-          "SeveritySource": "ghsa",
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-54291",
-          "DataSource": {
-            "ID": "ghsa",
-            "Name": "GitHub Security Advisory Maven",
-            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Amaven"
-          },
-          "Fingerprint": "sha256:33045b53bba1dc25a4a6fd8a713ead782955c89a592eda6af7145a33e07308f2",
-          "Title": "org.postgresql/postgresql: com.ongres.scram/scram-client: pgjdbc: Man-in-the-middle protection bypass via SCRAM-SHA-256-PLUS downgrade",
-          "Description": "pgjdbc is an open source postgresql JDBC Driver. In releases 42.7.4 through 42.7.11, channelBinding=require connections can be silently downgraded from SCRAM-SHA-256-PLUS with channel binding to plain SCRAM-SHA-256 without it, losing the man-in-the-middle protection the setting is meant to guarantee. An attacker who can intercept the TLS connection can trigger the downgrade with a certificate whose signature algorithm has no tls-server-end-point channel-binding hash, because the bundled com.ongres.scram:scram-client returns an empty byte array instead of failing and pgJDBC ScramAuthenticator checks only that the server advertised a PLUS mechanism, without rejecting the empty binding or checking that the negotiated mechanism uses channel binding. This issue is fixed in version 42.7.12.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-636",
-            "CWE-757"
-          ],
-          "VendorSeverity": {
-            "bitnami": 3,
-            "ghsa": 3,
-            "nvd": 2,
-            "redhat": 2
-          },
-          "CVSS": {
-            "bitnami": {
-              "V40Vector": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:L/SA:N",
-              "V40Score": 8.2
-            },
-            "ghsa": {
-              "V40Vector": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:L/SA:N",
-              "V40Score": 8.2
-            },
-            "nvd": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
-              "V3Score": 5.9
-            },
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
-              "V3Score": 5.9
-            }
-          },
-          "References": [
-            "https://access.redhat.com/security/cve/CVE-2026-54291",
-            "https://github.com/ongres/scram/releases/tag/3.3",
-            "https://github.com/pgjdbc/pgjdbc",
-            "https://github.com/pgjdbc/pgjdbc/commit/77df98e4e66c12936ded3478a0954f6f580bad99",
-            "https://github.com/pgjdbc/pgjdbc/security/advisories/GHSA-j92g-9f8w-j867",
-            "https://nvd.nist.gov/vuln/detail/CVE-2026-54291",
-            "https://www.cve.org/CVERecord?id=CVE-2026-54291"
-          ],
-          "PublishedDate": "2026-07-06T19:17:08.407Z",
-          "LastModifiedDate": "2026-07-09T13:16:25.717Z"
         }
       ]
     }

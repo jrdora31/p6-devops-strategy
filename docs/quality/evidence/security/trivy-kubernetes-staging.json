@@ -3,8 +3,8 @@
   "Trivy": {
     "Version": "0.70.0"
   },
-  "ReportID": "01a0c482-a140-726d-a5d5-244c1350fbfd",
-  "CreatedAt": "2026-09-21T15:08:10.4321615Z",
+  "ReportID": "01a0c8c9-0570-7c6f-a24d-c160665b26fb",
+  "CreatedAt": "2026-09-22T11:03:32.4648178Z",
   "ArtifactName": "infrastructure/helm/microcrm",
   "ArtifactType": "filesystem",
   "Results": [

@@ -22,21 +22,15 @@ dépendances natif de GitLab. Les rapports HIGH/CRITICAL n'impliquent pas tous
 un blocage : celui-ci dépend du seuil `--exit-code 1` propre au contrôle.
 Les artefacts des jobs concernés sont conservés 30 jours.
 
-Les artefacts historiques du commit `dd5e87fd` sont archivés dans
+Les artefacts du commit corrigé `71f7d64` sont archivés dans
 [`evidence/security`](evidence/security/SECURITY_EVIDENCE_2026-09-22.md). Ils
-montrent 0 CRITICAL corrigible avec le filtre actuel et 0 secret, mais aussi
-65 occurrences HIGH représentant 46 identifiants distincts dans les trois
-rapports de vulnérabilités, ainsi que 3 constats IaC HIGH. La conclusion est
-donc « détection démontrée, correction partielle » pour cette pipeline ; une
-pipeline verte ne signifie pas l'absence de vulnérabilités HIGH puisque le
-seuil bloquant actuel porte sur les CRITICAL.
-
-Depuis ces artefacts, PostgreSQL JDBC a été corrigé en `42.7.12`, Angular a été
-migré en `20.3.31` et les images ont été reconstruites. Les tests et builds
-locaux passent. Un scan Trivy local retourne 0 HIGH/CRITICAL pour l'image
-backend et pour les paquets Alpine du frontend, mais 17 HIGH dans le binaire
-Caddy. Ces résultats devront être confirmés par les artefacts de la prochaine
-pipeline avant de remplacer l'état CI historique.
+montrent 0 secret, 0 HIGH/CRITICAL pour le dépôt et le backend, 16 occurrences
+HIGH représentant 15 identifiants dans le binaire Caddy, et 0 CRITICAL. Les
+trois constats IaC HIGH restent des décisions d'architecture du POC. Par
+rapport aux artefacts antérieurs, le total des trois rapports de
+vulnérabilités passe de 65 à 16 occurrences HIGH, soit une baisse de 75,4 %.
+La conclusion reste « détection démontrée, correction partielle » puisque les
+HIGH Caddy ne sont pas encore tous corrigés ou acceptés nominativement.
 
 ## Exception Trivy
 
