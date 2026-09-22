@@ -146,4 +146,22 @@ test:helm:
       --set-string registrySecret.passwordBase64=dG9rZW4=
       --set database.managedSecret.enabled=true
       --set-string database.managedSecret.passwordBase64=dGVzdA==
-      > /dev/null
+      --set monitoringAuth.managedSecret.enabled=true
+      --set-string monitoringAuth.managedSecret.passwordBase64=dGVzdA==
+      > /tmp/microcrm-managed-secrets.yaml
+    # Chaque document non vide doit rester une ressource Kubernetes complète.
+    # Ce contrôle détecte notamment un apiVersion absorbé par un commentaire.
+    - >-
+      awk '
+      function validate() {
+        if (content && (!api_version || !kind)) exit 1
+      }
+      /^---[[:space:]]*$/ {
+        validate(); content = api_version = kind = 0; next
+      }
+      /^[[:space:]]*(#|$)/ { next }
+      { content = 1 }
+      /^apiVersion:[[:space:]]/ { api_version = 1 }
+      /^kind:[[:space:]]/ { kind = 1 }
+      END { validate() }
+      ' /tmp/microcrm-managed-secrets.yaml
