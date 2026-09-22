@@ -189,7 +189,8 @@ Pour les versions suivantes :
 
 1. lancer `deploy:helm:production:canary` ;
 2. attendre le succès automatique de `verify:production:canary` ;
-3. observer la version répartie à 90 % stable / 10 % Canary ;
+3. [contrôler la répartition 90 % stable / 10 %
+   Canary](quality/testing.md#verifier-la-repartition-canary-9010) ;
 4. lancer `promote:helm:production:canary` pour passer la nouvelle version à
    100 %, ou `abort:helm:production:canary` pour conserver l'ancienne stable.
 
