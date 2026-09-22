@@ -146,6 +146,10 @@ production, ainsi que des contrôles Trivy
 L'envoi dépend de la configuration effective de `SLACK_WEBHOOK_URL` dans
 GitLab ; sans cette variable, les jobs passent la notification.
 
+La [capture des notifications Slack](../quality/evidence/slack_notifications_deploiement_rollback_15_16_09_26.png)
+montre des événements réels de déploiement, de Canary et de rollback, dont un
+succès de `rollback:helm:production:release` sur la pipeline `#2848029220`.
+
 ## Diagnostic rapide
 
 Depuis une session autorisée, contrôler d'abord les EC2 et les nœuds K3s :
