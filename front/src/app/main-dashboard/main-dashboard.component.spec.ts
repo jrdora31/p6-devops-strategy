@@ -37,6 +37,7 @@ describe('MainDashboardComponent', () => {
     fixture.detectChanges();
 
     const banner = fixture.nativeElement.querySelector('output');
+    expect(banner.textContent).toContain('DÉPLOIEMENT');
     expect(banner.textContent).toContain('PRODUCTION');
     expect(banner.textContent).toContain('CANARY');
     expect(banner.textContent).toContain('v1.4.0');

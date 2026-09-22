@@ -2,7 +2,8 @@
   class="notification is-light"
   [ngClass]="deployment.environment === 'production' ? 'is-info' : 'is-warning'"
 >
-  <strong>{{ deployment.environment | uppercase }}</strong>
+  <strong>DÉPLOIEMENT</strong>
+  · {{ deployment.environment | uppercase }}
   · {{ deployment.track | uppercase }}
   · {{ deployment.version }}
 </output>
