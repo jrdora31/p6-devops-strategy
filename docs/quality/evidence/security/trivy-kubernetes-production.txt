@@ -1,0 +1,28 @@
+
+Report Summary
+
+┌─────────────────────────────────────┬──────┬───────────────────┐
+│               Target                │ Type │ Misconfigurations │
+├─────────────────────────────────────┼──────┼───────────────────┤
+│ templates/backend-deployment.yaml   │ helm │         0         │
+├─────────────────────────────────────┼──────┼───────────────────┤
+│ templates/backend-service.yaml      │ helm │         0         │
+├─────────────────────────────────────┼──────┼───────────────────┤
+│ templates/configmap.yaml            │ helm │         0         │
+├─────────────────────────────────────┼──────┼───────────────────┤
+│ templates/database-service.yaml     │ helm │         0         │
+├─────────────────────────────────────┼──────┼───────────────────┤
+│ templates/database-statefulset.yaml │ helm │         0         │
+├─────────────────────────────────────┼──────┼───────────────────┤
+│ templates/frontend-deployment.yaml  │ helm │         0         │
+├─────────────────────────────────────┼──────┼───────────────────┤
+│ templates/frontend-service.yaml     │ helm │         0         │
+├─────────────────────────────────────┼──────┼───────────────────┤
+│ templates/ingress.yaml              │ helm │         0         │
+├─────────────────────────────────────┼──────┼───────────────────┤
+│ templates/networkpolicy.yaml        │ helm │         0         │
+└─────────────────────────────────────┴──────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+

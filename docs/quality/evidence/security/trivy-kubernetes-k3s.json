@@ -1,0 +1,93 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.70.0"
+  },
+  "ReportID": "01a0c482-9664-7313-acd3-d29dceafcf67",
+  "CreatedAt": "2026-09-21T15:08:07.652204Z",
+  "ArtifactName": "infrastructure/helm/microcrm",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "templates/backend-deployment.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 22,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "templates/backend-service.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 11,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "templates/configmap.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 11,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "templates/database-service.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 11,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "templates/database-statefulset.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 22,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "templates/frontend-deployment.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 22,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "templates/frontend-service.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 11,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "templates/ingress.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 10,
+        "Failures": 0
+      }
+    },
+    {
+      "Target": "templates/networkpolicy.yaml",
+      "Class": "config",
+      "Type": "helm",
+      "MisconfSummary": {
+        "Successes": 10,
+        "Failures": 0
+      }
+    }
+  ]
+}

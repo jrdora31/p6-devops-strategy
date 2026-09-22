@@ -1,0 +1,70 @@
+
+For OSS Maintainers: VEX Notice
+--------------------------------
+If you're an OSS maintainer and Trivy has detected vulnerabilities in your project that you believe are not actually exploitable, consider issuing a VEX (Vulnerability Exploitability eXchange) statement.
+VEX allows you to communicate the actual status of vulnerabilities in your project, improving security transparency and reducing false positives for your users.
+Learn more and start using VEX: https://trivy.dev/docs/v0.70/guide/supply-chain/vex/repo#publishing-vex-documents
+
+To disable this notice, set the TRIVY_DISABLE_VEX_NOTICE environment variable.
+
+
+registry.gitlab.com/project_6_group/microcrm/backend:dd5e87fd51ac041ae66b4a79c5473559238950fe (alpine 3.23.5)
+=============================================================================================================
+Total: 10 (HIGH: 10, CRITICAL: 0)
+
+┌───────────────┬────────────────┬──────────┬────────┬───────────────────┬───────────────┬──────────────────────────────────────────────────────────────┐
+│    Library    │ Vulnerability  │ Severity │ Status │ Installed Version │ Fixed Version │                            Title                             │
+├───────────────┼────────────────┼──────────┼────────┼───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ libcrypto3    │ CVE-2026-14456 │ HIGH     │ fixed  │ 3.5.7-r0          │ 3.5.8-r0      │ openssl: OpenSSL: Denial of Service via unbounded memory     │
+│               │                │          │        │                   │               │ growth in QUIC server...                                     │
+│               │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-14456                   │
+├───────────────┼────────────────┤          │        ├───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ libexpat      │ CVE-2026-66046 │          │        │ 2.8.1-r0          │ 2.8.4-r0      │ expat: Expat: Denial of Service via quadratic complexity in  │
+│               │                │          │        │                   │               │ attribute processing                                         │
+│               │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-66046                   │
+│               ├────────────────┤          │        │                   │               ├──────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-76956 │          │        │                   │               │ libexpat: libexpat: Denial of Service via hash flooding      │
+│               │                │          │        │                   │               │ attack with crafted XML...                                   │
+│               │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-76956                   │
+│               ├────────────────┤          │        │                   │               ├──────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-76957 │          │        │                   │               │ libexpat: libexpat: Memory corruption vulnerability allows   │
+│               │                │          │        │                   │               │ arbitrary code execution or denial of...                     │
+│               │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-76957                   │
+├───────────────┼────────────────┤          │        ├───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ libssl3       │ CVE-2026-14456 │          │        │ 3.5.7-r0          │ 3.5.8-r0      │ openssl: OpenSSL: Denial of Service via unbounded memory     │
+│               │                │          │        │                   │               │ growth in QUIC server...                                     │
+│               │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-14456                   │
+├───────────────┤                │          │        │                   │               │                                                              │
+│ openssl       │                │          │        │                   │               │                                                              │
+│               │                │          │        │                   │               │                                                              │
+│               │                │          │        │                   │               │                                                              │
+├───────────────┼────────────────┤          │        ├───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ p11-kit       │ CVE-2026-2100  │          │        │ 0.25.5-r2         │ 0.26.2-r0     │ p11-kit: NULL dereference via C_DeriveKey with specific NULL │
+│               │                │          │        │                   │               │ parameters                                                   │
+│               │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-2100                    │
+├───────────────┤                │          │        │                   │               │                                                              │
+│ p11-kit-trust │                │          │        │                   │               │                                                              │
+│               │                │          │        │                   │               │                                                              │
+│               │                │          │        │                   │               │                                                              │
+├───────────────┼────────────────┤          │        ├───────────────────┼───────────────┼──────────────────────────────────────────────────────────────┤
+│ sqlite-libs   │ CVE-2026-11822 │          │        │ 3.51.2-r0         │ 3.53.4-r0     │ sqlite: SQLite: Arbitrary code execution via crafted FTS5    │
+│               │                │          │        │                   │               │ full-text search data                                        │
+│               │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-11822                   │
+│               ├────────────────┤          │        │                   │               ├──────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-11824 │          │        │                   │               │ sqlite: SQLite: Arbitrary code execution and crash via       │
+│               │                │          │        │                   │               │ heap-based buffer overflow in...                             │
+│               │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-11824                   │
+└───────────────┴────────────────┴──────────┴────────┴───────────────────┴───────────────┴──────────────────────────────────────────────────────────────┘
+
+Java (jar)
+==========
+Total: 1 (HIGH: 1, CRITICAL: 0)
+
+┌──────────────────────────────────────────┬────────────────┬──────────┬────────┬───────────────────┬───────────────┬───────────────────────────────────────────────────────────┐
+│                 Library                  │ Vulnerability  │ Severity │ Status │ Installed Version │ Fixed Version │                           Title                           │
+├──────────────────────────────────────────┼────────────────┼──────────┼────────┼───────────────────┼───────────────┼───────────────────────────────────────────────────────────┤
+│ org.postgresql:postgresql (microcrm.jar) │ CVE-2026-54291 │ HIGH     │ fixed  │ 42.7.11           │ 42.7.12       │ org.postgresql/postgresql: com.ongres.scram/scram-client: │
+│                                          │                │          │        │                   │               │ pgjdbc: Man-in-the-middle protection bypass via           │
+│                                          │                │          │        │                   │               │ SCRAM-SHA-256-PLUS downgrade                              │
+│                                          │                │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-54291                │
+└──────────────────────────────────────────┴────────────────┴──────────┴────────┴───────────────────┴───────────────┴───────────────────────────────────────────────────────────┘

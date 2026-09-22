@@ -22,6 +22,22 @@ dépendances natif de GitLab. Les rapports HIGH/CRITICAL n'impliquent pas tous
 un blocage : celui-ci dépend du seuil `--exit-code 1` propre au contrôle.
 Les artefacts des jobs concernés sont conservés 30 jours.
 
+Les artefacts historiques du commit `dd5e87fd` sont archivés dans
+[`evidence/security`](evidence/security/SECURITY_EVIDENCE_2026-09-22.md). Ils
+montrent 0 CRITICAL corrigible avec le filtre actuel et 0 secret, mais aussi
+65 occurrences HIGH représentant 46 identifiants distincts dans les trois
+rapports de vulnérabilités, ainsi que 3 constats IaC HIGH. La conclusion est
+donc « détection démontrée, correction partielle » pour cette pipeline ; une
+pipeline verte ne signifie pas l'absence de vulnérabilités HIGH puisque le
+seuil bloquant actuel porte sur les CRITICAL.
+
+Depuis ces artefacts, PostgreSQL JDBC a été corrigé en `42.7.12`, Angular a été
+migré en `20.3.31` et les images ont été reconstruites. Les tests et builds
+locaux passent. Un scan Trivy local retourne 0 HIGH/CRITICAL pour l'image
+backend et pour les paquets Alpine du frontend, mais 17 HIGH dans le binaire
+Caddy. Ces résultats devront être confirmés par les artefacts de la prochaine
+pipeline avant de remplacer l'état CI historique.
+
 ## Exception Trivy
 
 Le frontend utilise `.trivyignore-frontend` pour `CVE-2026-56854`, liée à
@@ -29,6 +45,10 @@ l'image Caddy. L'exception expire le 31 décembre 2026. Le POC n'expose pas la
 fonction SSH concernée ; l'exception doit être retirée lorsqu'une image
 corrigée est disponible. L'option `--ignore-unfixed` filtre séparément les
 vulnérabilités sans correctif : ce n'est pas une exception nominative.
+
+La justification, le risque résiduel, les conditions de réexamen et la procédure
+de clôture sont consignés dans la
+[décision de risque CVE-2026-56854](evidence/security/CVE-2026-56854-decision.md).
 
 Pour traiter un signalement, ouvrir le job et son rapport, identifier le
 composant, la version et la sévérité, corriger ou justifier le cas précis,

@@ -1,0 +1,1186 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.70.0"
+  },
+  "ReportID": "01a0c482-69c5-74a7-ad49-f024a08fdec5",
+  "CreatedAt": "2026-09-21T15:07:56.2293074Z",
+  "ArtifactID": "sha256:9319859630aac911204bc1e4490568c9f166c024e91817d317c991693418a403",
+  "ArtifactName": ".",
+  "ArtifactType": "repository",
+  "Metadata": {
+    "RepoURL": "https://gitlab.com/project_6_group/microcrm.git",
+    "Commit": "dd5e87fd51ac041ae66b4a79c5473559238950fe",
+    "CommitMsg": "docs(architecture): replace Mermaid diagram with D2 and dashboard + getstarted + supervision",
+    "Author": "JR_Pro \u003cjordan.renoult33@gmail.com\u003e",
+    "Committer": "JR_Pro \u003cjordan.renoult33@gmail.com\u003e"
+  },
+  "Results": [
+    {
+      "Target": "front/package-lock.json",
+      "Class": "lang-pkgs",
+      "Type": "npm",
+      "Packages": [
+        {
+          "ID": "@angular/animations@17.3.8",
+          "Name": "@angular/animations",
+          "Identifier": {
+            "PURL": "pkg:npm/%40angular/animations@17.3.8",
+            "UID": "fad740d6dfbdcfb7"
+          },
+          "Version": "17.3.8",
+          "Relationship": "direct",
+          "DependsOn": [
+            "@angular/core@17.3.8",
+            "tslib@2.6.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 287,
+              "EndLine": 300
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@angular/common@17.3.8",
+          "Name": "@angular/common",
+          "Identifier": {
+            "PURL": "pkg:npm/%40angular/common@17.3.8",
+            "UID": "775b874fcac49530"
+          },
+          "Version": "17.3.8",
+          "Relationship": "direct",
+          "DependsOn": [
+            "@angular/core@17.3.8",
+            "rxjs@7.8.1",
+            "tslib@2.6.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 380,
+              "EndLine": 394
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@angular/compiler@17.3.8",
+          "Name": "@angular/compiler",
+          "Identifier": {
+            "PURL": "pkg:npm/%40angular/compiler@17.3.8",
+            "UID": "a2ae76fc78928fcd"
+          },
+          "Version": "17.3.8",
+          "Relationship": "direct",
+          "DependsOn": [
+            "@angular/core@17.3.8",
+            "tslib@2.6.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 395,
+              "EndLine": 413
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@angular/core@17.3.8",
+          "Name": "@angular/core",
+          "Identifier": {
+            "PURL": "pkg:npm/%40angular/core@17.3.8",
+            "UID": "ea0d301c1911bfad"
+          },
+          "Version": "17.3.8",
+          "Relationship": "direct",
+          "DependsOn": [
+            "rxjs@7.8.1",
+            "tslib@2.6.2",
+            "zone.js@0.14.5"
+          ],
+          "Locations": [
+            {
+              "StartLine": 487,
+              "EndLine": 501
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@angular/forms@17.3.8",
+          "Name": "@angular/forms",
+          "Identifier": {
+            "PURL": "pkg:npm/%40angular/forms@17.3.8",
+            "UID": "46e7611e40e6f066"
+          },
+          "Version": "17.3.8",
+          "Relationship": "direct",
+          "DependsOn": [
+            "@angular/common@17.3.8",
+            "@angular/core@17.3.8",
+            "@angular/platform-browser@17.3.8",
+            "rxjs@7.8.1",
+            "tslib@2.6.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 502,
+              "EndLine": 518
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@angular/platform-browser@17.3.8",
+          "Name": "@angular/platform-browser",
+          "Identifier": {
+            "PURL": "pkg:npm/%40angular/platform-browser@17.3.8",
+            "UID": "ad474626ef3486fb"
+          },
+          "Version": "17.3.8",
+          "Relationship": "direct",
+          "DependsOn": [
+            "@angular/animations@17.3.8",
+            "@angular/common@17.3.8",
+            "@angular/core@17.3.8",
+            "tslib@2.6.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 519,
+              "EndLine": 539
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@angular/platform-browser-dynamic@17.3.8",
+          "Name": "@angular/platform-browser-dynamic",
+          "Identifier": {
+            "PURL": "pkg:npm/%40angular/platform-browser-dynamic@17.3.8",
+            "UID": "fa562fcdc0f38c42"
+          },
+          "Version": "17.3.8",
+          "Relationship": "direct",
+          "DependsOn": [
+            "@angular/common@17.3.8",
+            "@angular/compiler@17.3.8",
+            "@angular/core@17.3.8",
+            "@angular/platform-browser@17.3.8",
+            "tslib@2.6.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 540,
+              "EndLine": 556
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@angular/router@17.3.8",
+          "Name": "@angular/router",
+          "Identifier": {
+            "PURL": "pkg:npm/%40angular/router@17.3.8",
+            "UID": "90477f32e7b930f7"
+          },
+          "Version": "17.3.8",
+          "Relationship": "direct",
+          "DependsOn": [
+            "@angular/common@17.3.8",
+            "@angular/core@17.3.8",
+            "@angular/platform-browser@17.3.8",
+            "rxjs@7.8.1",
+            "tslib@2.6.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 557,
+              "EndLine": 573
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "rxjs@7.8.1",
+          "Name": "rxjs",
+          "Identifier": {
+            "PURL": "pkg:npm/rxjs@7.8.1",
+            "UID": "75f8e6da7fcf52c9"
+          },
+          "Version": "7.8.1",
+          "Relationship": "direct",
+          "DependsOn": [
+            "tslib@2.6.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 10392,
+              "EndLine": 10399
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "tslib@2.6.2",
+          "Name": "tslib",
+          "Identifier": {
+            "PURL": "pkg:npm/tslib@2.6.2",
+            "UID": "7b0107530d70d6a"
+          },
+          "Version": "2.6.2",
+          "Relationship": "direct",
+          "Locations": [
+            {
+              "StartLine": 11521,
+              "EndLine": 11525
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "zone.js@0.14.5",
+          "Name": "zone.js",
+          "Identifier": {
+            "PURL": "pkg:npm/zone.js@0.14.5",
+            "UID": "ab9d3be905bd4865"
+          },
+          "Version": "0.14.5",
+          "Relationship": "direct",
+          "DependsOn": [
+            "tslib@2.6.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 12711,
+              "EndLine": 12718
+            }
+          ],
+          "AnalyzedBy": "npm"
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2025-66035",
+          "VendorIDs": [
+            "GHSA-58c5-g7wp-6w37"
+          ],
+          "PkgID": "@angular/common@17.3.8",
+          "PkgName": "@angular/common",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/common@17.3.8",
+            "UID": "775b874fcac49530"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "21.0.1, 20.3.14, 19.2.16",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-66035",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:2e012979af1b8d8439974e08fe44a181a49a07fafb9f022fa3d3fa4e4bc5e667",
+          "Title": "angular: Angular HTTP Client Has XSRF Token Leakage via Protocol-Relative URLs",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to versions 19.2.16, 20.3.14, and 21.0.1, there is a XSRF token leakage via protocol-relative URLs in angular HTTP clients. The vulnerability is a Credential Leak by App Logic that leads to the unauthorized disclosure of the Cross-Site Request Forgery (XSRF) token to an attacker-controlled domain. Angular's HttpClient has a built-in XSRF protection mechanism that works by checking if a request URL starts with a protocol (http:// or https://) to determine if it is cross-origin. If the URL starts with protocol-relative URL (//), it is incorrectly treated as a same-origin request, and the XSRF token is automatically added to the X-XSRF-TOKEN header. This issue has been patched in versions 19.2.16, 20.3.14, and 21.0.1. A workaround for this issue involves avoiding using protocol-relative URLs (URLs starting with //) in HttpClient requests. All backend communication URLs should be hardcoded as relative paths (starting with a single /) or fully qualified, trusted absolute URLs.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-201",
+            "CWE-359"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:N/SA:N",
+              "V40Score": 7.7
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:N",
+              "V3Score": 7.1
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2025-66035",
+            "https://cert-portal.siemens.com/productcert/html/ssa-253495.html",
+            "https://cert-portal.siemens.com/productcert/html/ssa-485750.html",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/0276479e7d0e280e0f8d26fa567d3b7aa97a516f",
+            "https://github.com/angular/angular/commit/05fe6686a97fa0bcd3cf157805b3612033f975bc",
+            "https://github.com/angular/angular/commit/3240d856d942727372a705252f7c8c115394a41e",
+            "https://github.com/angular/angular/releases/tag/19.2.16",
+            "https://github.com/angular/angular/releases/tag/20.3.14",
+            "https://github.com/angular/angular/releases/tag/21.0.1",
+            "https://github.com/angular/angular/security/advisories/GHSA-58c5-g7wp-6w37",
+            "https://nvd.nist.gov/vuln/detail/CVE-2025-66035",
+            "https://www.cve.org/CVERecord?id=CVE-2025-66035"
+          ],
+          "PublishedDate": "2025-11-26T23:15:49.55Z",
+          "LastModifiedDate": "2026-06-17T09:56:12.957Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-50170",
+          "VendorIDs": [
+            "GHSA-q6f4-qqrg-jv6x"
+          ],
+          "PkgID": "@angular/common@17.3.8",
+          "PkgName": "@angular/common",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/common@17.3.8",
+            "UID": "775b874fcac49530"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.0-rc.2, 20.3.22, 19.2.23, 21.2.15",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-50170",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:828222f23da407d721da4536ab38dea2903a9e7117a87c874fd52d2b1e6b2581",
+          "Title": "@angular/common: Information Leak via Default Caching of Credentialed Requests in HttpTransferCache",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 22.0.0-rc.2, 21.2.15, 20.3.22, and 19.2.23, a vulnerability was discovered in @angular/common when Server-Side Rendering (SSR) and hydration are enabled. The HttpTransferCache utility optimizes hydration by caching outgoing HTTP requests performed during SSR and transferring the cached state to the client-side application via TransferState. However, the caching mechanism fails to inspect the withCredentials flag or the Cookie header of outgoing requests. As a result, credentialed, user-specific responses may be cached by default in the shared TransferState payload. When these responses are serialized into the HTML, any caching layer (such as a CDN, reverse proxy, or shared server cache) that caches the SSR-rendered HTML page could inadvertently cache and leak one user's private data to other users, leading to a high-severity information disclosure vulnerability. This vulnerability is fixed in 22.0.0-rc.2, 21.2.15, 20.3.22, and 19.2.23.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-524"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 3
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+              "V3Score": 7.5,
+              "V40Score": 8.2
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+              "V3Score": 7.5
+            }
+          },
+          "References": [
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/pull/67964",
+            "https://github.com/angular/angular/security/advisories/GHSA-q6f4-qqrg-jv6x",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-50170"
+          ],
+          "PublishedDate": "2026-06-22T18:16:42.403Z",
+          "LastModifiedDate": "2026-07-09T15:31:59.043Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-50171",
+          "VendorIDs": [
+            "GHSA-p3vc-36g9-x9gr"
+          ],
+          "PkgID": "@angular/common@17.3.8",
+          "PkgName": "@angular/common",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/common@17.3.8",
+            "UID": "775b874fcac49530"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.0-rc.2, 20.3.22, 19.2.23, 21.2.15",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-50171",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:b900229a89eec8a1b9aab63a47cdd54690020ee7acd2fd3f4f0a6460039f8652",
+          "Title": "@angular/common: Angular @angular/common: Denial of Service via malformed digitsInfo parameter",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 22.0.0-rc.2, 21.2.15, 20.3.22, and 19.2.23, a Denial of Service (DoS) vulnerability exists in the @angular/common package of Angular. The formatNumber function, which is also utilized by DecimalPipe, PercentPipe, and CurrencyPipe, does not properly validate the upper bounds of the digitsInfo parameter. Specifically, the minimum and maximum fraction digits parsed from the digitsInfo string (e.g., 1.2-4) are converted to integers and used without limits. When parsing a maliciously crafted digitsInfo string with excessively large fraction digit values (e.g., 1.200000000-200000000), the internal roundNumber function attempts to pad the digits array to match the requested fraction size. This results in an unbounded loop that repeatedly pushes elements into an array.  This vulnerability is fixed in 22.0.0-rc.2, 21.2.15, 20.3.22, and 19.2.23.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-400",
+            "CWE-834"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+              "V3Score": 6.1,
+              "V40Score": 8.2
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 5.9
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-50171",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/pull/68840",
+            "https://github.com/angular/angular/security/advisories/GHSA-p3vc-36g9-x9gr",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-50171",
+            "https://www.cve.org/CVERecord?id=CVE-2026-50171"
+          ],
+          "PublishedDate": "2026-06-22T18:16:42.533Z",
+          "LastModifiedDate": "2026-07-09T15:41:41.163Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-54266",
+          "VendorIDs": [
+            "GHSA-39pv-4j6c-2g6v"
+          ],
+          "PkgID": "@angular/common@17.3.8",
+          "PkgName": "@angular/common",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/common@17.3.8",
+            "UID": "775b874fcac49530"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.1, 21.2.17, 20.3.25",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-54266",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:e74c573b9fcfd4267a3523be184c66923a711faf04cc68d9bedbf36d46189aa9",
+          "Title": "@angular/common: Weak 32-Bit Cache Key Hashing in `HttpTransferCache` Leading to Cross-Request Data Leakage and State Poisoning",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 22.0.1, 21.2.17, and 20.3.25, Angular's HttpTransferCache caches HTTP requests made during Server-Side Rendering (SSR) so that they can be reused during client-side hydration. This avoids repeating the same HTTP requests on the client. The cached responses are stored in TransferState using a cache key generated by hashing request properties (method, response type, mapped URL, serialized body, and sorted query parameters). The cache keys are generated using a weak 32-bit DJB2-like polynomial rolling hash. The 32-bit hash space is extremely small, allowing attackers to find hash collisions. An attacker can easily find a query parameter string (e.g., q=aaCAZMMM for a search request) that produces the exact same 32-bit hash as a sensitive endpoint (e.g., /api/user/profile). When a victim visits a crafted link containing the colliding parameter, the SSR process executes both the search request and the profile request. Due to the hash collision, the search response overwrites the profile response in the TransferState cache. This vulnerability is fixed in 22.0.1, 21.2.17, and 20.3.25.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-328",
+            "CWE-345"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:L/VA:N/SC:N/SI:N/SA:N",
+              "V3Score": 6.1,
+              "V40Score": 8.8
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            }
+          },
+          "References": [
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/5f36274da3f961430ae72865159afa02a1dd9133",
+            "https://github.com/angular/angular/pull/69153",
+            "https://github.com/angular/angular/security/advisories/GHSA-39pv-4j6c-2g6v",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-54266"
+          ],
+          "PublishedDate": "2026-06-22T16:16:39.313Z",
+          "LastModifiedDate": "2026-07-09T15:39:58.797Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-54268",
+          "VendorIDs": [
+            "GHSA-48r7-hpm6-gfxm"
+          ],
+          "PkgID": "@angular/common@17.3.8",
+          "PkgName": "@angular/common",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/common@17.3.8",
+            "UID": "775b874fcac49530"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.1, 21.2.17, 20.3.25",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-54268",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:9df815d6beb4e3f9f0449583bebcaf4863ebf47a2cda583a91d38d9f218f0cfe",
+          "Title": "@angular/common: Angular @angular/common: Denial of Service via crafted date format string",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 22.0.1, 21.2.17, and 20.3.25, a Denial of Service (DoS) vulnerability exists in the @angular/common package of the Angular framework. The formatDate function, which is also utilized by the standard Angular DatePipe, does not properly limit or validate the length of the format parameter. When parsing a maliciously crafted, excessively long date format string (e.g., a repeating pattern or very large string), the internal parser splits the string iteratively using a regular expression loop. This results in uncontrolled resource consumption (high CPU utilization and excessive memory allocations), leading to a Denial of Service (DoS). This vulnerability is fixed in 22.0.1, 21.2.17, and 20.3.25.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-400",
+            "CWE-1333"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 3,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+              "V3Score": 7.5,
+              "V40Score": 8.2
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+              "V3Score": 5.3
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-54268",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/eeb03f4ea310e2e51ba5d53a421ec7b418e186cd",
+            "https://github.com/angular/angular/pull/69197",
+            "https://github.com/angular/angular/security/advisories/GHSA-48r7-hpm6-gfxm",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-54268",
+            "https://www.cve.org/CVERecord?id=CVE-2026-54268"
+          ],
+          "PublishedDate": "2026-06-22T16:16:39.59Z",
+          "LastModifiedDate": "2026-07-09T15:39:41.96Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-68945",
+          "VendorIDs": [
+            "GHSA-jhpw-976m-542j"
+          ],
+          "PkgID": "@angular/common@17.3.8",
+          "PkgName": "@angular/common",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/common@17.3.8",
+            "UID": "775b874fcac49530"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.2, 21.2.19, 20.3.27",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-68945",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:98a2d23961f317839db68741c1075d8cc769f5e4e753df0f0b3f76508702b9d7",
+          "Title": "@angular/common: Angular: Cross-Request Response Reuse and State Poisoning in HttpTransferCache",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 20.3.27, 21.2.19, and 22.0.2, HttpTransferCache comma-joins repeated request parameters, allowing semantically distinct HttpClient requests to use the same transfer-cache key and reuse a wrong backend response. This issue is fixed in versions 20.3.27, 21.2.19, and 22.0.2.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-345"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2,
+            "redhat": 3
+          },
+          "CVSS": {
+            "ghsa": {
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:L/VA:N/SC:N/SI:N/SA:N",
+              "V40Score": 8.8
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N",
+              "V3Score": 8.2
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-68945",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/6867f77ec779a0a24f6339ad6c775f444202103c",
+            "https://github.com/angular/angular/commit/948a8d6831e8920b54663ec79421da95210e0e35",
+            "https://github.com/angular/angular/commit/a64e2883e9dc4abdac70209129be303de79e5b2b",
+            "https://github.com/angular/angular/commit/a6c7fc5c13e6e494a4c9bd8e773b8d4b2a99b20c",
+            "https://github.com/angular/angular/pull/68571",
+            "https://github.com/angular/angular/security/advisories/GHSA-jhpw-976m-542j",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-68945",
+            "https://www.cve.org/CVERecord?id=CVE-2026-68945"
+          ],
+          "PublishedDate": "2026-08-03T17:16:45.033Z",
+          "LastModifiedDate": "2026-08-11T18:13:35.95Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2025-66412",
+          "VendorIDs": [
+            "GHSA-v4hv-rgfq-gp49"
+          ],
+          "PkgID": "@angular/compiler@17.3.8",
+          "PkgName": "@angular/compiler",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/compiler@17.3.8",
+            "UID": "a2ae76fc78928fcd"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "21.0.2, 20.3.15, 19.2.17",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2025-66412",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:33c928da9388f56b67cdb68889721ffec9a7599b5cc21ad455f513f6e825ac1e",
+          "Title": "angular: Angular Stored XSS Vulnerability via SVG Animation, SVG URL and MathML Attributes",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 21.0.2, 20.3.15, and 19.2.17, A Stored Cross-Site Scripting (XSS) vulnerability has been identified in the Angular Template Compiler. It occurs because the compiler's internal security schema is incomplete, allowing attackers to bypass Angular's built-in security sanitization. Specifically, the schema fails to classify certain URL-holding attributes (e.g., those that could contain javascript: URLs) as requiring strict URL security, enabling the injection of malicious scripts. This vulnerability is fixed in 21.0.2, 20.3.15, and 19.2.17.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-79"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2,
+            "redhat": 3
+          },
+          "CVSS": {
+            "ghsa": {
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+              "V40Score": 8.5
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 5.4
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N",
+              "V3Score": 8.1
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2025-66412",
+            "https://cert-portal.siemens.com/productcert/html/ssa-253495.html",
+            "https://cert-portal.siemens.com/productcert/html/ssa-485750.html",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/1c6b0704fb63d051fab8acff84d076abfbc4893a",
+            "https://github.com/angular/angular/security/advisories/GHSA-v4hv-rgfq-gp49",
+            "https://nvd.nist.gov/vuln/detail/CVE-2025-66412",
+            "https://www.cve.org/CVERecord?id=CVE-2025-66412"
+          ],
+          "PublishedDate": "2025-12-01T23:15:53.89Z",
+          "LastModifiedDate": "2026-06-17T09:56:47.677Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-22610",
+          "VendorIDs": [
+            "GHSA-jrmj-c5cx-3cw6"
+          ],
+          "PkgID": "@angular/compiler@17.3.8",
+          "PkgName": "@angular/compiler",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/compiler@17.3.8",
+            "UID": "a2ae76fc78928fcd"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "21.1.0-rc.0, 21.0.7, 20.3.16, 19.2.18",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-22610",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:8a4f9a30d1afa64b92c4e6fdf4e05ef4ae405cfc434c05f117ec72577e73b4db",
+          "Title": "angular: Angular: Cross-site scripting vulnerability in Template Compiler",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to versions 19.2.18, 20.3.16, 21.0.7, and 21.1.0-rc.0, a cross-site scripting (XSS) vulnerability has been identified in the Angular Template Compiler. The vulnerability exists because Angular’s internal sanitization schema fails to recognize the href and xlink:href attributes of SVG \u003cscript\u003e elements as a Resource URL context. This issue has been patched in versions 19.2.18, 20.3.16, 21.0.7, and 21.1.0-rc.0.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-79"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+              "V40Score": 8.5
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:N",
+              "V3Score": 7.3
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-22610",
+            "https://cert-portal.siemens.com/productcert/html/ssa-253495.html",
+            "https://cert-portal.siemens.com/productcert/html/ssa-485750.html",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/91dc91bae4a1bbefc58bef6ef739d0e02ab44d56",
+            "https://github.com/angular/angular/pull/66318",
+            "https://github.com/angular/angular/security/advisories/GHSA-jrmj-c5cx-3cw6",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-22610",
+            "https://www.cve.org/CVERecord?id=CVE-2026-22610"
+          ],
+          "PublishedDate": "2026-01-10T04:16:01.517Z",
+          "LastModifiedDate": "2026-06-17T10:20:09.593Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-32635",
+          "VendorIDs": [
+            "GHSA-g93w-mfhg-p222"
+          ],
+          "PkgID": "@angular/compiler@17.3.8",
+          "PkgName": "@angular/compiler",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/compiler@17.3.8",
+            "UID": "a2ae76fc78928fcd"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.0-next.3, 21.2.4, 20.3.18, 19.2.20",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-32635",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:633b4fbcac26a294ff2024c5b3d1a651929388368973c02f0cf4dff0c372c4d0",
+          "Title": "@angular/core: @angular/compiler: Angular has XSS in i18n attribute bindings",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 22.0.0-next.3, 21.2.4, 20.3.18, and 19.2.20, a Cross-Site Scripting (XSS) vulnerability has been identified in the Angular runtime and compiler. It occurs when the application uses a security-sensitive attribute (for example href on an anchor tag) together with Angular's ability to internationalize attributes. Enabling internationalization for the sensitive attribute by adding i18n-\u003cattribute\u003e name bypasses Angular's built-in sanitization mechanism, which when combined with a data binding to untrusted user-generated data can allow an attacker to inject a malicious script. This vulnerability is fixed in 22.0.0-next.3, 21.2.4, 20.3.18, and 19.2.20.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-79"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 4,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+              "V3Score": 9.1,
+              "V40Score": 8.6
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H",
+              "V3Score": 9
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
+              "V3Score": 6.3
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-32635",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/224e60ecb1b90115baa702f1c06edc1d64d86187",
+            "https://github.com/angular/angular/commit/78dea55351fb305b33a919c43a6b363137eca166",
+            "https://github.com/angular/angular/commit/8630319f74c9575a21693d875cc7d5252516146d",
+            "https://github.com/angular/angular/commit/ed2d324f9cc12aab6cfa0569ef10b73243a62c65",
+            "https://github.com/angular/angular/pull/67541",
+            "https://github.com/angular/angular/pull/67561",
+            "https://github.com/angular/angular/security/advisories/GHSA-g93w-mfhg-p222",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-32635",
+            "https://www.cve.org/CVERecord?id=CVE-2026-32635"
+          ],
+          "PublishedDate": "2026-03-16T14:19:40.753Z",
+          "LastModifiedDate": "2026-06-17T10:36:08.51Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-69151",
+          "VendorIDs": [
+            "GHSA-jj27-h5hq-8x99"
+          ],
+          "PkgID": "@angular/compiler@17.3.8",
+          "PkgName": "@angular/compiler",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/compiler@17.3.8",
+            "UID": "a2ae76fc78928fcd"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.1, 21.2.19, 20.3.27",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-69151",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:851e83dd52671c016c8fdc8b5489f7889946a91e1e8788866706a25ce8a8bbd5",
+          "Title": "@angular/compiler: @angular/core: Angular: Cross-Site Scripting via internationalization event handlers",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 20.3.27, 21.2.19, and 22.0.1, the Angular compiler i18n pipeline permits i18n-onerror and other i18n-on event-handler attributes, allowing a lower-trust translation file to replace a static handler with executable JavaScript. This issue is fixed in versions 20.3.27, 21.2.19, and 22.0.1.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-79"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2,
+            "redhat": 3
+          },
+          "CVSS": {
+            "ghsa": {
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
+              "V40Score": 7.6
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N",
+              "V3Score": 8.1
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-69151",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/417a4071a776464d549509ed3aec121dbd2fda5e",
+            "https://github.com/angular/angular/commit/6c41f5ca01c0ae045fc7d929b72853a11eb55865",
+            "https://github.com/angular/angular/pull/68821",
+            "https://github.com/angular/angular/pull/69306",
+            "https://github.com/angular/angular/security/advisories/GHSA-jj27-h5hq-8x99",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-69151",
+            "https://www.cve.org/CVERecord?id=CVE-2026-69151"
+          ],
+          "PublishedDate": "2026-08-03T17:16:45.797Z",
+          "LastModifiedDate": "2026-08-11T18:19:30.66Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-22610",
+          "VendorIDs": [
+            "GHSA-jrmj-c5cx-3cw6"
+          ],
+          "PkgID": "@angular/core@17.3.8",
+          "PkgName": "@angular/core",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/core@17.3.8",
+            "UID": "ea0d301c1911bfad"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "21.1.0-rc.0, 21.0.7, 20.3.16, 19.2.18",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-22610",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:66f736f3c75fe90b854e9d3f7240855e730939b7a983559a777607282b627aed",
+          "Title": "angular: Angular: Cross-site scripting vulnerability in Template Compiler",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to versions 19.2.18, 20.3.16, 21.0.7, and 21.1.0-rc.0, a cross-site scripting (XSS) vulnerability has been identified in the Angular Template Compiler. The vulnerability exists because Angular’s internal sanitization schema fails to recognize the href and xlink:href attributes of SVG \u003cscript\u003e elements as a Resource URL context. This issue has been patched in versions 19.2.18, 20.3.16, 21.0.7, and 21.1.0-rc.0.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-79"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+              "V40Score": 8.5
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:N",
+              "V3Score": 7.3
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-22610",
+            "https://cert-portal.siemens.com/productcert/html/ssa-253495.html",
+            "https://cert-portal.siemens.com/productcert/html/ssa-485750.html",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/91dc91bae4a1bbefc58bef6ef739d0e02ab44d56",
+            "https://github.com/angular/angular/pull/66318",
+            "https://github.com/angular/angular/security/advisories/GHSA-jrmj-c5cx-3cw6",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-22610",
+            "https://www.cve.org/CVERecord?id=CVE-2026-22610"
+          ],
+          "PublishedDate": "2026-01-10T04:16:01.517Z",
+          "LastModifiedDate": "2026-06-17T10:20:09.593Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-27970",
+          "VendorIDs": [
+            "GHSA-prjf-86w9-mfqv"
+          ],
+          "PkgID": "@angular/core@17.3.8",
+          "PkgName": "@angular/core",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/core@17.3.8",
+            "UID": "ea0d301c1911bfad"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "21.2.0, 21.1.6, 20.3.17, 19.2.19",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-27970",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:be5ba52304930e8b574220734d114c4b733485e8c80cfe56f16f6f7ff9375a2c",
+          "Title": "@angular/core: Angular: Cross-site scripting via compromised translation files",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Versions prior to 21.2.0, 21.1.16, 20.3.17, and 19.2.19 have a cross-Site scripting vulnerability in the Angular internationalization (i18n) pipeline. In ICU messages (International Components for Unicode), HTML from translated content was not properly sanitized and could execute arbitrary JavaScript. Angular i18n typically involves three steps, extracting all messages from an application in the source language, sending the messages to be translated, and then merging their translations back into the final source code. Translations are frequently handled by contracts with specific partner companies, and involve sending the source messages to a separate contractor before receiving final translations for display to the end user. If the returned translations have malicious content, it could be rendered into the application and execute arbitrary JavaScript. When successfully exploited, this vulnerability allows for execution of attacker controlled JavaScript in the application origin. Depending on the nature of the application being exploited this could lead to credential exfiltration and/or page vandalism. Several preconditions apply to the attack. The attacker must compromise the translation file (xliff, xtb, etc.). Unlike most XSS vulnerabilities, this issue is not exploitable by arbitrary users. An attacker must first compromise an application's translation file before they can escalate privileges into the Angular application client. The victim application must use Angular i18n, use one or more ICU messages, render an ICU message, and not defend against XSS via a safe content security policy. Versions 21.2.0, 21.1.6, 20.3.17, and 19.2.19 patch the issue. Until the patch is applied, developers should consider reviewing and verifying translated content received from untrusted third parties before incorporating it in an Angular application, enabling strict CSP controls to block unauthorized JavaScript from executing on the page, and enabling Trusted Types to enforce proper HTML sanitization.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-79"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2,
+            "redhat": 3
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V40Vector": "CVSS:4.0/AV:L/AC:L/AT:N/PR:H/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+              "V3Score": 6.1,
+              "V40Score": 7
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:L",
+              "V3Score": 7.1
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-27970",
+            "https://angular.dev/best-practices/security#enforcing-trusted-types",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=2442934",
+            "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API",
+            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP",
+            "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/XSS",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/306f367899dfc2e04238fecd3455547b5d54075d",
+            "https://github.com/angular/angular/commit/7d58b798c626bb0e4e5f89ca8affdce4f352b232",
+            "https://github.com/angular/angular/commit/b85830953281ff3a1a77bbfe69019d352d509c93",
+            "https://github.com/angular/angular/pull/67183",
+            "https://github.com/angular/angular/security/advisories/GHSA-prjf-86w9-mfqv",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-27970",
+            "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-27970.json",
+            "https://www.cve.org/CVERecord?id=CVE-2026-27970"
+          ],
+          "PublishedDate": "2026-02-26T02:16:24.353Z",
+          "LastModifiedDate": "2026-07-15T02:19:13.267Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-32635",
+          "VendorIDs": [
+            "GHSA-g93w-mfhg-p222"
+          ],
+          "PkgID": "@angular/core@17.3.8",
+          "PkgName": "@angular/core",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/core@17.3.8",
+            "UID": "ea0d301c1911bfad"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.0-next.3, 21.2.4, 20.3.18, 19.2.20",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-32635",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:7d1abb5799e6fc36487067a6649cfbc6d26428574f0d94777e7e09d262819f83",
+          "Title": "@angular/core: @angular/compiler: Angular has XSS in i18n attribute bindings",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 22.0.0-next.3, 21.2.4, 20.3.18, and 19.2.20, a Cross-Site Scripting (XSS) vulnerability has been identified in the Angular runtime and compiler. It occurs when the application uses a security-sensitive attribute (for example href on an anchor tag) together with Angular's ability to internationalize attributes. Enabling internationalization for the sensitive attribute by adding i18n-\u003cattribute\u003e name bypasses Angular's built-in sanitization mechanism, which when combined with a data binding to untrusted user-generated data can allow an attacker to inject a malicious script. This vulnerability is fixed in 22.0.0-next.3, 21.2.4, 20.3.18, and 19.2.20.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-79"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 4,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+              "V3Score": 9.1,
+              "V40Score": 8.6
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H",
+              "V3Score": 9
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L",
+              "V3Score": 6.3
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-32635",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/224e60ecb1b90115baa702f1c06edc1d64d86187",
+            "https://github.com/angular/angular/commit/78dea55351fb305b33a919c43a6b363137eca166",
+            "https://github.com/angular/angular/commit/8630319f74c9575a21693d875cc7d5252516146d",
+            "https://github.com/angular/angular/commit/ed2d324f9cc12aab6cfa0569ef10b73243a62c65",
+            "https://github.com/angular/angular/pull/67541",
+            "https://github.com/angular/angular/pull/67561",
+            "https://github.com/angular/angular/security/advisories/GHSA-g93w-mfhg-p222",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-32635",
+            "https://www.cve.org/CVERecord?id=CVE-2026-32635"
+          ],
+          "PublishedDate": "2026-03-16T14:19:40.753Z",
+          "LastModifiedDate": "2026-06-17T10:36:08.51Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-54267",
+          "VendorIDs": [
+            "GHSA-rgjc-h3x7-9mwg"
+          ],
+          "PkgID": "@angular/core@17.3.8",
+          "PkgName": "@angular/core",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/core@17.3.8",
+            "UID": "ea0d301c1911bfad"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.1, 21.2.17, 20.3.25",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-54267",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:44f4c39e9cde1acb44c96acf04c5268b89f3d031a936d269eb0e6d2f1f386a37",
+          "Title": "@angular/core: Angular Client Hydration DOM Clobbering \u0026 Response-Cache Poisoning",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 22.0.1, 21.2.17, and 20.3.25, to optimize client-side bootstrap in Server-Side Rendered (SSR) environments, Angular supports Hydration via provideClientHydration(). During SSR, Angular serializes the application's runtime state (such as cached HttpClient responses) and outputs it into the HTML stream as a \u003cscript\u003e tag with a predictable identifier. During client bootstrap, Angular recovers this state by looking up the element via document.getElementById('ng-state') and parsing its text content. Because the DOM element lookup for the state container is predictable and relies solely on the ID selector (ng-state), it is susceptible to DOM Clobbering. If the application binds untrusted user input or CMS content to element properties such as id (e.g., \u003cdiv [id]=\"userInput\"\u003e or \u003ca id=\"ng-state\"\u003e) before the genuine \u003cscript\u003e tag is parsed by the browser, the attacker-controlled element takes precedence in the DOM lookup. During hydration, when Angular calls document.getElementById('ng-state'), the browser returns the attacker's clobbered element. Angular then attempts to parse the text content or attributes of this clobbered element as JSON. This vulnerability is fixed in 22.0.1, 21.2.17, and 20.3.25.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-79",
+            "CWE-471"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
+              "V3Score": 6.1,
+              "V40Score": 8.6
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 4.7
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-54267",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/6bde84fa8e6a5770b54040fbbc9bf10d5d0386fa",
+            "https://github.com/angular/angular/pull/69064",
+            "https://github.com/angular/angular/security/advisories/GHSA-rgjc-h3x7-9mwg",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-54267",
+            "https://www.cve.org/CVERecord?id=CVE-2026-54267"
+          ],
+          "PublishedDate": "2026-06-22T16:16:39.457Z",
+          "LastModifiedDate": "2026-07-09T15:39:24.36Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-69151",
+          "VendorIDs": [
+            "GHSA-jj27-h5hq-8x99"
+          ],
+          "PkgID": "@angular/core@17.3.8",
+          "PkgName": "@angular/core",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/%40angular/core@17.3.8",
+            "UID": "ea0d301c1911bfad"
+          },
+          "InstalledVersion": "17.3.8",
+          "FixedVersion": "22.0.1, 21.2.19, 20.3.27",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-69151",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:3f7a90f63d9bc8a0e8dc206ada1fdfe6816c3d2f53768c6618bcd5477d660c33",
+          "Title": "@angular/compiler: @angular/core: Angular: Cross-Site Scripting via internationalization event handlers",
+          "Description": "Angular is a development platform for building mobile and desktop web applications using TypeScript/JavaScript and other languages. Prior to 20.3.27, 21.2.19, and 22.0.1, the Angular compiler i18n pipeline permits i18n-onerror and other i18n-on event-handler attributes, allowing a lower-trust translation file to replace a static handler with executable JavaScript. This issue is fixed in versions 20.3.27, 21.2.19, and 22.0.1.",
+          "Severity": "HIGH",
+          "CweIDs": [
+            "CWE-79"
+          ],
+          "VendorSeverity": {
+            "ghsa": 3,
+            "nvd": 2,
+            "redhat": 3
+          },
+          "CVSS": {
+            "ghsa": {
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
+              "V40Score": 7.6
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N",
+              "V3Score": 8.1
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-69151",
+            "https://github.com/angular/angular",
+            "https://github.com/angular/angular/commit/417a4071a776464d549509ed3aec121dbd2fda5e",
+            "https://github.com/angular/angular/commit/6c41f5ca01c0ae045fc7d929b72853a11eb55865",
+            "https://github.com/angular/angular/pull/68821",
+            "https://github.com/angular/angular/pull/69306",
+            "https://github.com/angular/angular/security/advisories/GHSA-jj27-h5hq-8x99",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-69151",
+            "https://www.cve.org/CVERecord?id=CVE-2026-69151"
+          ],
+          "PublishedDate": "2026-08-03T17:16:45.797Z",
+          "LastModifiedDate": "2026-08-11T18:19:30.66Z"
+        }
+      ]
+    }
+  ]
+}
