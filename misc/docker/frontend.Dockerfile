@@ -1,6 +1,6 @@
 # Image runtime déjà équipée de Caddy. Le tag donne une version lisible et le
 # digest garantit que le contenu téléchargé restera strictement identique.
-FROM caddy:2.11.4-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+FROM caddy:2.11.4-alpine@sha256:de23def33b17fb5d1290b0f6c2add1d70780e52341896c00a4c8a2a2fe9d355e
 
 # L'image officielle ne définit pas d'utilisateur applicatif. Celui-ci est créé
 # explicitement afin que Caddy ne s'exécute pas avec l'identité root. Le binaire

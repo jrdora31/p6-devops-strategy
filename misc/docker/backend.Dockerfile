@@ -2,9 +2,11 @@
 # compilation du JDK. Le digest rend l'image de base reproductible.
 FROM eclipse-temurin:21.0.11_10-jre-alpine-3.23@sha256:3f08b13888f595cc49edabea7250ba69499ba25602b267da591720769400e08c
 
-# Crée un groupe et un utilisateur système sans mot de passe ni session normale.
-# L'application n'a ainsi pas besoin des privilèges `root` dans le conteneur.
-RUN addgroup -S microcrm \
+# Met à niveau les paquets Alpine présents dans l'image de base, puis crée un
+# utilisateur système sans mot de passe ni session normale. L'application n'a
+# ainsi pas besoin des privilèges `root` dans le conteneur.
+RUN apk upgrade --no-cache \
+    && addgroup -S microcrm \
     && adduser -S -G microcrm microcrm
 
 # Le JAR a déjà été produit par `build:backend`. `--chown` donne immédiatement
