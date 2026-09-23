@@ -25,20 +25,19 @@ reproductible actuelle du POC.
 | Contrôles sécurité automatisés | aucun | Gitleaks, Trivy et SonarQube | détection avant livraison |
 | Durée des pipelines push `dev` | non mesurée | moyenne 10 min 57 s ; médiane 10 min 37 s sur 7 pipelines | référence actuelle, aucun gain historique calculable |
 
-La [capture des pipelines push `dev`](evidence/performance/pipeline_push_dev_durations_22_09_26.png)
-montre les durées `10:30`, `10:36`, `10:37`, `11:12`, `11:00`, `12:19` et
-`10:22`. La moyenne vaut `(630 + 636 + 637 + 672 + 660 + 739 + 622) / 7`, soit
-`656,57 s` ou `10 min 56,57 s`, arrondie à `10 min 57 s`. La médiane est
-`10 min 37 s`. La capture est une liste de pipelines **push**, malgré son nom
-initial qui mentionnait Web.
+Les durées observées sont `10:30`, `10:36`, `10:37`, `11:12`, `11:00`, `12:19`
+et `10:22`. La moyenne vaut
+`(630 + 636 + 637 + 672 + 660 + 739 + 622) / 7`, soit `656,57 s` ou
+`10 min 56,57 s`, arrondie à `10 min 57 s`. La médiane est `10 min 37 s`.
+Il s'agit de pipelines **push**, et non de pipelines Web.
+
+Plus de détails dans la
+[capture des pipelines push `dev`](evidence/performance/pipeline_push_dev_durations_22_09_26.png).
 
 ## 3. Sécurité : résultats et corrections
 
 Les artefacts du commit `71f7d64`, générés par la pipeline réussie
-`#2870894000`, constituent l'état CI après correction. La
-[synthèse sécurité](evidence/security/SECURITY_EVIDENCE_2026-09-22.md) et la
-[décision CVE-2026-56854](evidence/security/CVE-2026-56854-decision.md)
-conservent le détail et les limites.
+`#2870894000`, constituent l'état CI après correction.
 
 Corrections vérifiées localement le 22 septembre 2026 :
 
@@ -61,14 +60,21 @@ Ces artefacts n'ont pas besoin d'être remplacés à chaque pipeline documentair
 Un nouvel export est utile si les dépendances, les Dockerfiles ou les règles de
 scan changent.
 
+Plus de détails dans la
+[synthèse des preuves de sécurité](evidence/security/SECURITY_EVIDENCE_2026-09-22.md)
+et la
+[décision CVE-2026-56854](evidence/security/CVE-2026-56854-decision.md).
+
 ## 4. CloudWatch : métriques, journaux et alertes
 
 Le dashboard applicatif sépare stable et Canary pour les requêtes, versions,
-latence p95, 5xx, taux d'erreur et échecs d'authentification. Les captures et
-leur interprétation sont regroupées dans la
+latence p95, 5xx, taux d'erreur et échecs d'authentification. Les 5xx et le taux
+d'erreur visibles proviennent d'un test synthétique ; ils ne doivent pas être
+présentés comme un incident réel.
+
+Plus de détails sur les métriques, les dimensions et l'interprétation des
+captures dans la
 [documentation de supervision](../Maintenance/supervision.md#validation-du-dashboard-applicatif).
-Les 5xx et le taux d'erreur visibles proviennent d'un test synthétique ; ils ne
-doivent pas être présentés comme un incident réel.
 
 ![Dashboard CloudWatch MicroCRM avec requêtes, erreurs, latence, authentification et logs](evidence/performance/dashboard_cloudwatch_microcrm_application_production_21_09_26.png)
 
@@ -86,11 +92,14 @@ Le test NLB du 16 septembre 2026 a exécuté 50 requêtes séquentielles :
 |---:|---:|---:|---:|---:|---:|
 | 50 | 50 | 46,64 ms | 60,98 ms | 111,27 ms | 120,28 ms |
 
-Preuves : [protocole et sortie](evidence/performance/PREUVE_PERFORMANCE_NLB_2026-09-16.md)
-et [capture](evidence/performance/performance_nlb_50_requetes_http_200.png).
 Ce test démontre la disponibilité de la route pendant environ quatre secondes ;
 il ne démontre ni une capacité maximale, ni un failover, ni la distribution
 entre les deux EC2.
+
+Plus de détails dans le
+[protocole avec sa sortie](evidence/performance/PREUVE_PERFORMANCE_NLB_2026-09-16.md)
+et la
+[capture des 50 réponses HTTP 200](evidence/performance/performance_nlb_50_requetes_http_200.png).
 
 | Mécanisme | Après observé | Impact démontré | Limite |
 |---|---|---|---|
@@ -99,9 +108,10 @@ entre les deux EC2.
 | PostgreSQL | StatefulSet persistant à un replica | persistance au redémarrage du Pod | pas de haute disponibilité ni de restauration automatisée |
 | Canary | stable/Canary séparés, routage 90/10 observé | exposition initiale limitée à 10 % | ne prouve pas un gain de vitesse |
 
-Preuves complémentaires : [tests du POC](evidence/performance/TESTS_MICROCRM_2026-09-16.md),
-[Canary réussi](evidence/performance/canary_succeed_1.4.0.png),
-[comptage 90/10](evidence/performance/résultat_comptage_canary_90_10.png) et
+Plus de détails sur ces observations dans les
+[tests du POC](evidence/performance/TESTS_MICROCRM_2026-09-16.md), la preuve du
+[Canary réussi](evidence/performance/canary_succeed_1.4.0.png), le
+[comptage 90/10](evidence/performance/résultat_comptage_canary_90_10.png) et les
 [cibles NLB saines](evidence/performance/nlb_target_group_healthy_22_09_26.png).
 
 ![Target group NLB avec deux cibles saines](evidence/performance/nlb_target_group_healthy_22_09_26.png)

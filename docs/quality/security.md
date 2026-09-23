@@ -22,15 +22,43 @@ dépendances natif de GitLab. Les rapports HIGH/CRITICAL n'impliquent pas tous
 un blocage : celui-ci dépend du seuil `--exit-code 1` propre au contrôle.
 Les artefacts des jobs concernés sont conservés 30 jours.
 
-Les artefacts du commit corrigé `71f7d64` sont archivés dans
-[`evidence/security`](evidence/security/SECURITY_EVIDENCE_2026-09-22.md). Ils
-montrent 0 secret, 0 HIGH/CRITICAL pour le dépôt et le backend, 16 occurrences
-HIGH représentant 15 identifiants dans le binaire Caddy, et 0 CRITICAL. Les
-trois constats IaC HIGH restent des décisions d'architecture du POC. Par
-rapport aux artefacts antérieurs, le total des trois rapports de
-vulnérabilités passe de 65 à 16 occurrences HIGH, soit une baisse de 75,4 %.
-La conclusion reste « détection démontrée, correction partielle » puisque les
-HIGH Caddy ne sont pas encore tous corrigés ou acceptés nominativement.
+## Résultats et limites connus
+
+Les contrôles du commit corrigé `71f7d64` donnent les résultats suivants :
+
+| Contrôle | Résultat | Limite restante |
+|---|---|---|
+| Gitleaks | 0 secret détecté | aucune exception configurée |
+| Trivy — dépôt | 0 HIGH, 0 CRITICAL | aucune au seuil contrôlé |
+| Trivy — image backend | 0 HIGH, 0 CRITICAL | aucune au seuil contrôlé |
+| Trivy — image frontend | 16 occurrences HIGH, 15 identifiants distincts, 0 CRITICAL | vulnérabilités présentes dans le binaire Caddy |
+| Trivy — Helm/Kubernetes | 0 constat HIGH/CRITICAL sur les quatre profils | aucune au seuil contrôlé |
+| Trivy — Terraform/IaC | 3 constats HIGH, 0 CRITICAL | choix d'architecture acceptés uniquement pour le POC |
+
+Par rapport aux artefacts antérieurs, les trois rapports de vulnérabilités
+passent de 65 à 16 occurrences HIGH, soit une baisse de 75,4 %. La conclusion
+reste « détection démontrée, correction partielle » puisque les HIGH Caddy ne
+sont pas encore tous corrigés ou acceptés nominativement.
+
+Une CVE identifie une vulnérabilité connue dans un logiciel ou une
+bibliothèque. Un constat IaC (*Infrastructure as Code*) signale une
+configuration d'infrastructure à durcir ; il ne correspond pas nécessairement
+à une CVE. Les trois constats IaC de MicroCRM sont distincts de
+`CVE-2026-56854` :
+
+| ID | Constat | Décision pour le POC | Durcissement attendu en production |
+|---|---|---|---|
+| `AWS-0053` | Le NLB est exposé à Internet (`internal = false`) | exposition attendue pour rendre le POC accessible en HTTP | restreindre les CIDR, terminer TLS et ajouter les protections d'entrée adaptées |
+| `AWS-0132` | Le bucket S3 utilise le chiffrement `AES256` fourni par AWS, sans clé KMS propre au projet | bucket temporaire privé, chiffré et vidé sous 24 heures | utiliser une clé KMS gérée par le projet avec une politique minimale |
+| `AWS-0164` | Le sous-réseau attribue automatiquement des IP publiques (`map_public_ip_on_launch = true`) | choix du POC sans NAT Gateway ni endpoints privés | placer les nœuds dans des sous-réseaux privés et les administrer avec SSM/VPC endpoints |
+
+Ces trois constats ne sont pas corrigés et ne représentent pas une architecture
+de production durcie. Pour une mise en production réelle, l'image frontend ne
+serait pas livrée avec les HIGH Caddy résiduels et les choix IaC ci-dessus
+seraient durcis avant le déploiement.
+
+Plus de détails dans la
+[synthèse des preuves de sécurité du 22 septembre 2026](evidence/security/SECURITY_EVIDENCE_2026-09-22.md).
 
 ## Exception Trivy
 
